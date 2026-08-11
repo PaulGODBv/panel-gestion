@@ -3,8 +3,8 @@ from django.db import models
 # Create your models here.
 
 class StudentReport(models.Model):
-    username = models.CharField(max_lenght=150)
-    email = models.CharField(max_length=254, blank=true)
+    username = models.CharField(max_length=150)
+    email = models.CharField(max_length=254, blank=True)
     
     total_questions_answered = models.PositiveIntegerField(default=0)
     total_practice_time_seconds= models.PositiveIntegerField(default=0)
