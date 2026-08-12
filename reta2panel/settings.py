@@ -31,6 +31,9 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'unfold',
+    'unfold.contrib.filters',
+    'unfold.contrib.forms',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -134,3 +137,82 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+from django.templatetags.static import static
+from django.urls import reverse_lazy
+
+UNFOLD = {
+    "SITE_TITLE": "Reta2 Panel",
+    "SITE_HEADER": "Reta2 – Gestión Académica",
+    "SITE_URL": "/",
+    "SITE_ICON": None,
+    "DASHBOARD_CALLBACK": "core.views.dashboard_callback",
+    "STYLES": [],
+    "SCRIPTS": [],
+    "COLORS": {
+        "primary": {
+            "50": "240 249 255",
+            "100": "224 242 254",
+            "200": "186 230 253",
+            "300": "125 211 252",
+            "400": "56 189 248",
+            "500": "14 165 233",
+            "600": "2 132 199",
+            "700": "3 105 161",
+            "800": "7 89 133",
+            "900": "12 74 110",
+            "950": "8 47 73",
+        },
+    },
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": True,
+        "navigation": [
+            {
+                "title": "Principal",
+                "items": [
+                    {
+                        "title": "Dashboard",
+                        "icon": "dashboard",
+                        "link": reverse_lazy("admin:index"),
+                    },
+                ],
+            },
+            {
+                "title": "Estudiantes",
+                "items": [
+                    {
+                        "title": "Reportes",
+                        "icon": "person",
+                        "link": reverse_lazy("admin:core_studentreport_changelist"),
+                    },
+                    {
+                        "title": "Progreso por nivel",
+                        "icon": "bar_chart",
+                        "link": reverse_lazy("admin:core_levelprogressreport_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": "Banco de Preguntas",
+                "items": [
+                    {
+                        "title": "Competencias",
+                        "icon": "school",
+                        "link": reverse_lazy("admin:academics_competence_changelist"),
+                    },
+                    {
+                        "title": "Niveles",
+                        "icon": "layers",
+                        "link": reverse_lazy("admin:academics_level_changelist"),
+                    },
+                    {
+                        "title": "Preguntas",
+                        "icon": "quiz",
+                        "link": reverse_lazy("admin:academics_question_changelist"),
+                    },
+                ],
+            },
+        ],
+    },
+}
