@@ -1,8 +1,19 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import StudentReport
+from .models import StudentReport, LevelProgressReport
 from .serializers import StudentReportSerializer
+
+
+def dashboard_callback(request, context):
+    context.update(
+        {
+            "total_students": StudentReport.objects.values("username").distinct().count(),
+            "total_reports": StudentReport.objects.count(),
+            "total_level_progress": LevelProgressReport.objects.count(),
+        }
+    )
+    return context
 
 
 class SyncReportView(APIView):
