@@ -1,0 +1,178 @@
+{% extends 'unfold/layouts/base_simple.html' %}
+{% load i18n %}
+
+{% block content %}
+<div class="p-6 lg:p-8">
+
+    <!-- Título -->
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-font-important-light dark:text-font-important-dark">
+            Dashboard Reta2
+        </h1>
+        <p class="mt-1 text-sm text-font-secondary-light dark:text-font-secondary-dark">
+            Panel de seguimiento del programa Ruta del Mejor Saber – UDES
+        </p>
+    </div>
+
+    <!-- Tarjetas de estadísticas -->
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4 mb-8">
+
+        <!-- Estudiantes -->
+        <div class="flex flex-col gap-2 p-5 rounded-xl border border-base-200 dark:border-base-700 bg-white dark:bg-base-900 shadow-sm">
+            <div class="flex items-center justify-between">
+                <p class="text-xs font-semibold uppercase tracking-wider text-font-secondary-light dark:text-font-secondary-dark">
+                    Estudiantes
+                </p>
+                <span class="material-symbols-outlined text-primary-600 dark:text-primary-400 text-xl">group</span>
+            </div>
+            <p class="text-4xl font-extrabold text-font-important-light dark:text-font-important-dark">
+                {{ total_students }}
+            </p>
+            <p class="text-xs text-font-secondary-light dark:text-font-secondary-dark">
+                Con al menos un reporte enviado
+            </p>
+        </div>
+
+        <!-- Total reportes -->
+        <div class="flex flex-col gap-2 p-5 rounded-xl border border-base-200 dark:border-base-700 bg-white dark:bg-base-900 shadow-sm">
+            <div class="flex items-center justify-between">
+                <p class="text-xs font-semibold uppercase tracking-wider text-font-secondary-light dark:text-font-secondary-dark">
+                    Total reportes
+                </p>
+                <span class="material-symbols-outlined text-green-600 dark:text-green-400 text-xl">assessment</span>
+            </div>
+            <p class="text-4xl font-extrabold text-font-important-light dark:text-font-important-dark">
+                {{ total_reports }}
+            </p>
+            <p class="text-xs text-font-secondary-light dark:text-font-secondary-dark">
+                Sincronizaciones desde la app
+            </p>
+        </div>
+
+        <!-- Preguntas respondidas -->
+        <div class="flex flex-col gap-2 p-5 rounded-xl border border-base-200 dark:border-base-700 bg-white dark:bg-base-900 shadow-sm">
+            <div class="flex items-center justify-between">
+                <p class="text-xs font-semibold uppercase tracking-wider text-font-secondary-light dark:text-font-secondary-dark">
+                    Preguntas respondidas
+                </p>
+                <span class="material-symbols-outlined text-purple-600 dark:text-purple-400 text-xl">quiz</span>
+            </div>
+            <p class="text-4xl font-extrabold text-font-important-light dark:text-font-important-dark">
+                {{ total_questions }}
+            </p>
+            <p class="text-xs text-font-secondary-light dark:text-font-secondary-dark">
+                Total acumulado de todos los usuarios
+            </p>
+        </div>
+
+        <!-- Racha promedio -->
+        <div class="flex flex-col gap-2 p-5 rounded-xl border border-base-200 dark:border-base-700 bg-white dark:bg-base-900 shadow-sm">
+            <div class="flex items-center justify-between">
+                <p class="text-xs font-semibold uppercase tracking-wider text-font-secondary-light dark:text-font-secondary-dark">
+                    Racha promedio
+                </p>
+                <span class="material-symbols-outlined text-orange-600 dark:text-orange-400 text-xl">local_fire_department</span>
+            </div>
+            <p class="text-4xl font-extrabold text-font-important-light dark:text-font-important-dark">
+                {{ avg_streak }} días
+            </p>
+            <p class="text-xs text-font-secondary-light dark:text-font-secondary-dark">
+                Días consecutivos de práctica
+            </p>
+        </div>
+    </div>
+
+    <!-- Fila: Progreso por competencia + Últimos reportes -->
+    <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+
+        <!-- Progreso por competencia -->
+        <div class="rounded-xl border border-base-200 dark:border-base-700 bg-white dark:bg-base-900 shadow-sm overflow-hidden">
+            <div class="px-5 py-4 border-b border-base-200 dark:border-base-700">
+                <h2 class="text-sm font-bold text-font-important-light dark:text-font-important-dark">
+                    Progreso por competencia
+                </h2>
+                <p class="text-xs text-font-secondary-light dark:text-font-secondary-dark mt-0.5">
+                    Niveles completados vs intentados
+                </p>
+            </div>
+            <div class="p-5 flex flex-col gap-5">
+                {% if competence_progress %}
+                    {% for comp in competence_progress %}
+                    <div>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <span class="text-sm font-medium text-font-important-light dark:text-font-important-dark">
+                                {{ comp.competence_name }}
+                            </span>
+                            <span class="text-xs font-semibold text-primary-600 dark:text-primary-400">
+                                {{ comp.completed }}/{{ comp.total }}
+                            </span>
+                        </div>
+                        <div class="w-full bg-base-200 dark:bg-base-700 rounded-full h-2">
+                            {% if comp.total > 0 %}
+                            <div
+                                class="bg-primary-600 dark:bg-primary-400 h-2 rounded-full"
+                                style="width: {% widthratio comp.completed comp.total 100 %}%">
+                            </div>
+                            {% else %}
+                            <div class="h-2 rounded-full" style="width:0%"></div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-sm text-font-secondary-light dark:text-font-secondary-dark text-center py-8">
+                        No hay datos de progreso aún.<br>
+                        Los datos aparecerán cuando los estudiantes sincronicen la app.
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Últimos reportes -->
+        <div class="rounded-xl border border-base-200 dark:border-base-700 bg-white dark:bg-base-900 shadow-sm overflow-hidden">
+            <div class="px-5 py-4 border-b border-base-200 dark:border-base-700">
+                <h2 class="text-sm font-bold text-font-important-light dark:text-font-important-dark">
+                    Últimas sincronizaciones
+                </h2>
+                <p class="text-xs text-font-secondary-light dark:text-font-secondary-dark mt-0.5">
+                    Reportes más recientes recibidos desde la app
+                </p>
+            </div>
+            <div class="divide-y divide-base-200 dark:divide-base-700">
+                {% if latest_reports %}
+                    {% for report in latest_reports %}
+                    <div class="px-5 py-4 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-full bg-primary-600 dark:bg-primary-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                                {{ report.username|first|upper }}
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-font-important-light dark:text-font-important-dark">
+                                    {{ report.username }}
+                                </p>
+                                <p class="text-xs text-font-secondary-light dark:text-font-secondary-dark">
+                                    {{ report.total_questions_answered }} preguntas &bull;
+                                    🔥 {{ report.current_streak_days }} días de racha
+                                </p>
+                            </div>
+                        </div>
+                        <span class="text-xs text-font-secondary-light dark:text-font-secondary-dark whitespace-nowrap ml-4">
+                            {{ report.reported_at|date:"d/m/Y H:i" }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="px-5 py-8 text-center">
+                        <p class="text-sm text-font-secondary-light dark:text-font-secondary-dark">
+                            No hay reportes aún.
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+{% endblock %}

@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-ew606-j&f-y8hi94d1do3#$#8vy*@rd@y4jmco%f)q7fjrqt^p
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.20.72', '*']
 
 
 # Application definition
@@ -150,20 +150,20 @@ UNFOLD = {
     "STYLES": [],
     "SCRIPTS": [],
     "COLORS": {
-        "primary": {
-            "50": "240 249 255",
-            "100": "224 242 254",
-            "200": "186 230 253",
-            "300": "125 211 252",
-            "400": "56 189 248",
-            "500": "14 165 233",
-            "600": "2 132 199",
-            "700": "3 105 161",
-            "800": "7 89 133",
-            "900": "12 74 110",
-            "950": "8 47 73",
-        },
+    "primary": {
+        "50": "240 248 255",
+        "100": "219 238 255",
+        "200": "183 233 255",
+        "300": "125 197 234",
+        "400": "78 136 202",
+        "500": "0 91 153",
+        "600": "0 78 130",
+        "700": "0 65 108",
+        "800": "0 52 87",
+        "900": "0 39 65",
+        "950": "0 26 43",
     },
+},
     "SIDEBAR": {
         "show_search": True,
         "show_all_applications": True,

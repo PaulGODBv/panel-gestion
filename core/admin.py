@@ -1,11 +1,13 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 from .models import StudentReport, LevelProgressReport
 
+
 @admin.register(StudentReport)
-class StudentReportAdmin(admin.ModelAdmin):
+class StudentReportAdmin(ModelAdmin):
     list_display = [
-        'username', 
-        'email', 
+        'username',
+        'email',
         'total_questions_answered',
         'current_streak_days',
         'practice_time_formatted',
@@ -16,8 +18,9 @@ class StudentReportAdmin(admin.ModelAdmin):
     readonly_fields = ['reported_at', 'practice_time_formatted']
     ordering = ['-reported_at']
 
+
 @admin.register(LevelProgressReport)
-class LevelProgressReportAdmin(admin.ModelAdmin):
+class LevelProgressReportAdmin(ModelAdmin):
     list_display = [
         'report',
         'competence_name',
