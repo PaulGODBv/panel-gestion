@@ -182,6 +182,11 @@ UNFOLD = {
                 "title": "Estudiantes",
                 "items": [
                     {
+                        "title": "Ver todos",
+                        "icon": "group",
+                        "link": "/panel/estudiantes/",
+                    },
+                    {
                         "title": "Reportes",
                         "icon": "person",
                         "link": reverse_lazy("admin:core_studentreport_changelist"),

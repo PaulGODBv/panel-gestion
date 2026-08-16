@@ -1,0 +1,167 @@
+{% extends 'unfold/layouts/base.html' %}
+{% load i18n %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6 p-2 lg:p-4">
+
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <p class="text-sm text-font-secondary-light dark:text-font-secondary-dark">
+                {{ total_count }} estudiante{{ total_count|pluralize }} con reportes sincronizados
+            </p>
+        </div>
+
+        <!-- Buscador -->
+        <form method="get" class="flex gap-2">
+            <input
+                type="text"
+                name="q"
+                value="{{ search }}"
+                placeholder="Buscar por usuario o correo..."
+                class="px-4 py-2 text-sm rounded-lg border border-base-200 dark:border-base-700
+                       bg-white dark:bg-base-900
+                       text-font-important-light dark:text-font-important-dark
+                       placeholder-font-secondary-light dark:placeholder-font-secondary-dark
+                       focus:outline-none focus:ring-2 focus:ring-primary-500 w-72"
+            />
+            <button type="submit"
+                class="px-4 py-2 text-sm font-medium rounded-lg
+                       bg-primary-600 hover:bg-primary-700
+                       text-white transition-colors">
+                Buscar
+            </button>
+            {% if search %}
+            <a href="{% url 'admin_student_list' %}"
+               class="px-4 py-2 text-sm font-medium rounded-lg
+                      border border-base-200 dark:border-base-700
+                      text-font-secondary-light dark:text-font-secondary-dark
+                      hover:bg-base-100 dark:hover:bg-base-800 transition-colors">
+                Limpiar
+            </a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Tabla -->
+    <div class="rounded-xl border border-base-200 dark:border-base-700 bg-white dark:bg-base-900 shadow-sm overflow-hidden">
+        {% if students %}
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-base-200 dark:border-base-700 bg-base-50 dark:bg-base-800">
+                    <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-font-secondary-light dark:text-font-secondary-dark">
+                        Estudiante
+                    </th>
+                    <th class="text-center px-5 py-3 text-xs font-semibold uppercase tracking-wider text-font-secondary-light dark:text-font-secondary-dark">
+                        Preguntas
+                    </th>
+                    <th class="text-center px-5 py-3 text-xs font-semibold uppercase tracking-wider text-font-secondary-light dark:text-font-secondary-dark">
+                        Racha
+                    </th>
+                    <th class="text-center px-5 py-3 text-xs font-semibold uppercase tracking-wider text-font-secondary-light dark:text-font-secondary-dark">
+                        Tiempo total
+                    </th>
+                    <th class="text-right px-5 py-3 text-xs font-semibold uppercase tracking-wider text-font-secondary-light dark:text-font-secondary-dark">
+                        Último reporte
+                    </th>
+                    <th class="px-5 py-3"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-base-200 dark:divide-base-700">
+                {% for student in students %}
+                <tr class="hover:bg-base-50 dark:hover:bg-base-800 transition-colors">
+                    <!-- Estudiante -->
+                    <td class="px-5 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-full bg-primary-600 dark:bg-primary-500
+                                        flex items-center justify-center
+                                        text-white font-bold text-sm flex-shrink-0">
+                                {{ student.username|first|upper }}
+                            </div>
+                            <div>
+                                <p class="font-semibold text-font-important-light dark:text-font-important-dark">
+                                    {{ student.username }}
+                                </p>
+                                <p class="text-xs text-font-secondary-light dark:text-font-secondary-dark">
+                                    {{ student.email }}
+                                </p>
+                            </div>
+                        </div>
+                    </td>
+
+                    <!-- Preguntas -->
+                    <td class="px-5 py-4 text-center">
+                        <span class="font-bold text-font-important-light dark:text-font-important-dark">
+                            {{ student.total_questions_answered }}
+                        </span>
+                    </td>
+
+                    <!-- Racha -->
+                    <td class="px-5 py-4 text-center">
+                        <span class="inline-flex items-center gap-1 font-medium
+                                     {% if student.current_streak_days >= 7 %}text-orange-600 dark:text-orange-400
+                                     {% elif student.current_streak_days >= 3 %}text-yellow-600 dark:text-yellow-400
+                                     {% else %}text-font-secondary-light dark:text-font-secondary-dark{% endif %}">
+                            {% if student.current_streak_days >= 1 %}🔥{% endif %}
+                            {{ student.current_streak_days }} días
+                        </span>
+                    </td>
+
+                    <!-- Tiempo total -->
+                    <td class="px-5 py-4 text-center text-font-secondary-light dark:text-font-secondary-dark">
+                        {% with total=student.total_practice_time_seconds %}
+                            {% if total >= 3600 %}
+                                {{ total|divisibleby:3600 }}h
+                                {% widthratio total|add:0 3600 1 %}h
+                            {% elif total >= 60 %}
+                                {% widthratio total 60 1 %} min
+                            {% else %}
+                                {{ total }} seg
+                            {% endif %}
+                        {% endwith %}
+                    </td>
+
+                    <!-- Último reporte -->
+                    <td class="px-5 py-4 text-right text-xs text-font-secondary-light dark:text-font-secondary-dark whitespace-nowrap">
+                        {{ student.reported_at|date:"d/m/Y H:i" }}
+                    </td>
+
+                    <!-- Acción -->
+                    <td class="px-5 py-4 text-right">
+                        <a href="{% url 'admin_student_detail' student.username %}"
+                           class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium
+                                  rounded-lg bg-primary-50 dark:bg-primary-900
+                                  text-primary-700 dark:text-primary-300
+                                  hover:bg-primary-100 dark:hover:bg-primary-800
+                                  transition-colors">
+                            Ver detalle
+                            <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="px-5 py-16 text-center">
+            {% if search %}
+                <p class="text-font-important-light dark:text-font-important-dark font-medium">
+                    No se encontraron estudiantes con "{{ search }}"
+                </p>
+                <p class="text-sm text-font-secondary-light dark:text-font-secondary-dark mt-1">
+                    Intenta con otro término de búsqueda
+                </p>
+            {% else %}
+                <p class="text-font-important-light dark:text-font-important-dark font-medium">
+                    No hay estudiantes aún
+                </p>
+                <p class="text-sm text-font-secondary-light dark:text-font-secondary-dark mt-1">
+                    Los estudiantes aparecerán aquí cuando sincronicen la app
+                </p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
