@@ -13,6 +13,7 @@ class StudentReport(models.Model):
     
     reported_at = models.DateTimeField(auto_now_add=True)
     app_version = models.CharField(max_length=20, blank=True)
+    academic_program = models.CharField(max_length=100, blank=True, null=True, verbose_name="Programa Académico")
     
     class Meta:
         verbose_name = 'Reporte de Estudiante'
@@ -28,6 +29,30 @@ class StudentReport(models.Model):
         hours = total // 3600
         minutes = (total % 3600) // 60
         return f"{hours}h {minutes}m"
+
+    @property
+    def risk_status(self):
+        from django.utils import timezone
+        import datetime
+        now = timezone.now()
+        
+        # 1. Inactive: more than 7 days since last sync
+        if (now - self.reported_at).days > 7:
+            return 'inactivo'
+        
+        # 2. At risk: current streak is 0, but total practice time is somewhat high indicating they used to practice (or we could use a history model to strictly check "had streak > 5"). Since we don't have historical streaks, we will estimate: if they answered a lot of questions but streak is 0, they lost it. Let's use a simple heuristic for now as requested: "cuya racha cayó a 0 después de haber tenido más de 5 días" - Since we only have current report, maybe we assume if they have > 50 total questions and streak is 0. 
+        # But wait! We have all reports for the user? Actually StudentReport is just one row per sync, or is it one row per user updated?
+        # Let's check how StudentReport is used. If it's a log, we need to query previous reports.
+        # "cuya racha cayó a 0 después de haber tenido más de 5 días"
+        # Let's query previous reports for this user:
+        if self.current_streak_days == 0:
+            previous_max_streak = StudentReport.objects.filter(username=self.username).exclude(id=self.id).aggregate(models.Max('current_streak_days'))['current_streak_days__max']
+            if previous_max_streak and previous_max_streak > 5:
+                return 'en_riesgo'
+        
+        # Default: Active
+        return 'activo'
+
     
 class LevelProgressReport(models.Model):
     report = models.ForeignKey(

@@ -13,26 +13,41 @@
             </p>
         </div>
 
-        <!-- Buscador -->
-        <form method="get" class="flex gap-2">
+        <!-- Buscador y Filtros -->
+        <form method="get" class="flex flex-wrap items-center gap-2">
             <input
                 type="text"
                 name="q"
                 value="{{ search }}"
-                placeholder="Buscar por usuario o correo..."
+                placeholder="Buscar por usuario..."
                 class="px-4 py-2 text-sm rounded-lg border border-base-200 dark:border-base-700
                        bg-white dark:bg-base-900
                        text-font-important-light dark:text-font-important-dark
                        placeholder-font-secondary-light dark:placeholder-font-secondary-dark
-                       focus:outline-none focus:ring-2 focus:ring-primary-500 w-72"
+                       focus:outline-none focus:ring-2 focus:ring-primary-500 w-48"
             />
+            
+            <input 
+                type="date" 
+                name="date_from" 
+                value="{{ date_from }}"
+                class="px-3 py-2 text-sm rounded-lg border border-base-200 dark:border-base-700 bg-white dark:bg-base-900 text-font-important-light dark:text-font-important-dark focus:outline-none focus:ring-2 focus:ring-primary-500" 
+            />
+            <span class="text-font-secondary-light dark:text-font-secondary-dark">-</span>
+            <input 
+                type="date" 
+                name="date_to" 
+                value="{{ date_to }}"
+                class="px-3 py-2 text-sm rounded-lg border border-base-200 dark:border-base-700 bg-white dark:bg-base-900 text-font-important-light dark:text-font-important-dark focus:outline-none focus:ring-2 focus:ring-primary-500" 
+            />
+
             <button type="submit"
                 class="px-4 py-2 text-sm font-medium rounded-lg
                        bg-primary-600 hover:bg-primary-700
                        text-white transition-colors">
-                Buscar
+                Filtrar
             </button>
-            {% if search %}
+            {% if search or date_from or date_to %}
             <a href="{% url 'admin_student_list' %}"
                class="px-4 py-2 text-sm font-medium rounded-lg
                       border border-base-200 dark:border-base-700
@@ -41,6 +56,13 @@
                 Limpiar
             </a>
             {% endif %}
+            
+            <button type="submit" name="export" value="csv"
+               class="px-4 py-2 text-sm font-medium rounded-lg
+                      border border-green-600 text-green-700 dark:text-green-500
+                      hover:bg-green-50 dark:hover:bg-green-900 transition-colors ml-2 flex items-center gap-1">
+                <span class="material-symbols-outlined text-[18px]">download</span> Exportar CSV
+            </button>
         </form>
     </div>
 
@@ -57,7 +79,7 @@
                         Preguntas
                     </th>
                     <th class="text-center px-5 py-3 text-xs font-semibold uppercase tracking-wider text-font-secondary-light dark:text-font-secondary-dark">
-                        Racha
+                        Estado
                     </th>
                     <th class="text-center px-5 py-3 text-xs font-semibold uppercase tracking-wider text-font-secondary-light dark:text-font-secondary-dark">
                         Tiempo total
@@ -84,7 +106,7 @@
                                     {{ student.username }}
                                 </p>
                                 <p class="text-xs text-font-secondary-light dark:text-font-secondary-dark">
-                                    {{ student.email }}
+                                    {{ student.academic_program|default:"Sin programa" }}
                                 </p>
                             </div>
                         </div>
@@ -97,29 +119,27 @@
                         </span>
                     </td>
 
-                    <!-- Racha -->
+                    <!-- Estado (Badges) -->
                     <td class="px-5 py-4 text-center">
-                        <span class="inline-flex items-center gap-1 font-medium
-                                     {% if student.current_streak_days >= 7 %}text-orange-600 dark:text-orange-400
-                                     {% elif student.current_streak_days >= 3 %}text-yellow-600 dark:text-yellow-400
-                                     {% else %}text-font-secondary-light dark:text-font-secondary-dark{% endif %}">
-                            {% if student.current_streak_days >= 1 %}🔥{% endif %}
-                            {{ student.current_streak_days }} días
-                        </span>
+                        {% if student.risk_status == 'activo' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800">
+                                Racha Activa
+                            </span>
+                        {% elif student.risk_status == 'en_riesgo' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800">
+                                En Riesgo
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
+                                Inactivo
+                            </span>
+                        {% endif %}
+                        <div class="text-[10px] mt-1 text-font-secondary-light dark:text-font-secondary-dark">Racha: {{ student.current_streak_days }}</div>
                     </td>
 
                     <!-- Tiempo total -->
                     <td class="px-5 py-4 text-center text-font-secondary-light dark:text-font-secondary-dark">
-                        {% with total=student.total_practice_time_seconds %}
-                            {% if total >= 3600 %}
-                                {{ total|divisibleby:3600 }}h
-                                {% widthratio total|add:0 3600 1 %}h
-                            {% elif total >= 60 %}
-                                {% widthratio total 60 1 %} min
-                            {% else %}
-                                {{ total }} seg
-                            {% endif %}
-                        {% endwith %}
+                        {{ student.practice_time_formatted }}
                     </td>
 
                     <!-- Último reporte -->

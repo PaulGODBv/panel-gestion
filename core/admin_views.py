@@ -10,12 +10,40 @@ from .models import StudentReport, LevelProgressReport
 class StudentListAdminView(TemplateView):
     template_name = 'admin/students/list.html'
 
-    def get_context_data(self, **kwargs):
-        # Obtener contexto base de Admin (necesario para Unfold)
-        context = admin.site.each_context(self.request)
-        context.update(super().get_context_data(**kwargs))
+    def get(self, request, *args, **kwargs):
+        if request.GET.get('export') == 'csv':
+            return self.export_csv(request)
+        return super().get(request, *args, **kwargs)
 
+    def export_csv(self, request):
+        import csv
+        from django.http import HttpResponse
+        
+        students = self.get_queryset()
+        
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="estudiantes.csv"'
+        
+        writer = csv.writer(response)
+        writer.writerow(['Usuario', 'Email', 'Programa', 'Reporte Mas Reciente', 'Preguntas Totales', 'Racha Actual', 'Estado'])
+        
+        for student in students:
+            writer.writerow([
+                student.username,
+                student.email,
+                student.academic_program or 'N/A',
+                student.reported_at.strftime('%Y-%m-%d %H:%M:%S'),
+                student.total_questions_answered,
+                student.current_streak_days,
+                student.risk_status
+            ])
+            
+        return response
+
+    def get_queryset(self):
         search = self.request.GET.get('q', '')
+        date_from = self.request.GET.get('date_from', '')
+        date_to = self.request.GET.get('date_to', '')
 
         latest_ids = (
             StudentReport.objects
@@ -30,13 +58,27 @@ class StudentListAdminView(TemplateView):
             students = students.filter(
                 Q(username__icontains=search) | Q(email__icontains=search)
             )
+            
+        if date_from:
+            students = students.filter(reported_at__date__gte=date_from)
+        if date_to:
+            students = students.filter(reported_at__date__lte=date_to)
 
-        students = students.order_by('username')
+        return students.order_by('username')
+
+    def get_context_data(self, **kwargs):
+        # Obtener contexto base de Admin (necesario para Unfold)
+        context = admin.site.each_context(self.request)
+        context.update(super().get_context_data(**kwargs))
+
+        students = self.get_queryset()
 
         context.update({
             'title': 'Estudiantes',
             'students': students,
-            'search': search,
+            'search': self.request.GET.get('q', ''),
+            'date_from': self.request.GET.get('date_from', ''),
+            'date_to': self.request.GET.get('date_to', ''),
             'total_count': students.count(),
         })
         return context

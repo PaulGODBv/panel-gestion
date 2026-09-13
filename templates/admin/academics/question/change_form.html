@@ -1,0 +1,84 @@
+{% extends "unfold/change_form.html" %}
+{% load i18n admin_urls static %}
+
+{% block breadcrumbs %}
+<div class="px-4 py-3 border-b border-base-200 dark:border-base-700">
+    <nav class="flex" aria-label="Breadcrumb">
+      <ol class="inline-flex items-center space-x-1 md:space-x-3">
+        <li class="inline-flex items-center">
+          <a href="{% url 'admin:index' %}" class="inline-flex items-center text-sm font-medium text-font-secondary-light dark:text-font-secondary-dark hover:text-primary-600 dark:hover:text-primary-400">
+            <span class="material-symbols-outlined text-[18px] mr-1">dashboard</span>
+            Dashboard
+          </a>
+        </li>
+        <li>
+          <div class="flex items-center">
+            <span class="material-symbols-outlined text-[18px] text-font-secondary-light dark:text-font-secondary-dark">chevron_right</span>
+            <a href="{% url 'admin:app_list' 'academics' %}" class="ml-1 text-sm font-medium text-font-secondary-light dark:text-font-secondary-dark hover:text-primary-600 dark:hover:text-primary-400">Banco de Preguntas</a>
+          </div>
+        </li>
+        <li>
+            <div class="flex items-center">
+              <span class="material-symbols-outlined text-[18px] text-font-secondary-light dark:text-font-secondary-dark">chevron_right</span>
+              <a href="{% url 'admin:academics_question_changelist' %}" class="ml-1 text-sm font-medium text-font-secondary-light dark:text-font-secondary-dark hover:text-primary-600 dark:hover:text-primary-400">Preguntas</a>
+            </div>
+        </li>
+        <li aria-current="page">
+          <div class="flex items-center">
+            <span class="material-symbols-outlined text-[18px] text-font-secondary-light dark:text-font-secondary-dark">chevron_right</span>
+            <span class="ml-1 text-sm font-medium text-font-important-light dark:text-font-important-dark">
+                {% if original %}{{ original|truncatechars:30 }}{% else %}Nueva{% endif %}
+            </span>
+          </div>
+        </li>
+      </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="flex flex-col xl:flex-row gap-6 relative">
+    <!-- Formulario a la izquierda -->
+    <div class="flex-grow">
+        {{ block.super }}
+    </div>
+
+    <!-- Mockup Celular a la derecha -->
+    <div class="hidden xl:block w-80 flex-shrink-0 sticky top-4 h-[650px] mt-12">
+        <div class="bg-base-100 dark:bg-base-900 border-4 border-base-300 dark:border-base-700 rounded-[3rem] w-full h-full relative overflow-hidden shadow-xl">
+            <!-- Notch -->
+            <div class="absolute top-0 inset-x-0 h-6 bg-base-300 dark:bg-base-700 rounded-b-3xl mx-16 z-10"></div>
+            
+            <!-- Pantalla App -->
+            <div class="bg-white dark:bg-base-800 w-full h-full p-4 pt-10 flex flex-col gap-4 overflow-y-auto">
+                <div class="text-xs font-semibold text-font-secondary-light dark:text-font-secondary-dark uppercase tracking-wider text-center" id="mockup-level">Nivel</div>
+                
+                <div class="text-sm font-medium text-font-important-light dark:text-font-important-dark" id="mockup-text">
+                    Aquí aparecerá el enunciado de la pregunta...
+                </div>
+                
+                <div class="text-xs text-font-secondary-light dark:text-font-secondary-dark italic" id="mockup-reading" style="display: none;"></div>
+                
+                <div class="flex flex-col gap-2 mt-4" id="mockup-options">
+                    <div class="px-4 py-3 rounded-xl border border-base-200 dark:border-base-700 bg-base-50 dark:bg-base-900 text-sm">Opción 1</div>
+                    <div class="px-4 py-3 rounded-xl border border-base-200 dark:border-base-700 bg-base-50 dark:bg-base-900 text-sm">Opción 2</div>
+                    <div class="px-4 py-3 rounded-xl border border-base-200 dark:border-base-700 bg-base-50 dark:bg-base-900 text-sm">Opción 3</div>
+                    <div class="px-4 py-3 rounded-xl border border-base-200 dark:border-base-700 bg-base-50 dark:bg-base-900 text-sm">Opción 4</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Toasts flotantes CSS (Toastify) -->
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<!-- Inline Validation error span -->
+<style>
+    .inline-error {
+        color: #ef4444;
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+        display: none;
+    }
+</style>
+{% endblock %}
