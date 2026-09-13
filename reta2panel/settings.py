@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-ew606-j&f-y8hi94d1do3#$#8vy*@rd@y4jmco%f)q7fjrqt^p
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.20.72', '*']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.20.72', '10.81.235.97', '10.10.16.97', '*']
 
 
 # Application definition
@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'core',
     'academics',
+    'simple_history',
 ]
 
 REST_FRAMEWORK = {

@@ -1,0 +1,11 @@
+/* academics/css/question_admin.css */
+/* Minimal overrides if needed for mockup or inline validation */
+.inline-error {
+    color: #ef4444;
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+    display: none;
+}
+.border-red-500 {
+    border-color: #ef4444 !important;
+}

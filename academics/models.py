@@ -1,4 +1,5 @@
 from django.db import models
+from simple_history.models import HistoricalRecords
 
 # Create your models here.
 class Competence(models.Model):
@@ -35,6 +36,7 @@ class Level(models.Model):
         return f"{self.competence.name} - {self.name}"
     
 class Question(models.Model):
+    history = HistoricalRecords()
     level = models.ForeignKey(
         Level, 
         on_delete=models.CASCADE, 
