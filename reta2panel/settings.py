@@ -148,7 +148,9 @@ UNFOLD = {
     "SITE_URL": "/",
     "SITE_ICON": None,
     "DASHBOARD_CALLBACK": "core.views.dashboard_callback",
-    "STYLES": [],
+    "STYLES": [
+        lambda request: static("reta2/css/reta2.css"),
+    ],
     "SCRIPTS": [],
     "COLORS": {
     "primary": {

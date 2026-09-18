@@ -1,0 +1,25 @@
+{% comment %}
+    Etiqueta de estado de riesgo.
+
+    Parámetros:
+      status — 'activo' | 'en_riesgo' | 'inactivo'
+
+    El estado nunca se comunica solo con color: cada variante lleva icono
+    y texto, de modo que sea legible en escala de grises y con lector de pantalla.
+{% endcomment %}
+{% if status == 'activo' %}
+    <span class="rt-badge rt-badge--ok">
+        <span class="material-symbols-outlined" aria-hidden="true">trending_up</span>
+        Activo
+    </span>
+{% elif status == 'en_riesgo' %}
+    <span class="rt-badge rt-badge--danger">
+        <span class="material-symbols-outlined" aria-hidden="true">warning</span>
+        En riesgo
+    </span>
+{% else %}
+    <span class="rt-badge">
+        <span class="material-symbols-outlined" aria-hidden="true">schedule</span>
+        Inactivo
+    </span>
+{% endif %}

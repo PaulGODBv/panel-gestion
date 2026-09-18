@@ -1,0 +1,18 @@
+{% extends 'unfold/layouts/base.html' %}
+
+{% comment %}
+    Base de las páginas propias del panel.
+
+    Envuelve el contenido en el contenedor del sistema (.rt-page) y añade el
+    enlace de salto al contenido. Las páginas hijas solo implementan el bloque "page".
+{% endcomment %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    <a class="rt-skip" href="#rt-main">Saltar al contenido</a>
+
+    <div class="rt-page{% block page_modifier %}{% endblock %}" id="rt-main">
+        {% block page %}{% endblock %}
+    </div>
+{% endblock %}

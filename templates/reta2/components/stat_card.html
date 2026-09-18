@@ -1,0 +1,38 @@
+{% comment %}
+    Tarjeta KPI.
+
+    Parámetros:
+      label     — etiqueta corta (se muestra en mono, versalita)
+      icon      — nombre de Material Symbol (opcional)
+      help      — texto explicativo del icono de ayuda (opcional)
+      value     — valor ya calculado (opcional si se rellena por JS)
+      value_id  — id del nodo del valor, para que el JS existente lo rellene
+      unit      — sufijo del valor: "días", "min"… (opcional)
+      hint      — pie descriptivo (opcional)
+      text      — "1" cuando el valor no es numérico (correo, nombre): usa
+                  tipografía de cuerpo en lugar de la escala de cifra grande
+{% endcomment %}
+<div class="rt-kpi">
+    <div class="rt-kpi__top">
+        <span class="rt-kpi__label">
+            {{ label }}
+            {% if help %}
+                <span class="material-symbols-outlined rt-hint" title="{{ help }}" aria-hidden="true">info</span>
+                <span class="rt-sr-only">{{ help }}</span>
+            {% endif %}
+        </span>
+        {% if icon %}
+            <span class="material-symbols-outlined rt-kpi__icon" aria-hidden="true">{{ icon }}</span>
+        {% endif %}
+    </div>
+
+    <p class="rt-kpi__value{% if text %} rt-kpi__value--text{% endif %}"{% if value_id %} id="{{ value_id }}"{% endif %}>
+        {% if value is not None %}
+            {{ value }}{% if unit %} <span class="rt-kpi__unit">{{ unit }}</span>{% endif %}
+        {% else %}
+            <span class="rt-skeleton rt-skeleton--value" aria-hidden="true"></span>
+        {% endif %}
+    </p>
+
+    {% if hint %}<p class="rt-kpi__hint">{{ hint }}</p>{% endif %}
+</div>

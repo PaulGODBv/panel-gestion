@@ -1,187 +1,103 @@
-{% extends 'unfold/layouts/base.html' %}
+{% extends 'reta2/base_page.html' %}
 {% load i18n %}
 
-{% block content %}
-<div class="p-6 lg:p-8" id="dashboard-container">
+{% block page %}
+<div id="dashboard-container" class="rt-stack">
 
-    <!-- Título -->
-    <div class="mb-8">
-        <h1 class="text-2xl font-bold text-font-important-light dark:text-font-important-dark">
-            Dashboard Reta2
-        </h1>
-        <p class="mt-1 text-sm text-font-secondary-light dark:text-font-secondary-dark">
-            Panel de seguimiento del programa Ruta del Mejor Saber – UDES
-        </p>
-    </div>
+    <header class="rt-page__head rt-grid-bg">
+        {% include "reta2/components/page_header.html" with eyebrow="PANEL DE SEGUIMIENTO" title="Dashboard Reta2" subtitle="Programa Ruta del Mejor Saber – Universidad de Santander. Los datos se actualizan con cada sincronización recibida desde la app móvil." %}
+    </header>
 
-    <!-- Tarjetas de estadísticas -->
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4 mb-8">
-        
-        <!-- Estudiantes -->
-        <div class="flex flex-col gap-2 p-5 rounded-xl border border-base-200 dark:border-base-700 bg-white dark:bg-base-900 shadow-sm relative group">
-            <div class="flex items-center justify-between">
-                <p class="text-xs font-semibold uppercase tracking-wider text-font-secondary-light dark:text-font-secondary-dark flex items-center gap-1">
-                    Estudiantes
-                    <span class="material-symbols-outlined text-[14px] cursor-help" title="Número total de estudiantes únicos que han enviado al menos un reporte.">info</span>
-                </p>
-                <span class="material-symbols-outlined text-primary-600 dark:text-primary-400 text-xl">group</span>
-            </div>
-            <p class="text-4xl font-extrabold text-font-important-light dark:text-font-important-dark" id="stat-students">
-                <span class="animate-pulse bg-base-200 dark:bg-base-700 h-10 w-24 rounded block"></span>
-            </p>
-            <p class="text-xs text-font-secondary-light dark:text-font-secondary-dark">
-                Con al menos un reporte enviado
-            </p>
+    <!-- Indicadores generales -->
+    <section aria-labelledby="rt-kpis-title">
+        <h2 id="rt-kpis-title" class="rt-sr-only">Indicadores generales</h2>
+
+        <div class="rt-grid rt-grid--kpi" aria-live="polite" aria-busy="true" id="rt-kpi-grid">
+            {% include "reta2/components/stat_card.html" with label="Estudiantes" icon="group" value_id="stat-students" hint="Con al menos un reporte enviado" help="Número total de estudiantes únicos que han enviado al menos un reporte." %}
+            {% include "reta2/components/stat_card.html" with label="Sincronizaciones" icon="sync" value_id="stat-reports" hint="Reportes recibidos desde la app" help="Cantidad total de sincronizaciones de datos recibidas desde la app móvil." %}
+            {% include "reta2/components/stat_card.html" with label="Preguntas" icon="quiz" value_id="stat-questions" hint="Total acumulado histórico" help="Suma total de preguntas respondidas por todos los usuarios en la historia." %}
+            {% include "reta2/components/stat_card.html" with label="Racha promedio" icon="local_fire_department" value_id="stat-streak" hint="Días consecutivos de práctica" help="Promedio de los días consecutivos de práctica reportados en el último evento de cada usuario." %}
         </div>
+    </section>
 
-        <!-- Total reportes -->
-        <div class="flex flex-col gap-2 p-5 rounded-xl border border-base-200 dark:border-base-700 bg-white dark:bg-base-900 shadow-sm relative">
-            <div class="flex items-center justify-between">
-                <p class="text-xs font-semibold uppercase tracking-wider text-font-secondary-light dark:text-font-secondary-dark flex items-center gap-1">
-                    Total reportes
-                    <span class="material-symbols-outlined text-[14px] cursor-help" title="Cantidad total de sincronizaciones de datos recibidas desde la app móvil.">info</span>
-                </p>
-                <span class="material-symbols-outlined text-green-600 dark:text-green-400 text-xl">assessment</span>
-            </div>
-            <p class="text-4xl font-extrabold text-font-important-light dark:text-font-important-dark" id="stat-reports">
-                <span class="animate-pulse bg-base-200 dark:bg-base-700 h-10 w-24 rounded block"></span>
-            </p>
-            <p class="text-xs text-font-secondary-light dark:text-font-secondary-dark">
-                Sincronizaciones desde la app
-            </p>
+    <!-- Intensidad de práctica -->
+    <section class="rt-card" aria-labelledby="rt-heatmap-title">
+        {% include "reta2/components/card_head.html" with title="Intensidad de práctica" desc="Sincronizaciones recibidas por día durante los últimos 12 meses" %}
+        <div class="rt-card__body">
+            <div id="heatmap-skeleton" class="rt-skeleton rt-skeleton--block" aria-hidden="true"></div>
+            <div id="cal-heatmap" class="rt-table-wrap" style="display:none;"></div>
         </div>
+    </section>
 
-        <!-- Preguntas respondidas -->
-        <div class="flex flex-col gap-2 p-5 rounded-xl border border-base-200 dark:border-base-700 bg-white dark:bg-base-900 shadow-sm relative">
-            <div class="flex items-center justify-between">
-                <p class="text-xs font-semibold uppercase tracking-wider text-font-secondary-light dark:text-font-secondary-dark flex items-center gap-1">
-                    Preguntas
-                    <span class="material-symbols-outlined text-[14px] cursor-help" title="Suma total de preguntas respondidas por todos los usuarios en la historia.">info</span>
-                </p>
-                <span class="material-symbols-outlined text-purple-600 dark:text-purple-400 text-xl">quiz</span>
-            </div>
-            <p class="text-4xl font-extrabold text-font-important-light dark:text-font-important-dark" id="stat-questions">
-                <span class="animate-pulse bg-base-200 dark:bg-base-700 h-10 w-24 rounded block"></span>
-            </p>
-            <p class="text-xs text-font-secondary-light dark:text-font-secondary-dark">
-                Total acumulado histórico
-            </p>
-        </div>
+    <div class="rt-grid rt-grid--halves">
 
-        <!-- Racha promedio -->
-        <div class="flex flex-col gap-2 p-5 rounded-xl border border-base-200 dark:border-base-700 bg-white dark:bg-base-900 shadow-sm relative">
-            <div class="flex items-center justify-between">
-                <p class="text-xs font-semibold uppercase tracking-wider text-font-secondary-light dark:text-font-secondary-dark flex items-center gap-1">
-                    Racha promedio
-                    <span class="material-symbols-outlined text-[14px] cursor-help" title="Promedio de los días consecutivos de práctica reportados en el último evento de cada usuario.">info</span>
-                </p>
-                <span class="material-symbols-outlined text-orange-600 dark:text-orange-400 text-xl">local_fire_department</span>
-            </div>
-            <p class="text-4xl font-extrabold text-font-important-light dark:text-font-important-dark" id="stat-streak">
-                <span class="animate-pulse bg-base-200 dark:bg-base-700 h-10 w-24 rounded block"></span>
-            </p>
-            <p class="text-xs text-font-secondary-light dark:text-font-secondary-dark">
-                Días consecutivos de práctica
-            </p>
-        </div>
-    </div>
-
-    <!-- Heatmap de Actividad -->
-    <div class="mb-8 rounded-xl border border-base-200 dark:border-base-700 bg-white dark:bg-base-900 shadow-sm overflow-hidden p-5">
-        <h2 class="text-sm font-bold text-font-important-light dark:text-font-important-dark mb-4">
-            Intensidad de práctica (Último año)
-        </h2>
-        <div id="heatmap-skeleton" class="animate-pulse bg-base-200 dark:bg-base-700 h-32 w-full rounded"></div>
-        <div id="cal-heatmap" class="overflow-x-auto" style="display:none;"></div>
-    </div>
-
-    <!-- Fila Media -->
-    <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 mb-8">
         <!-- Progreso por competencia -->
-        <div class="rounded-xl border border-base-200 dark:border-base-700 bg-white dark:bg-base-900 shadow-sm overflow-hidden">
-            <div class="px-5 py-4 border-b border-base-200 dark:border-base-700">
-                <h2 class="text-sm font-bold text-font-important-light dark:text-font-important-dark">
-                    Progreso por competencia
-                </h2>
-                <p class="text-xs text-font-secondary-light dark:text-font-secondary-dark mt-0.5">
-                    Niveles completados vs intentados
-                </p>
-            </div>
-            <div class="p-5 flex flex-col gap-5" id="competence-container">
-                <div class="animate-pulse flex flex-col gap-2">
-                    <div class="h-4 bg-base-200 dark:bg-base-700 rounded w-1/3"></div>
-                    <div class="h-2 bg-base-200 dark:bg-base-700 rounded w-full"></div>
+        <section class="rt-card" aria-labelledby="rt-competence-title">
+            {% include "reta2/components/card_head.html" with title="Progreso por competencia" desc="Niveles completados frente a niveles intentados" %}
+            <div class="rt-card__body" id="competence-container" aria-live="polite" aria-busy="true">
+                <div class="rt-progress-row" aria-hidden="true">
+                    <span class="rt-skeleton rt-skeleton--chip"></span>
+                    <span class="rt-skeleton rt-skeleton--line"></span>
                 </div>
-                <div class="animate-pulse flex flex-col gap-2">
-                    <div class="h-4 bg-base-200 dark:bg-base-700 rounded w-1/3"></div>
-                    <div class="h-2 bg-base-200 dark:bg-base-700 rounded w-full"></div>
+                <div class="rt-progress-row" aria-hidden="true">
+                    <span class="rt-skeleton rt-skeleton--chip"></span>
+                    <span class="rt-skeleton rt-skeleton--line"></span>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <!-- Últimos reportes -->
-        <div class="rounded-xl border border-base-200 dark:border-base-700 bg-white dark:bg-base-900 shadow-sm overflow-hidden">
-            <div class="px-5 py-4 border-b border-base-200 dark:border-base-700">
-                <h2 class="text-sm font-bold text-font-important-light dark:text-font-important-dark">
-                    Últimas sincronizaciones
-                </h2>
-            </div>
-            <div class="divide-y divide-base-200 dark:divide-base-700" id="reports-container">
-                <div class="px-5 py-4 flex items-center justify-between animate-pulse">
-                    <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-full bg-base-200 dark:bg-base-700 flex-shrink-0"></div>
-                        <div class="flex flex-col gap-2 w-32">
-                            <div class="h-3 bg-base-200 dark:bg-base-700 rounded"></div>
-                            <div class="h-2 bg-base-200 dark:bg-base-700 rounded"></div>
+        <!-- Últimas sincronizaciones -->
+        <section class="rt-card" aria-labelledby="rt-latest-title">
+            {% include "reta2/components/card_head.html" with title="Últimas sincronizaciones" desc="Los cinco reportes más recientes" %}
+            <div class="rt-card__body rt-card__body--flush">
+                <div class="rt-list" id="reports-container" aria-live="polite" aria-busy="true">
+                    <div class="rt-list__item" aria-hidden="true">
+                        <span class="rt-skeleton" style="width:36px;height:36px;border-radius:var(--rt-radius);"></span>
+                        <div class="rt-list__main">
+                            <span class="rt-skeleton rt-skeleton--chip"></span>
                         </div>
                     </div>
-                </div>
-                <div class="px-5 py-4 flex items-center justify-between animate-pulse">
-                    <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-full bg-base-200 dark:bg-base-700 flex-shrink-0"></div>
-                        <div class="flex flex-col gap-2 w-32">
-                            <div class="h-3 bg-base-200 dark:bg-base-700 rounded"></div>
-                            <div class="h-2 bg-base-200 dark:bg-base-700 rounded"></div>
+                    <div class="rt-list__item" aria-hidden="true">
+                        <span class="rt-skeleton" style="width:36px;height:36px;border-radius:var(--rt-radius);"></span>
+                        <div class="rt-list__main">
+                            <span class="rt-skeleton rt-skeleton--chip"></span>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
     </div>
-    
-    <!-- Tabla Comparativa Cohortes -->
-    <div class="rounded-xl border border-base-200 dark:border-base-700 bg-white dark:bg-base-900 shadow-sm overflow-hidden mb-8">
-        <div class="px-5 py-4 border-b border-base-200 dark:border-base-700 flex justify-between items-center">
-            <h2 class="text-sm font-bold text-font-important-light dark:text-font-important-dark flex items-center gap-1">
-                Rendimiento por Programa Académico
-                <span class="material-symbols-outlined text-[14px] cursor-help text-font-secondary-light" title="Comparativa del desempeño promedio agrupado por programa.">info</span>
-            </h2>
+
+    <!-- Comparativa por programa -->
+    <section class="rt-card" aria-labelledby="rt-cohorts-title">
+        {% include "reta2/components/card_head.html" with title="Rendimiento por programa académico" desc="Desempeño promedio agrupado por cohorte" %}
+        <div class="rt-card__body rt-card__body--flush">
+            <div class="rt-table-wrap">
+                <table class="rt-table rt-table--stack">
+                    <caption class="rt-sr-only">Promedio de preguntas respondidas y racha por programa académico</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Programa</th>
+                            <th scope="col" class="rt-num">Estudiantes</th>
+                            <th scope="col" class="rt-num">Promedio preguntas</th>
+                            <th scope="col" class="rt-num">Racha promedio</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cohorts-container" aria-live="polite" aria-busy="true">
+                        <tr aria-hidden="true">
+                            <td data-label=""><span class="rt-skeleton rt-skeleton--chip"></span></td>
+                            <td data-label="Estudiantes" class="rt-num"><span class="rt-skeleton rt-skeleton--chip"></span></td>
+                            <td data-label="Promedio preguntas" class="rt-num"><span class="rt-skeleton rt-skeleton--chip"></span></td>
+                            <td data-label="Racha promedio" class="rt-num"><span class="rt-skeleton rt-skeleton--chip"></span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-base-50 dark:bg-base-800 text-xs uppercase text-font-secondary-light dark:text-font-secondary-dark border-b border-base-200 dark:border-base-700">
-                        <th class="px-5 py-3 font-semibold">Programa</th>
-                        <th class="px-5 py-3 font-semibold">Estudiantes</th>
-                        <th class="px-5 py-3 font-semibold">Promedio Preguntas</th>
-                        <th class="px-5 py-3 font-semibold">Racha Promedio</th>
-                    </tr>
-                </thead>
-                <tbody id="cohorts-container" class="text-sm text-font-important-light dark:text-font-important-dark divide-y divide-base-200 dark:divide-base-700">
-                    <tr class="animate-pulse">
-                        <td class="px-5 py-3"><div class="h-3 bg-base-200 dark:bg-base-700 rounded w-24"></div></td>
-                        <td class="px-5 py-3"><div class="h-3 bg-base-200 dark:bg-base-700 rounded w-10"></div></td>
-                        <td class="px-5 py-3"><div class="h-3 bg-base-200 dark:bg-base-700 rounded w-16"></div></td>
-                        <td class="px-5 py-3"><div class="h-3 bg-base-200 dark:bg-base-700 rounded w-16"></div></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
+    </section>
 
 </div>
 
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
 <!-- Cal-Heatmap CSS & JS -->
 <script src="https://d3js.org/d3.v7.min.js"></script>
 <script src="https://unpkg.com/cal-heatmap/dist/cal-heatmap.min.js"></script>
@@ -189,6 +105,8 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const done = (el) => { if (el) el.setAttribute('aria-busy', 'false'); };
+
         fetch('/api/dashboard-data/')
             .then(response => response.json())
             .then(data => {
@@ -197,67 +115,92 @@
                 document.getElementById('stat-reports').innerText = data.total_reports;
                 document.getElementById('stat-questions').innerText = data.total_questions;
                 document.getElementById('stat-streak').innerText = data.avg_streak + ' días';
+                done(document.getElementById('rt-kpi-grid'));
 
                 // Render Competence Progress
                 const compContainer = document.getElementById('competence-container');
                 compContainer.innerHTML = '';
                 if (data.competence_progress.length === 0) {
-                    compContainer.innerHTML = '<p class="text-sm text-center py-8">No hay datos</p>';
+                    compContainer.innerHTML = `
+                        <div class="rt-empty">
+                            <span class="material-symbols-outlined rt-empty__icon" aria-hidden="true">insights</span>
+                            <p class="rt-empty__title">Sin datos de competencias</p>
+                            <p class="rt-empty__text">Aparecerán cuando los estudiantes completen niveles.</p>
+                        </div>`;
                 } else {
                     data.competence_progress.forEach(comp => {
                         let pct = comp.total > 0 ? (comp.completed / comp.total) * 100 : 0;
                         compContainer.innerHTML += `
-                        <div>
-                            <div class="flex justify-between items-center mb-1.5">
-                                <span class="text-sm font-medium">${comp.competence_name}</span>
-                                <span class="text-xs font-semibold text-primary-600">${comp.completed}/${comp.total}</span>
+                        <div class="rt-progress-row">
+                            <div class="rt-progress-row__top">
+                                <span class="rt-progress-row__name">${comp.competence_name}</span>
+                                <span class="rt-progress-row__meta">
+                                    <span class="rt-progress-row__count">${comp.completed}/${comp.total}</span>
+                                </span>
                             </div>
-                            <div class="w-full bg-base-200 dark:bg-base-700 rounded-full h-2">
-                                <div class="bg-primary-600 dark:bg-primary-400 h-2 rounded-full" style="width: ${pct}%"></div>
+                            <div class="rt-progress" role="progressbar"
+                                 aria-label="${comp.competence_name}: ${comp.completed} de ${comp.total} niveles completados"
+                                 aria-valuenow="${comp.completed}" aria-valuemin="0" aria-valuemax="${comp.total}">
+                                <div class="rt-progress__bar" style="width: ${pct}%"></div>
                             </div>
                         </div>`;
                     });
                 }
+                done(compContainer);
 
                 // Render Reports
                 const repContainer = document.getElementById('reports-container');
                 repContainer.innerHTML = '';
                 if (data.latest_reports.length === 0) {
-                    repContainer.innerHTML = '<p class="text-sm text-center py-8">No hay reportes</p>';
+                    repContainer.innerHTML = `
+                        <div class="rt-empty">
+                            <span class="material-symbols-outlined rt-empty__icon" aria-hidden="true">sync_disabled</span>
+                            <p class="rt-empty__title">Sin sincronizaciones</p>
+                            <p class="rt-empty__text">Los reportes aparecerán aquí cuando la app envíe datos.</p>
+                        </div>`;
                 } else {
                     data.latest_reports.forEach(rep => {
                         let letter = rep.username.charAt(0).toUpperCase();
                         let date = new Date(rep.reported_at).toLocaleString();
                         repContainer.innerHTML += `
-                        <div class="px-5 py-4 flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="w-9 h-9 rounded-full bg-primary-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">${letter}</div>
-                                <div>
-                                    <p class="text-sm font-semibold">${rep.username}</p>
-                                    <p class="text-xs text-font-secondary-light">${rep.total_questions_answered} preguntas &bull; 🔥 ${rep.current_streak_days} días</p>
-                                </div>
+                        <div class="rt-list__item">
+                            <span class="rt-avatar" aria-hidden="true">${letter}</span>
+                            <div class="rt-list__main">
+                                <p class="rt-list__title">${rep.username}</p>
+                                <p class="rt-list__meta">${rep.total_questions_answered} PREGUNTAS · RACHA ${rep.current_streak_days}</p>
                             </div>
-                            <span class="text-xs text-font-secondary-light ml-4">${date}</span>
+                            <span class="rt-list__aside">${date}</span>
                         </div>`;
                     });
                 }
+                done(repContainer);
 
                 // Render Cohorts
                 const cohortContainer = document.getElementById('cohorts-container');
                 cohortContainer.innerHTML = '';
                 if (data.cohorts.length === 0) {
-                    cohortContainer.innerHTML = '<tr><td colspan="4" class="px-5 py-3 text-center text-sm">No hay datos comparativos</td></tr>';
+                    cohortContainer.innerHTML = `
+                        <tr>
+                            <td colspan="4" data-label="">
+                                <div class="rt-empty">
+                                    <span class="material-symbols-outlined rt-empty__icon" aria-hidden="true">school</span>
+                                    <p class="rt-empty__title">Sin datos comparativos</p>
+                                    <p class="rt-empty__text">Asigna el programa académico a los estudiantes para ver esta comparativa.</p>
+                                </div>
+                            </td>
+                        </tr>`;
                 } else {
                     data.cohorts.forEach(coh => {
                         cohortContainer.innerHTML += `
-                        <tr class="hover:bg-base-50 dark:hover:bg-base-800/50">
-                            <td class="px-5 py-3 font-medium">${coh.academic_program}</td>
-                            <td class="px-5 py-3">${coh.students}</td>
-                            <td class="px-5 py-3">${Math.round(coh.avg_questions)}</td>
-                            <td class="px-5 py-3">${Math.round(coh.avg_streak)}</td>
+                        <tr>
+                            <td data-label="" class="rt-strong">${coh.academic_program}</td>
+                            <td data-label="Estudiantes" class="rt-num">${coh.students}</td>
+                            <td data-label="Promedio preguntas" class="rt-num">${Math.round(coh.avg_questions)}</td>
+                            <td data-label="Racha promedio" class="rt-num">${Math.round(coh.avg_streak)}</td>
                         </tr>`;
                     });
                 }
+                done(cohortContainer);
 
                 // Initialize Heatmap
                 document.getElementById('heatmap-skeleton').style.display = 'none';
@@ -267,17 +210,25 @@
                 let heatmapDataArray = Object.keys(data.heatmap_data).map(key => {
                     return { date: parseInt(key)*1000, value: data.heatmap_data[key] };
                 });
-                
+
                 let d = new Date();
                 d.setMonth(d.getMonth() - 11);
-                
+
+                const isDark = document.documentElement.classList.contains('dark');
+                // Serie de datos en la escala del acento institucional (DESIGN.md:
+                // el color del sistema solo aparece como puntuación funcional)
+                const heatRange = isDark
+                    ? ['#1f5e8f', '#2b7ab8', '#4e9fe0', '#7dc5ea']
+                    : ['#b7e9ff', '#7dc5ea', '#4e88ca', '#005b99'];
+
                 cal.paint({
                     itemSelector: '#cal-heatmap',
                     domain: { type: 'month', label: { text: 'MMM', textAlign: 'start', position: 'top' } },
                     subDomain: { type: 'ghDay', radius: 2, width: 11, height: 11, gutter: 4 },
                     data: { source: heatmapDataArray, x: 'date', y: 'value' },
                     date: { start: d },
-                    theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+                    scale: { color: { type: 'threshold', range: heatRange, domain: [1, 3, 6] } },
+                    theme: isDark ? 'dark' : 'light',
                 });
             })
             .catch(err => console.error("Error loading dashboard data:", err));

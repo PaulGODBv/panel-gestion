@@ -1,0 +1,28 @@
+{% comment %}
+    Fila de progreso (competencia).
+
+    Parámetros:
+      name      — nombre de la competencia
+      completed — niveles completados
+      total     — niveles intentados
+      meta      — texto adicional a la izquierda del contador (opcional)
+{% endcomment %}
+<div class="rt-progress-row">
+    <div class="rt-progress-row__top">
+        <span class="rt-progress-row__name">{{ name }}</span>
+        <span class="rt-progress-row__meta">
+            {% if meta %}<span>{{ meta }}</span>{% endif %}
+            <span class="rt-progress-row__count">{{ completed }}/{{ total }}</span>
+        </span>
+    </div>
+    <div class="rt-progress"
+         role="progressbar"
+         aria-label="{{ name }}: {{ completed }} de {{ total }} niveles completados"
+         aria-valuenow="{{ completed }}"
+         aria-valuemin="0"
+         aria-valuemax="{{ total }}">
+        {% if total > 0 %}
+            <div class="rt-progress__bar" style="width: {% widthratio completed total 100 %}%"></div>
+        {% endif %}
+    </div>
+</div>

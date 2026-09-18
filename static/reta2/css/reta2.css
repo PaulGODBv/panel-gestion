@@ -1,0 +1,1260 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* =============================================================================
+   RETA2 — Capa visual "Dovetail"
+   Fuente de verdad: DESIGN.md
+   -----------------------------------------------------------------------------
+   Esta hoja NO reemplaza a Unfold: reescribe sus variables de color, radio y
+   tipografía, y añade una capa de componentes propios con prefijo .rt-*
+   para no colisionar nunca con las utilidades de Tailwind compiladas.
+
+   Orden del archivo:
+     1. Tokens Dovetail
+     2. Mapeo a las variables de Unfold (tema claro y oscuro)
+     3. Utilidades ausentes en el build de Unfold
+     4. Base, foco y accesibilidad
+     5. Componentes .rt-*
+     6. Responsive
+   ========================================================================== */
+
+
+/* =============================================================================
+   1. TOKENS — DESIGN.md
+   ========================================================================== */
+
+html:root {
+    /* Paleta Dovetail literal */
+    --rt-pure-black: #000000;
+    --rt-carbon:     #0a0a0a;
+    --rt-graphite:   #141414;
+    --rt-iron:       #1e1e1e;
+    --rt-slate-edge: #313131;
+    --rt-smoke:      #454545;
+    --rt-mist:       #7c7c7c;
+    --rt-ash:        #a7a7a7;
+    --rt-bone:       #ffffff;
+
+    /* Acento institucional UDES */
+    --rt-udes-50:  #f0f8ff;
+    --rt-udes-100: #dbeeff;
+    --rt-udes-200: #b7e9ff;
+    --rt-udes-300: #7dc5ea;
+    --rt-udes-400: #4e88ca;
+    --rt-udes-500: #005b99;
+    --rt-udes-600: #004e82;
+    --rt-udes-700: #00416c;
+    --rt-udes-800: #003457;
+    --rt-udes-900: #002741;
+    --rt-udes-950: #001a2b;
+
+    /* Tipografía */
+    --rt-font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --rt-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+    --rt-text-caption: 12px;
+    --rt-text-body-sm: 14px;
+    --rt-text-body: 16px;
+    --rt-text-heading-sm: 20px;
+    --rt-text-heading: 24px;
+    --rt-text-heading-lg: 40px;
+
+    --rt-tracking-caption: 0.85px;
+    --rt-tracking-body: -0.25px;
+    --rt-tracking-heading-sm: -0.42px;
+    --rt-tracking-heading: -0.6px;
+    --rt-tracking-heading-lg: -0.84px;
+
+    /* Espaciado — base 8px */
+    --rt-space-1: 8px;
+    --rt-space-2: 16px;
+    --rt-space-3: 24px;
+    --rt-space-4: 32px;
+    --rt-space-5: 40px;
+    --rt-space-8: 64px;
+
+    /* Radios — 8px es la firma del sistema */
+    --rt-radius-tag: 4px;
+    --rt-radius: 8px;
+    --rt-radius-pill: 9999px;
+
+    --rt-card-padding: 24px;
+    --rt-page-max: 1200px;
+
+    /* ---- Roles semánticos: TEMA CLARO (derivado) ------------------------- */
+    --rt-canvas: #fafafa;
+    --rt-surface: #ffffff;
+    --rt-surface-2: #f4f4f5;
+    --rt-surface-inset: #f4f4f5;
+
+    --rt-border: #e4e4e7;
+    --rt-border-soft: #ececef;
+    --rt-border-strong: #d0d0d6;
+
+    --rt-text: #0a0a0a;
+    --rt-text-2: #52525b;
+    --rt-text-3: #71717a;
+
+    --rt-accent: var(--rt-udes-500);
+    --rt-accent-hover: var(--rt-udes-600);
+    --rt-accent-quiet: #e7f1f8;
+    --rt-accent-on: #ffffff;
+
+    /* Acción primaria: relleno oscuro sobre lienzo claro */
+    --rt-action-bg: var(--rt-udes-500);
+    --rt-action-fg: #ffffff;
+    --rt-action-bg-hover: var(--rt-udes-600);
+
+    /* Estados semánticos (icono + texto siempre acompañan al color) */
+    --rt-ok: #15803d;
+    --rt-ok-bg: #f0fdf4;
+    --rt-ok-border: #bbf7d0;
+    --rt-warn: #b45309;
+    --rt-warn-bg: #fffbeb;
+    --rt-warn-border: #fde68a;
+    --rt-danger: #b91c1c;
+    --rt-danger-bg: #fef2f2;
+    --rt-danger-border: #fecaca;
+
+    --rt-grid-line: rgba(10, 10, 10, 0.045);
+}
+
+/* ---- Roles semánticos: TEMA OSCURO (Dovetail literal) -------------------- */
+html.dark {
+    --rt-canvas: var(--rt-carbon);
+    --rt-surface: var(--rt-graphite);
+    --rt-surface-2: var(--rt-iron);
+    --rt-surface-inset: var(--rt-pure-black);
+
+    --rt-border: var(--rt-iron);
+    --rt-border-soft: #191919;
+    --rt-border-strong: var(--rt-slate-edge);
+
+    --rt-text: var(--rt-bone);
+    --rt-text-2: var(--rt-ash);
+    --rt-text-3: var(--rt-mist);
+
+    /* El azul UDES puro se hunde sobre #0a0a0a: sobre lienzo oscuro se usa
+       el escalón claro de la misma familia para conservar el contraste. */
+    --rt-accent: #4e9fe0;
+    --rt-accent-hover: #7dc5ea;
+    --rt-accent-quiet: rgba(78, 159, 224, 0.14);
+    --rt-accent-on: var(--rt-carbon);
+
+    /* Dovetail: la acción primaria es blanca con texto negro */
+    --rt-action-bg: var(--rt-bone);
+    --rt-action-fg: var(--rt-carbon);
+    --rt-action-bg-hover: #e6e6e6;
+
+    --rt-ok: #4ade80;
+    --rt-ok-bg: rgba(74, 222, 128, 0.1);
+    --rt-ok-border: rgba(74, 222, 128, 0.3);
+    --rt-warn: #fbbf24;
+    --rt-warn-bg: rgba(251, 191, 36, 0.1);
+    --rt-warn-border: rgba(251, 191, 36, 0.3);
+    --rt-danger: #f87171;
+    --rt-danger-bg: rgba(248, 113, 113, 0.1);
+    --rt-danger-border: rgba(248, 113, 113, 0.32);
+
+    --rt-grid-line: rgba(255, 255, 255, 0.035);
+}
+
+
+/* =============================================================================
+   2. MAPEO A UNFOLD
+   Redefinir estas variables tematiza todo el admin nativo (sidebar, cabecera,
+   changelist, formularios, filtros, login) sin tocar ni una plantilla suya.
+   Se usa html:root para ganar al <style id="unfold-theme-colors"> inline.
+   ========================================================================== */
+
+html:root {
+    /* Escala neutra: el extremo bajo sirve al tema claro, el alto al oscuro */
+    --color-base-50:  #fafafa;
+    --color-base-100: #f4f4f5;
+    --color-base-200: #e4e4e7;
+    --color-base-300: var(--rt-ash);
+    --color-base-400: var(--rt-mist);
+    --color-base-500: #5f5f66;
+    --color-base-600: var(--rt-smoke);
+    --color-base-700: var(--rt-iron);
+    --color-base-800: var(--rt-graphite);
+    --color-base-900: var(--rt-carbon);
+    --color-base-950: var(--rt-pure-black);
+
+    /* Jerarquía tipográfica de Unfold */
+    --color-font-important-light: #0a0a0a;
+    --color-font-default-light:   #3f3f46;
+    --color-font-subtle-light:    #5f5f66;
+    --color-font-important-dark:  var(--rt-bone);
+    --color-font-default-dark:    var(--rt-ash);
+    --color-font-subtle-dark:     var(--rt-mist);
+
+    /* Acento institucional en formato válido para Unfold 0.104
+       (el dict UNFOLD["COLORS"] del proyecto usa el formato antiguo "R G B",
+       que esta versión ya no interpreta; aquí queda corregido) */
+    --color-primary-50:  var(--rt-udes-50);
+    --color-primary-100: var(--rt-udes-100);
+    --color-primary-200: var(--rt-udes-200);
+    --color-primary-300: var(--rt-udes-300);
+    --color-primary-400: var(--rt-udes-400);
+    --color-primary-500: var(--rt-udes-500);
+    --color-primary-600: var(--rt-udes-600);
+    --color-primary-700: var(--rt-udes-700);
+    --color-primary-800: var(--rt-udes-800);
+    --color-primary-900: var(--rt-udes-900);
+    --color-primary-950: var(--rt-udes-950);
+
+    /* 8px es el radio firma del sistema */
+    --border-radius: 8px;
+    --radius-default: 8px;
+}
+
+/* Sobre lienzo oscuro el azul institucional se aclara para no perder contraste */
+html.dark {
+    --color-primary-300: #a8d8f5;
+    --color-primary-400: #7dc5ea;
+    --color-primary-500: #4e9fe0;
+    --color-primary-600: #3a8fd6;
+    --color-primary-700: #2b7ab8;
+    --color-primary-800: #1f5e8f;
+    --color-primary-900: #17456a;
+}
+
+
+/* =============================================================================
+   3. UTILIDADES AUSENTES EN EL BUILD DE UNFOLD
+   Clases que las plantillas ya usaban pero que no existían en styles.css.
+   ========================================================================== */
+
+.text-font-secondary-light { color: var(--rt-text-2); }
+html.dark .dark\:text-font-secondary-dark { color: var(--rt-text-2); }
+.placeholder-font-secondary-light::placeholder { color: var(--rt-text-3); }
+html.dark .dark\:placeholder-font-secondary-dark::placeholder { color: var(--rt-text-3); }
+
+.tracking-wider { letter-spacing: var(--rt-tracking-caption); }
+.font-extrabold { font-weight: 600; } /* Dovetail no pasa de semibold */
+.flex-shrink-0 { flex-shrink: 0; }
+.flex-grow { flex-grow: 1; }
+
+.divide-y > * + * { border-top: 1px solid var(--rt-border); }
+.divide-base-200 > * + *,
+html.dark .dark\:divide-base-700 > * + * { border-top-color: var(--rt-border); }
+
+@keyframes rt-pulse { 50% { opacity: .35; } }
+.animate-pulse { animation: rt-pulse 1.8s cubic-bezier(.4, 0, .6, 1) infinite; }
+
+@media (min-width: 640px) {
+    .sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .sm\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .sm\:justify-between { justify-content: space-between; }
+}
+
+
+/* =============================================================================
+   4. BASE, FOCO Y ACCESIBILIDAD
+   ========================================================================== */
+
+html:root body {
+    font-family: var(--rt-font-sans);
+    letter-spacing: var(--rt-tracking-body);
+    font-feature-settings: "liga" 1;
+    background-color: var(--rt-canvas);
+    color: var(--rt-text);
+}
+
+html.dark body { background-color: var(--rt-canvas); }
+
+/* Unfold pinta #main en blanco fijo: se alinea al lienzo del sistema */
+html:root #main { background-color: var(--rt-canvas); }
+
+/* La profundidad viene del escalón de superficie, no de sombras */
+html.dark #main,
+html.dark #content { box-shadow: none; }
+
+/* Foco siempre visible, nunca solo por color */
+html:root :focus-visible {
+    outline: 2px solid var(--rt-accent);
+    outline-offset: 2px;
+    border-radius: var(--rt-radius-tag);
+}
+
+html:root ::selection {
+    background: var(--rt-accent);
+    color: var(--rt-accent-on);
+}
+
+.rt-sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.rt-skip {
+    position: absolute;
+    left: 8px; top: -60px;
+    z-index: 100;
+    padding: 10px 16px;
+    background: var(--rt-surface);
+    color: var(--rt-text);
+    border: 1px solid var(--rt-border-strong);
+    border-radius: var(--rt-radius);
+    font-size: var(--rt-text-body-sm);
+    transition: top .15s ease;
+}
+.rt-skip:focus { top: 8px; }
+
+@media (prefers-reduced-motion: reduce) {
+    html:root *,
+    html:root *::before,
+    html:root *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+    }
+}
+
+
+/* =============================================================================
+   5. COMPONENTES
+   ========================================================================== */
+
+/* ---- 5.1 Estructura de página ------------------------------------------- */
+
+.rt-page {
+    max-width: var(--rt-page-max);
+    margin-inline: auto;
+    padding: var(--rt-space-3) var(--rt-space-2) var(--rt-space-8);
+    display: flex;
+    flex-direction: column;
+    gap: var(--rt-space-4);
+    overflow-x: clip;
+}
+
+.rt-page--wide { max-width: none; }
+
+.rt-page__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--rt-space-2);
+    padding-bottom: var(--rt-space-3);
+    border-bottom: 1px solid var(--rt-border);
+}
+
+.rt-page__headings { min-width: 0; }
+
+.rt-page__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--rt-space-1);
+}
+
+/* Eyebrow: JetBrains Mono, versalita, tracking ancho — voz de metadato */
+.rt-eyebrow {
+    display: block;
+    font-family: var(--rt-font-mono);
+    font-size: var(--rt-text-caption);
+    font-weight: 400;
+    line-height: 1.4;
+    letter-spacing: var(--rt-tracking-caption);
+    text-transform: uppercase;
+    color: var(--rt-text-2);
+    margin-bottom: var(--rt-space-1);
+}
+
+.rt-title {
+    font-size: clamp(26px, 4vw, var(--rt-text-heading-lg));
+    line-height: 1.2;
+    letter-spacing: var(--rt-tracking-heading-lg);
+    font-weight: 500;
+    color: var(--rt-text);
+    margin: 0;
+}
+
+.rt-subtitle {
+    margin: var(--rt-space-1) 0 0;
+    font-size: var(--rt-text-body-sm);
+    line-height: 1.57;
+    color: var(--rt-text-2);
+    max-width: 68ch;
+}
+
+/* Rejilla de plano: firma visual del sistema, solo en cabeceras y vacíos */
+.rt-grid-bg {
+    position: relative;
+    isolation: isolate;
+}
+.rt-grid-bg::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image:
+        linear-gradient(to right, var(--rt-grid-line) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--rt-grid-line) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: linear-gradient(to bottom, #000 0%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 100%);
+    pointer-events: none;
+}
+
+/* ---- 5.2 Rejillas -------------------------------------------------------- */
+
+.rt-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--rt-space-4);
+    min-width: 0;
+}
+
+.rt-stack--tight { gap: var(--rt-space-3); }
+
+.rt-grid { display: grid; gap: var(--rt-space-2); }
+.rt-grid--kpi   { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+.rt-grid--halves{ grid-template-columns: repeat(1, minmax(0, 1fr)); gap: var(--rt-space-3); }
+
+@media (min-width: 480px) {
+    .rt-grid--kpi { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1024px) {
+    .rt-grid--halves { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1280px) {
+    .rt-grid--kpi { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* ---- 5.3 Card ------------------------------------------------------------ */
+
+.rt-card {
+    background: var(--rt-surface);
+    border: 1px solid var(--rt-border);
+    border-radius: var(--rt-radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.rt-card__head {
+    padding: var(--rt-space-2) var(--rt-card-padding);
+    border-bottom: 1px solid var(--rt-border);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--rt-space-2);
+}
+
+.rt-card__title {
+    margin: 0;
+    font-size: var(--rt-text-heading-sm);
+    line-height: 1.33;
+    letter-spacing: var(--rt-tracking-heading-sm);
+    font-weight: 500;
+    color: var(--rt-text);
+}
+
+.rt-card__desc {
+    margin: 4px 0 0;
+    font-size: var(--rt-text-body-sm);
+    line-height: 1.5;
+    color: var(--rt-text-2);
+}
+
+.rt-card__body {
+    padding: var(--rt-card-padding);
+    display: flex;
+    flex-direction: column;
+    gap: var(--rt-space-3);
+    min-width: 0;
+}
+
+.rt-card__body--flush { padding: 0; gap: 0; }
+
+/* ---- 5.4 KPI ------------------------------------------------------------- */
+
+.rt-kpi {
+    background: var(--rt-surface);
+    border: 1px solid var(--rt-border);
+    border-radius: var(--rt-radius);
+    padding: var(--rt-space-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--rt-space-1);
+    min-width: 0;
+}
+
+.rt-kpi__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--rt-space-1);
+}
+
+.rt-kpi__label {
+    font-family: var(--rt-font-mono);
+    font-size: var(--rt-text-caption);
+    letter-spacing: var(--rt-tracking-caption);
+    text-transform: uppercase;
+    color: var(--rt-text-2);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.rt-kpi__icon {
+    color: var(--rt-accent);
+    font-size: 20px;
+    line-height: 1;
+}
+
+.rt-kpi__value {
+    font-size: var(--rt-text-heading-lg);
+    line-height: 1.2;
+    letter-spacing: var(--rt-tracking-heading-lg);
+    font-weight: 500;
+    color: var(--rt-text);
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+}
+
+.rt-kpi__value--text {
+    font-size: var(--rt-text-body);
+    line-height: 1.5;
+    letter-spacing: var(--rt-tracking-body);
+    font-weight: 400;
+    color: var(--rt-text-2);
+    overflow-wrap: anywhere;
+}
+
+.rt-kpi__unit {
+    font-size: var(--rt-text-body);
+    letter-spacing: var(--rt-tracking-body);
+    font-weight: 400;
+    color: var(--rt-text-2);
+}
+
+.rt-kpi__hint {
+    font-size: var(--rt-text-body-sm);
+    line-height: 1.5;
+    color: var(--rt-text-2);
+    margin: 0;
+}
+
+/* Pista de ayuda accesible: no depende solo de title="" */
+.rt-hint {
+    color: var(--rt-text-3);
+    font-size: 14px;
+    line-height: 1;
+    cursor: help;
+}
+
+/* ---- 5.5 Botones --------------------------------------------------------- */
+
+.rt-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 8px 16px;
+    border-radius: var(--rt-radius);
+    border: 1px solid transparent;
+    font-family: var(--rt-font-sans);
+    font-size: var(--rt-text-body-sm);
+    font-weight: 500;
+    letter-spacing: var(--rt-tracking-body);
+    line-height: 1.2;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+}
+
+.rt-btn .material-symbols-outlined { font-size: 18px; }
+
+.rt-btn--primary {
+    background: var(--rt-action-bg);
+    color: var(--rt-action-fg);
+}
+.rt-btn--primary:hover { background: var(--rt-action-bg-hover); }
+
+.rt-btn--ghost {
+    background: transparent;
+    border-color: var(--rt-border-strong);
+    color: var(--rt-text);
+}
+.rt-btn--ghost:hover { background: var(--rt-surface-2); }
+
+.rt-btn--quiet {
+    background: transparent;
+    color: var(--rt-text-2);
+}
+.rt-btn--quiet:hover { background: var(--rt-surface-2); color: var(--rt-text); }
+
+.rt-btn--sm { min-height: 32px; padding: 4px 12px; font-size: var(--rt-text-caption); }
+
+.rt-btn[disabled],
+.rt-btn[aria-disabled="true"] {
+    color: var(--rt-mist);
+    background: var(--rt-surface-2);
+    border-color: var(--rt-border);
+    cursor: not-allowed;
+}
+
+/* ---- 5.6 Formularios ----------------------------------------------------- */
+
+.rt-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--rt-space-1);
+}
+
+.rt-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.rt-label {
+    font-family: var(--rt-font-mono);
+    font-size: var(--rt-text-caption);
+    letter-spacing: var(--rt-tracking-caption);
+    text-transform: uppercase;
+    color: var(--rt-text-2);
+}
+
+.rt-input {
+    min-height: 40px;
+    padding: 8px 12px;
+    background: var(--rt-surface);
+    border: 1px solid var(--rt-border-strong);
+    border-radius: var(--rt-radius);
+    color: var(--rt-text);
+    font-family: var(--rt-font-sans);
+    font-size: var(--rt-text-body-sm);
+    letter-spacing: var(--rt-tracking-body);
+    width: 100%;
+}
+
+.rt-input::placeholder { color: var(--rt-text-3); }
+.rt-input:hover { border-color: var(--rt-slate-edge); }
+
+.rt-input--search { min-width: 220px; }
+.rt-input--date { min-width: 150px; }
+
+html.dark .rt-input::-webkit-calendar-picker-indicator { filter: invert(1) opacity(.6); }
+
+.rt-file {
+    width: 100%;
+    font-size: var(--rt-text-body-sm);
+    color: var(--rt-text-2);
+}
+.rt-file::file-selector-button {
+    margin-right: 16px;
+    min-height: 40px;
+    padding: 8px 16px;
+    border: 1px solid var(--rt-border-strong);
+    border-radius: var(--rt-radius);
+    /* El navegador impone su propio fondo claro si se deja transparente */
+    background: var(--rt-surface-2);
+    color: var(--rt-text);
+    font-family: var(--rt-font-sans);
+    font-size: var(--rt-text-body-sm);
+    font-weight: 500;
+    cursor: pointer;
+}
+.rt-file::file-selector-button:hover { background: var(--rt-surface-2); }
+
+/* ---- 5.7 Tablas ---------------------------------------------------------- */
+
+.rt-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.rt-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--rt-text-body-sm);
+}
+
+.rt-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--rt-surface-2);
+    border-bottom: 1px solid var(--rt-border);
+    padding: 12px var(--rt-space-3);
+    text-align: left;
+    font-family: var(--rt-font-mono);
+    font-size: var(--rt-text-caption);
+    font-weight: 400;
+    letter-spacing: var(--rt-tracking-caption);
+    text-transform: uppercase;
+    color: var(--rt-text-2);
+    white-space: nowrap;
+}
+
+.rt-table tbody td {
+    padding: 14px var(--rt-space-3);
+    border-bottom: 1px solid var(--rt-border-soft);
+    color: var(--rt-text-2);
+    vertical-align: middle;
+}
+
+.rt-table tbody tr:last-child td { border-bottom: 0; }
+.rt-table tbody tr:hover { background: var(--rt-surface-2); }
+
+.rt-table .rt-num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: var(--rt-text);
+    font-weight: 500;
+}
+.rt-table th.rt-num { text-align: right; }
+.rt-table .rt-strong { color: var(--rt-text); font-weight: 500; }
+.rt-table .rt-nowrap { white-space: nowrap; }
+
+/* ---- 5.8 Badges de estado ------------------------------------------------ */
+
+.rt-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
+    border-radius: var(--rt-radius-tag);
+    border: 1px solid var(--rt-border-strong);
+    background: var(--rt-surface-2);
+    color: var(--rt-text-2);
+    font-family: var(--rt-font-mono);
+    font-size: var(--rt-text-caption);
+    letter-spacing: var(--rt-tracking-caption);
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.rt-badge .material-symbols-outlined { font-size: 14px; }
+
+.rt-badge--ok     { color: var(--rt-ok);     background: var(--rt-ok-bg);     border-color: var(--rt-ok-border); }
+.rt-badge--warn   { color: var(--rt-warn);   background: var(--rt-warn-bg);   border-color: var(--rt-warn-border); }
+.rt-badge--danger { color: var(--rt-danger); background: var(--rt-danger-bg); border-color: var(--rt-danger-border); }
+.rt-badge--accent { color: var(--rt-accent); background: var(--rt-accent-quiet); border-color: transparent; }
+
+/* ---- 5.9 Avatar ---------------------------------------------------------- */
+
+.rt-avatar {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    border-radius: var(--rt-radius);
+    background: var(--rt-accent-quiet);
+    color: var(--rt-accent);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--rt-text-body-sm);
+    font-weight: 600;
+    letter-spacing: 0;
+}
+
+/* ---- 5.10 Progreso ------------------------------------------------------- */
+
+.rt-progress {
+    height: 6px;
+    width: 100%;
+    background: var(--rt-surface-2);
+    border-radius: var(--rt-radius-pill);
+    overflow: hidden;
+}
+
+.rt-progress__bar {
+    height: 100%;
+    background: var(--rt-accent);
+    border-radius: var(--rt-radius-pill);
+}
+
+.rt-progress-row { display: flex; flex-direction: column; gap: 6px; }
+
+.rt-progress-row__top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--rt-space-2);
+    flex-wrap: wrap;
+}
+
+.rt-progress-row__name {
+    font-size: var(--rt-text-body-sm);
+    font-weight: 500;
+    color: var(--rt-text);
+}
+
+.rt-progress-row__meta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--rt-space-2);
+    font-family: var(--rt-font-mono);
+    font-size: var(--rt-text-caption);
+    letter-spacing: var(--rt-tracking-caption);
+    color: var(--rt-text-2);
+}
+
+.rt-progress-row__count { color: var(--rt-accent); }
+
+/* ---- 5.11 Listas --------------------------------------------------------- */
+
+.rt-list { display: flex; flex-direction: column; }
+
+.rt-list__item {
+    display: flex;
+    align-items: center;
+    gap: var(--rt-space-2);
+    padding: 14px var(--rt-card-padding);
+    border-bottom: 1px solid var(--rt-border-soft);
+    min-width: 0;
+}
+
+.rt-list__item:last-child { border-bottom: 0; }
+
+.rt-list__main { min-width: 0; flex: 1; }
+
+.rt-list__title {
+    margin: 0;
+    font-size: var(--rt-text-body-sm);
+    font-weight: 500;
+    color: var(--rt-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rt-list__meta {
+    margin: 2px 0 0;
+    font-family: var(--rt-font-mono);
+    font-size: var(--rt-text-caption);
+    letter-spacing: var(--rt-tracking-caption);
+    color: var(--rt-text-2);
+}
+
+.rt-list__aside {
+    font-family: var(--rt-font-mono);
+    font-size: var(--rt-text-caption);
+    letter-spacing: var(--rt-tracking-caption);
+    color: var(--rt-text-3);
+    white-space: nowrap;
+}
+
+/* ---- 5.12 Estado vacío --------------------------------------------------- */
+
+.rt-empty {
+    padding: var(--rt-space-8) var(--rt-space-3);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--rt-space-1);
+}
+
+.rt-empty__icon {
+    color: var(--rt-text-3);
+    font-size: 32px;
+    margin-bottom: var(--rt-space-1);
+}
+
+.rt-empty__title {
+    margin: 0;
+    font-size: var(--rt-text-body);
+    font-weight: 500;
+    color: var(--rt-text);
+}
+
+.rt-empty__text {
+    margin: 0;
+    font-size: var(--rt-text-body-sm);
+    color: var(--rt-text-2);
+    max-width: 48ch;
+}
+
+/* ---- 5.13 Aviso / callout ------------------------------------------------ */
+
+.rt-note {
+    border: 1px solid var(--rt-border);
+    border-left: 2px solid var(--rt-accent);
+    background: var(--rt-surface-2);
+    border-radius: var(--rt-radius);
+    padding: var(--rt-space-2);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.rt-note--danger { border-left-color: var(--rt-danger); }
+
+.rt-note__title {
+    margin: 0;
+    font-family: var(--rt-font-mono);
+    font-size: var(--rt-text-caption);
+    letter-spacing: var(--rt-tracking-caption);
+    text-transform: uppercase;
+    color: var(--rt-text-2);
+}
+
+.rt-note__text {
+    margin: 0;
+    font-size: var(--rt-text-body-sm);
+    line-height: 1.57;
+    color: var(--rt-text-2);
+}
+
+.rt-code {
+    font-family: var(--rt-font-mono);
+    font-size: var(--rt-text-caption);
+    color: var(--rt-text);
+    background: var(--rt-surface-inset);
+    border: 1px solid var(--rt-border);
+    border-radius: var(--rt-radius-tag);
+    padding: 8px 10px;
+    display: block;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* ---- 5.14 Esqueletos de carga -------------------------------------------- */
+
+.rt-skeleton {
+    display: block;
+    background: var(--rt-surface-2);
+    border-radius: var(--rt-radius-tag);
+    animation: rt-pulse 1.8s cubic-bezier(.4, 0, .6, 1) infinite;
+}
+
+.rt-skeleton--value { height: 40px; width: 96px; }
+.rt-skeleton--line  { height: 10px; width: 100%; }
+.rt-skeleton--chip  { height: 12px; width: 120px; }
+.rt-skeleton--block { height: 132px; width: 100%; border-radius: var(--rt-radius); }
+
+/* ---- 5.15 Retoques sobre el admin nativo de Unfold ----------------------- */
+
+/* Tarjetas y paneles propios de Unfold: mismo radio y borde del sistema */
+html:root #content .rounded-default,
+html:root #content .rounded-lg,
+html:root #content .rounded-xl { border-radius: var(--rt-radius); }
+
+/* Títulos de grupo del sidebar con la voz de metadato del sistema
+   (#nav-sidebar nav h2 son solo los grupos; el título de marca queda fuera) */
+html:root #nav-sidebar nav h2 {
+    font-family: var(--rt-font-mono);
+    font-size: var(--rt-text-caption);
+    font-weight: 400;
+    letter-spacing: var(--rt-tracking-caption);
+    text-transform: uppercase;
+    color: var(--rt-text-3);
+}
+
+/* La navegación conserva el borde de Unfold, alineado al escalón de superficie */
+html:root #nav-sidebar { border-color: var(--rt-border); }
+
+/* Botones de acción del changelist/change_form */
+html:root #content .button,
+html:root #content input[type="submit"],
+html:root #content .submit-row input[type="submit"] {
+    border-radius: var(--rt-radius);
+    letter-spacing: var(--rt-tracking-body);
+}
+
+/* Cabeceras de tabla del admin nativo con la misma voz de metadato */
+html:root #result_list thead th,
+html:root #changelist thead th {
+    font-family: var(--rt-font-mono);
+    font-size: var(--rt-text-caption);
+    letter-spacing: var(--rt-tracking-caption);
+    text-transform: uppercase;
+}
+
+/* Etiqueta de estado renderizada desde core/admin.py (clases Tailwind de
+   paleta que no existen en el build): se normaliza sin tocar Python */
+html:root #content span[class*="bg-green-100"] { background: var(--rt-ok-bg);     color: var(--rt-ok);     border-color: var(--rt-ok-border); }
+html:root #content span[class*="bg-red-100"]   { background: var(--rt-danger-bg); color: var(--rt-danger); border-color: var(--rt-danger-border); }
+html:root #content span[class*="bg-gray-100"]  { background: var(--rt-surface-2); color: var(--rt-text-2); border-color: var(--rt-border-strong); }
+
+
+/* =============================================================================
+   6. RESPONSIVE
+   ========================================================================== */
+
+/* Tablet: la primera columna queda fija al desplazar en horizontal */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .rt-table--sticky tbody td:first-child,
+    .rt-table--sticky thead th:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 2;
+        background: var(--rt-surface);
+    }
+    .rt-table--sticky thead th:first-child { background: var(--rt-surface-2); }
+}
+
+/* Móvil: la tabla deja de ser tabla y pasa a lista de fichas.
+   Cada td expone su etiqueta con data-label — sin duplicar markup. */
+@media (max-width: 767px) {
+    .rt-page { padding: var(--rt-space-2) var(--rt-space-2) var(--rt-space-5); gap: var(--rt-space-3); }
+
+    .rt-table--stack thead {
+        position: absolute;
+        width: 1px; height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+    }
+
+    .rt-table--stack,
+    .rt-table--stack tbody,
+    .rt-table--stack tr,
+    .rt-table--stack td { display: block; width: 100%; }
+
+    .rt-table--stack tr {
+        border: 1px solid var(--rt-border);
+        border-radius: var(--rt-radius);
+        background: var(--rt-surface);
+        margin-bottom: var(--rt-space-1);
+        overflow: hidden;
+    }
+
+    .rt-table--stack tbody tr:hover { background: var(--rt-surface); }
+
+    .rt-table--stack td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--rt-space-2);
+        padding: 10px var(--rt-space-2);
+        text-align: right;
+        border-bottom: 1px solid var(--rt-border-soft);
+    }
+
+    .rt-table--stack td::before {
+        content: attr(data-label);
+        font-family: var(--rt-font-mono);
+        font-size: var(--rt-text-caption);
+        letter-spacing: var(--rt-tracking-caption);
+        text-transform: uppercase;
+        color: var(--rt-text-2);
+        text-align: left;
+        flex: 0 0 auto;
+    }
+
+    .rt-table--stack td.rt-num { text-align: right; }
+    .rt-table--stack td:last-child { border-bottom: 0; }
+
+    /* La celda identidad ocupa todo el ancho, sin etiqueta */
+    .rt-table--stack td[data-label=""] { justify-content: flex-start; text-align: left; }
+    .rt-table--stack td[data-label=""]::before { content: none; }
+
+    /* En pantallas estrechas la fecha baja a su propia línea: si compite con
+       el nombre en la misma fila, ambos se aplastan y acaban solapados. */
+    .rt-list__item { flex-wrap: wrap; }
+    .rt-list__main { flex: 1 1 120px; }
+    .rt-list__aside {
+        flex: 1 1 100%;
+        padding-left: calc(36px + var(--rt-space-2));
+        margin-top: -2px;
+        white-space: normal;
+    }
+
+    .rt-card__head,
+    .rt-card__body { padding-inline: var(--rt-space-2); }
+
+    .rt-kpi { padding: var(--rt-space-2); }
+    .rt-kpi__value { font-size: 28px; letter-spacing: -0.6px; }
+
+    .rt-page__head { align-items: flex-start; flex-direction: column; }
+    .rt-page__actions { width: 100%; }
+    .rt-btn { flex: 1 1 auto; }
+
+    .rt-input--search,
+    .rt-input--date { min-width: 0; width: 100%; }
+    .rt-field { width: 100%; }
+}
+
+/* Filtros colapsables en móvil, sin JavaScript */
+.rt-disclosure { width: 100%; }
+.rt-disclosure > summary {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 8px 16px;
+    border: 1px solid var(--rt-border-strong);
+    border-radius: var(--rt-radius);
+    color: var(--rt-text);
+    font-size: var(--rt-text-body-sm);
+    font-weight: 500;
+    cursor: pointer;
+    list-style: none;
+}
+.rt-disclosure > summary::-webkit-details-marker { display: none; }
+.rt-disclosure[open] > summary { margin-bottom: var(--rt-space-1); }
+
+@media (min-width: 768px) {
+    /* En escritorio los filtros siempre están visibles: el disclosure
+       se neutraliza ocultando solo el resumen (el elemento va siempre "open"). */
+    .rt-disclosure > summary { display: none; }
+    .rt-disclosure[open] > summary { margin-bottom: 0; }
+}
+
+
+/* =============================================================================
+   7. VISTAS DEL ADMIN NATIVO — BANCO DE PREGUNTAS
+   ========================================================================== */
+
+/* ---- Migas de pan --------------------------------------------------------- */
+
+.rt-breadcrumbs {
+    padding: var(--rt-space-2) 0;
+    border-bottom: 1px solid var(--rt-border);
+    margin-bottom: var(--rt-space-3);
+}
+
+.rt-breadcrumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.rt-breadcrumbs li {
+    display: inline-flex;
+    align-items: center;
+    font-size: var(--rt-text-body-sm);
+    color: var(--rt-text-2);
+}
+
+.rt-breadcrumbs a {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--rt-text-2);
+    text-decoration: none;
+    padding: 4px 6px;
+    border-radius: var(--rt-radius-tag);
+}
+
+.rt-breadcrumbs a:hover { color: var(--rt-text); background: var(--rt-surface-2); }
+
+.rt-breadcrumbs [aria-current="page"] { color: var(--rt-text); font-weight: 500; }
+
+.rt-breadcrumbs .material-symbols-outlined { font-size: 18px; color: var(--rt-text-3); }
+
+/* ---- Disposición formulario + vista previa -------------------------------- */
+
+.rt-form-layout {
+    display: flex;
+    flex-direction: column;
+    gap: var(--rt-space-3);
+    align-items: flex-start;
+}
+
+.rt-form-layout__main { min-width: 0; width: 100%; flex: 1 1 auto; }
+
+/* La vista previa es un apoyo, no contenido esencial: se oculta hasta que hay
+   espacio real para ella y el formulario nunca queda comprimido. */
+.rt-form-layout__aside { display: none; }
+
+@media (min-width: 1280px) {
+    .rt-form-layout { flex-direction: row; }
+    .rt-form-layout__aside {
+        display: block;
+        position: sticky;
+        top: var(--rt-space-2);
+        flex: 0 0 300px;
+        width: 300px;
+    }
+}
+
+/* ---- Maqueta del teléfono ------------------------------------------------- */
+
+.rt-phone {
+    position: relative;
+    height: 620px;
+    border: 1px solid var(--rt-border-strong);
+    border-radius: 28px;
+    background: var(--rt-surface-2);
+    padding: 10px;
+    overflow: hidden;
+}
+
+.rt-phone__notch {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 96px;
+    height: 18px;
+    border-radius: var(--rt-radius-pill);
+    background: var(--rt-border-strong);
+    z-index: 2;
+}
+
+.rt-phone__screen {
+    height: 100%;
+    overflow-y: auto;
+    background: var(--rt-surface);
+    border: 1px solid var(--rt-border);
+    border-radius: 20px;
+    padding: 40px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--rt-space-2);
+}
+
+.rt-phone__level {
+    font-family: var(--rt-font-mono);
+    font-size: var(--rt-text-caption);
+    letter-spacing: var(--rt-tracking-caption);
+    text-transform: uppercase;
+    color: var(--rt-text-2);
+    text-align: center;
+}
+
+.rt-phone__question {
+    font-size: var(--rt-text-body-sm);
+    line-height: 1.5;
+    font-weight: 500;
+    color: var(--rt-text);
+}
+
+.rt-phone__reading {
+    font-size: var(--rt-text-caption);
+    line-height: 1.6;
+    color: var(--rt-text-2);
+    border-left: 2px solid var(--rt-border-strong);
+    padding-left: 10px;
+}
+
+.rt-phone__options {
+    display: flex;
+    flex-direction: column;
+    gap: var(--rt-space-1);
+    margin-top: var(--rt-space-1);
+}
+
+.rt-phone__option {
+    padding: 12px 14px;
+    border: 1px solid var(--rt-border);
+    border-radius: var(--rt-radius);
+    background: var(--rt-surface-2);
+    color: var(--rt-text);
+    font-size: var(--rt-text-body-sm);
+    line-height: 1.4;
+}
