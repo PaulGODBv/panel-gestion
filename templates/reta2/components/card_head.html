@@ -1,0 +1,18 @@
+{% comment %}
+    Cabecera de card.
+
+    Parámetros:
+      title — título de la sección
+      desc  — descripción corta (opcional)
+      level — nivel de encabezado semántico: 2 (por defecto) o 3
+{% endcomment %}
+<div class="rt-card__head">
+    <div>
+        {% if level == 3 %}
+            <h3 class="rt-card__title">{{ title }}</h3>
+        {% else %}
+            <h2 class="rt-card__title">{{ title }}</h2>
+        {% endif %}
+        {% if desc %}<p class="rt-card__desc">{{ desc }}</p>{% endif %}
+    </div>
+</div>

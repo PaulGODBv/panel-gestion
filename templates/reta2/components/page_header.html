@@ -1,0 +1,16 @@
+{% comment %}
+    Encabezado de página del sistema Dovetail.
+
+    Parámetros:
+      eyebrow   — etiqueta de categoría en JetBrains Mono (obligatoria)
+      title     — título de la página
+      subtitle  — descripción corta (opcional)
+
+    Las acciones se componen en la plantilla que lo incluye, dentro de
+    <div class="rt-page__actions"> … </div>, para poder alojar formularios.
+{% endcomment %}
+<div class="rt-page__headings">
+    {% if eyebrow %}<span class="rt-eyebrow">{{ eyebrow }}</span>{% endif %}
+    <h1 class="rt-title">{{ title }}</h1>
+    {% if subtitle %}<p class="rt-subtitle">{{ subtitle }}</p>{% endif %}
+</div>

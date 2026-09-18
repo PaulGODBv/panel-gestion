@@ -1,11 +1,17 @@
-/* academics/css/question_admin.css */
-/* Minimal overrides if needed for mockup or inline validation */
+/* academics/css/question_admin.css
+   Apoyo del formulario de preguntas. Los colores salen del sistema Dovetail
+   (static/reta2/css/reta2.css); aquí solo viven los estados de validación
+   que el JavaScript conmuta por clase. */
+
 .inline-error {
-    color: #ef4444;
-    font-size: 0.75rem;
-    margin-top: 0.25rem;
     display: none;
+    margin-top: 4px;
+    font-size: var(--rt-text-caption, 12px);
+    line-height: 1.4;
+    color: var(--rt-danger, #b91c1c);
 }
+
+/* Clase que aplica question_admin.js al campo inválido */
 .border-red-500 {
-    border-color: #ef4444 !important;
+    border-color: var(--rt-danger, #b91c1c) !important;
 }

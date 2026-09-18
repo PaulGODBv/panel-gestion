@@ -1,203 +1,119 @@
-{% extends 'unfold/layouts/base.html' %}
+{% extends 'reta2/base_page.html' %}
 {% load i18n %}
 
-{% block title %}{{ title }}{% endblock %}
+{% block page %}
 
-{% block content %}
-<div class="space-y-6 p-2 lg:p-4">
+<nav aria-label="Ruta de navegación">
+    <a href="{% url 'admin_student_list' %}" class="rt-btn rt-btn--quiet rt-btn--sm" style="padding-left:0;">
+        <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+        Volver a estudiantes
+    </a>
+</nav>
 
-    <div class="flex items-center gap-4">
-        <a href="{% url 'admin_student_list' %}"
-           class="flex items-center gap-1 text-sm text-font-secondary-light dark:text-font-secondary-dark
-                  hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
-            <span class="material-symbols-outlined text-base">arrow_back</span>
-            Volver
-        </a>
-        <div>
-            <p class="text-sm text-font-secondary-light dark:text-font-secondary-dark">
-                {{ total_reports }} reporte{{ total_reports|pluralize }} sincronizado{{ total_reports|pluralize }}
-            </p>
-        </div>
+<header class="rt-page__head rt-grid-bg">
+    {% include "reta2/components/page_header.html" with eyebrow="PERFIL DEL ESTUDIANTE" title=username %}
+    <p class="rt-subtitle" style="margin:0;">
+        {{ total_reports }} reporte{{ total_reports|pluralize }} sincronizado{{ total_reports|pluralize }}
+    </p>
+</header>
+
+{% if error %}
+
+    <div class="rt-note rt-note--danger" role="alert">
+        <p class="rt-note__title">Sin datos</p>
+        <p class="rt-note__text">{{ error }}</p>
     </div>
 
-    {% if error %}
-    <div class="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900 p-5">
-        <p class="text-red-700 dark:text-red-300">{{ error }}</p>
+{% else %}
+
+<!-- Estado actual -->
+<section aria-labelledby="rt-current-title">
+    <h2 id="rt-current-title" class="rt-sr-only">Estado actual</h2>
+
+    <div class="rt-grid rt-grid--kpi">
+        {% include "reta2/components/stat_card.html" with label="Preguntas" icon="quiz" value=latest.total_questions_answered hint="Total acumulado del estudiante" %}
+        {% include "reta2/components/stat_card.html" with label="Racha" icon="local_fire_department" value=latest.current_streak_days unit="días" hint="Días consecutivos de práctica" %}
+        {% include "reta2/components/stat_card.html" with label="Tiempo total" icon="schedule" value=latest.practice_time_formatted hint="Tiempo acumulado de práctica" %}
+        {% include "reta2/components/stat_card.html" with label="Correo" icon="mail" value=latest.email|default:"No registrado" text="1" hint="Dato informativo del registro" %}
     </div>
-    {% else %}
+</section>
 
-    <!-- Stats actuales -->
-    <div class="grid grid-cols-2 gap-4 sm:grid-cols-4 mb-8">
-        <div class="flex flex-col gap-1 p-4 rounded-xl border border-base-200 dark:border-base-700 bg-white dark:bg-base-900">
-            <p class="text-xs font-semibold uppercase tracking-wider text-font-secondary-light dark:text-font-secondary-dark">
-                Preguntas
-            </p>
-            <p class="text-3xl font-extrabold text-font-important-light dark:text-font-important-dark">
-                {{ latest.total_questions_answered }}
-            </p>
-        </div>
-        <div class="flex flex-col gap-1 p-4 rounded-xl border border-base-200 dark:border-base-700 bg-white dark:bg-base-900">
-            <p class="text-xs font-semibold uppercase tracking-wider text-font-secondary-light dark:text-font-secondary-dark">
-                🔥 Racha
-            </p>
-            <p class="text-3xl font-extrabold text-orange-500 dark:text-orange-400">
-                {{ latest.current_streak_days }}
-                <span class="text-base font-normal text-font-secondary-light dark:text-font-secondary-dark">días</span>
-            </p>
-        </div>
-        <div class="flex flex-col gap-1 p-4 rounded-xl border border-base-200 dark:border-base-700 bg-white dark:bg-base-900">
-            <p class="text-xs font-semibold uppercase tracking-wider text-font-secondary-light dark:text-font-secondary-dark">
-                Tiempo total
-            </p>
-            <p class="text-3xl font-extrabold text-font-important-light dark:text-font-important-dark">
-                {% widthratio latest.total_practice_time_seconds 60 1 %}
-                <span class="text-base font-normal text-font-secondary-light dark:text-font-secondary-dark">min</span>
-            </p>
-        </div>
-        <div class="flex flex-col gap-1 p-4 rounded-xl border border-base-200 dark:border-base-700 bg-white dark:bg-base-900">
-            <p class="text-xs font-semibold uppercase tracking-wider text-font-secondary-light dark:text-font-secondary-dark">
-                Email
-            </p>
-            <p class="text-sm font-medium text-font-important-light dark:text-font-important-dark truncate mt-1">
-                {{ latest.email|default:"No registrado" }}
-            </p>
-        </div>
-    </div>
+<div class="rt-grid rt-grid--halves">
 
-    <!-- Fila: Progreso por competencia + Niveles completados -->
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-8">
-
-        <!-- Progreso por competencia -->
-        <div class="rounded-xl border border-base-200 dark:border-base-700 bg-white dark:bg-base-900 shadow-sm overflow-hidden">
-            <div class="px-5 py-4 border-b border-base-200 dark:border-base-700">
-                <h2 class="text-sm font-bold text-font-important-light dark:text-font-important-dark">
-                    Progreso por competencia
-                </h2>
-                <p class="text-xs text-font-secondary-light dark:text-font-secondary-dark mt-0.5">
-                    Niveles completados vs intentados (acumulado)
-                </p>
-            </div>
-            <div class="p-5 flex flex-col gap-5">
-                {% if competence_progress %}
-                    {% for comp in competence_progress %}
-                    <div>
-                        <div class="flex justify-between items-center mb-1.5">
-                            <span class="text-sm font-medium text-font-important-light dark:text-font-important-dark">
-                                {{ comp.competence_name }}
-                            </span>
-                            <div class="flex items-center gap-3">
-                                <span class="text-xs text-font-secondary-light dark:text-font-secondary-dark">
-                                    Promedio: {{ comp.avg_score|floatformat:1 }} pts
-                                </span>
-                                <span class="text-xs font-semibold text-primary-600 dark:text-primary-400">
-                                    {{ comp.completed }}/{{ comp.total }}
-                                </span>
-                            </div>
-                        </div>
-                        <div class="w-full bg-base-200 dark:bg-base-700 rounded-full h-2">
-                            {% if comp.total > 0 %}
-                            <div class="bg-primary-600 dark:bg-primary-400 h-2 rounded-full"
-                                 style="width: {% widthratio comp.completed comp.total 100 %}%">
-                            </div>
-                            {% else %}
-                            <div class="h-2 rounded-full" style="width:0%"></div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    <p class="text-sm text-font-secondary-light dark:text-font-secondary-dark text-center py-4">
-                        Sin datos de competencias aún.
-                    </p>
-                {% endif %}
-            </div>
+    <!-- Progreso por competencia -->
+    <section class="rt-card" aria-labelledby="rt-progress-title">
+        {% include "reta2/components/card_head.html" with title="Progreso por competencia" desc="Niveles completados frente a intentados (acumulado)" %}
+        <div class="rt-card__body">
+            {% if competence_progress %}
+                {% for comp in competence_progress %}
+                    {% include "reta2/components/progress_row.html" with name=comp.competence_name completed=comp.completed total=comp.total meta=comp.avg_score|floatformat:1|add:" PTS PROMEDIO" %}
+                {% endfor %}
+            {% else %}
+                {% include "reta2/components/empty_state.html" with icon="insights" title="Sin datos de competencias" text="Aparecerán cuando el estudiante intente su primer nivel." %}
+            {% endif %}
         </div>
+    </section>
 
-        <!-- Niveles completados -->
-        <div class="rounded-xl border border-base-200 dark:border-base-700 bg-white dark:bg-base-900 shadow-sm overflow-hidden">
-            <div class="px-5 py-4 border-b border-base-200 dark:border-base-700">
-                <h2 class="text-sm font-bold text-font-important-light dark:text-font-important-dark">
-                    Niveles completados
-                </h2>
-                <p class="text-xs text-font-secondary-light dark:text-font-secondary-dark mt-0.5">
-                    Niveles con 80% o más de aciertos
-                </p>
-            </div>
-            <div class="divide-y divide-base-200 dark:divide-base-700">
-                {% if completed_levels %}
+    <!-- Niveles completados -->
+    <section class="rt-card" aria-labelledby="rt-levels-title">
+        {% include "reta2/components/card_head.html" with title="Niveles completados" desc="Niveles superados con 80% o más de aciertos" %}
+        <div class="rt-card__body rt-card__body--flush">
+            {% if completed_levels %}
+                <ul class="rt-list" style="list-style:none; margin:0; padding:0;">
                     {% for level in completed_levels %}
-                    <div class="px-5 py-3 flex items-center gap-3">
-                        <span class="text-green-500 dark:text-green-400 material-symbols-outlined text-base">
-                            check_circle
-                        </span>
-                        <div>
-                            <p class="text-sm font-medium text-font-important-light dark:text-font-important-dark">
-                                {{ level.level_name }}
-                            </p>
-                            <p class="text-xs text-font-secondary-light dark:text-font-secondary-dark">
-                                {{ level.competence_name }}
-                            </p>
+                    <li class="rt-list__item">
+                        <span class="material-symbols-outlined" style="color: var(--rt-ok);" aria-hidden="true">check_circle</span>
+                        <div class="rt-list__main">
+                            <p class="rt-list__title">{{ level.level_name }}</p>
+                            <p class="rt-list__meta">{{ level.competence_name }}</p>
                         </div>
-                    </div>
+                    </li>
                     {% endfor %}
-                {% else %}
-                    <div class="px-5 py-8 text-center">
-                        <p class="text-sm text-font-secondary-light dark:text-font-secondary-dark">
-                            Ningún nivel completado aún.
-                        </p>
-                    </div>
-                {% endif %}
-            </div>
+                </ul>
+            {% else %}
+                {% include "reta2/components/empty_state.html" with icon="flag" title="Ningún nivel completado" text="El estudiante aún no supera el umbral del 80% en ningún nivel." %}
+            {% endif %}
         </div>
-    </div>
+    </section>
+</div>
 
-    <!-- Evolución histórica -->
-    <div class="rounded-xl border border-base-200 dark:border-base-700 bg-white dark:bg-base-900 shadow-sm overflow-hidden mb-8">
-        <div class="px-5 py-4 border-b border-base-200 dark:border-base-700">
-            <h2 class="text-sm font-bold text-font-important-light dark:text-font-important-dark">
-                Evolución histórica
-            </h2>
-            <p class="text-xs text-font-secondary-light dark:text-font-secondary-dark mt-0.5">
-                Progreso acumulado a través de los reportes sincronizados
-            </p>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
+<!-- Evolución histórica -->
+<section class="rt-card" aria-labelledby="rt-evolution-title">
+    {% include "reta2/components/card_head.html" with title="Evolución histórica" desc="Progreso acumulado a través de los reportes sincronizados" %}
+    <div class="rt-card__body rt-card__body--flush">
+        {% if evolution %}
+        <div class="rt-table-wrap">
+            <table class="rt-table rt-table--stack rt-table--sticky">
+                <caption class="rt-sr-only">Reportes del estudiante en orden cronológico</caption>
                 <thead>
-                    <tr class="border-b border-base-200 dark:border-base-700 bg-base-50 dark:bg-base-800">
-                        <th class="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-font-secondary-light dark:text-font-secondary-dark">
-                            Fecha
-                        </th>
-                        <th class="text-center px-5 py-3 text-xs font-semibold uppercase tracking-wider text-font-secondary-light dark:text-font-secondary-dark">
-                            Preguntas acumuladas
-                        </th>
-                        <th class="text-center px-5 py-3 text-xs font-semibold uppercase tracking-wider text-font-secondary-light dark:text-font-secondary-dark">
-                            Racha
-                        </th>
-                        <th class="text-center px-5 py-3 text-xs font-semibold uppercase tracking-wider text-font-secondary-light dark:text-font-secondary-dark">
-                            Tiempo del día (min)
-                        </th>
+                    <tr>
+                        <th scope="col">Fecha</th>
+                        <th scope="col" class="rt-num">Preguntas acumuladas</th>
+                        <th scope="col" class="rt-num">Racha</th>
+                        <th scope="col" class="rt-num">Tiempo del día</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-base-200 dark:divide-base-700">
+                <tbody>
                     {% for entry in evolution %}
-                    <tr class="hover:bg-base-50 dark:hover:bg-base-800 transition-colors">
-                        <td class="px-5 py-3 text-font-secondary-light dark:text-font-secondary-dark whitespace-nowrap">
-                            {{ entry.reported_at|date:"d/m/Y H:i" }}
+                    <tr>
+                        <td data-label="" class="rt-nowrap rt-strong">{{ entry.reported_at|date:"d/m/Y H:i" }}</td>
+                        <td data-label="Preguntas acumuladas" class="rt-num">{{ entry.total_questions_answered }}</td>
+                        <td data-label="Racha" class="rt-num">
+                            {% if entry.current_streak_days >= 7 %}
+                                <span class="rt-badge rt-badge--ok">
+                                    <span class="material-symbols-outlined" aria-hidden="true">local_fire_department</span>
+                                    {{ entry.current_streak_days }} días
+                                </span>
+                            {% elif entry.current_streak_days >= 3 %}
+                                <span class="rt-badge rt-badge--warn">
+                                    <span class="material-symbols-outlined" aria-hidden="true">local_fire_department</span>
+                                    {{ entry.current_streak_days }} días
+                                </span>
+                            {% else %}
+                                <span class="rt-badge">{{ entry.current_streak_days }} días</span>
+                            {% endif %}
                         </td>
-                        <td class="px-5 py-3 text-center font-semibold text-font-important-light dark:text-font-important-dark">
-                            {{ entry.total_questions_answered }}
-                        </td>
-                        <td class="px-5 py-3 text-center">
-                            <span class="{% if entry.current_streak_days >= 7 %}text-orange-500
-                                         {% elif entry.current_streak_days >= 3 %}text-yellow-500
-                                         {% else %}text-font-secondary-light dark:text-font-secondary-dark{% endif %}
-                                         font-medium">
-                                {% if entry.current_streak_days >= 1 %}🔥{% endif %}
-                                {{ entry.current_streak_days }}
-                            </span>
-                        </td>
-                        <td class="px-5 py-3 text-center text-font-secondary-light dark:text-font-secondary-dark">
+                        <td data-label="Tiempo del día" class="rt-num">
                             {% widthratio entry.daily_practice_time_seconds 60 1 %} min
                         </td>
                     </tr>
@@ -205,8 +121,12 @@
                 </tbody>
             </table>
         </div>
+        {% else %}
+            {% include "reta2/components/empty_state.html" with icon="timeline" title="Sin historial" text="No hay reportes sincronizados para este estudiante." %}
+        {% endif %}
     </div>
+</section>
 
-    {% endif %}
-</div>
+{% endif %}
+
 {% endblock %}

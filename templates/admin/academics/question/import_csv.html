@@ -1,46 +1,59 @@
-{% extends 'unfold/layouts/base.html' %}
+{% extends 'reta2/base_page.html' %}
 {% load i18n admin_urls static %}
 
-{% block content %}
-<div class="p-6">
-    <div class="mb-8">
-        <h1 class="text-2xl font-bold text-font-important-light dark:text-font-important-dark">
-            Importar Preguntas desde CSV
-        </h1>
-    </div>
+{% block title %}Importar preguntas desde CSV{% endblock %}
 
-    <div class="bg-white dark:bg-base-900 border border-base-200 dark:border-base-700 rounded-xl p-6">
-        <form method="post" enctype="multipart/form-data" class="space-y-4">
+{% block page %}
+
+<nav aria-label="Ruta de navegación">
+    <a href="{% url 'admin:academics_question_changelist' %}" class="rt-btn rt-btn--quiet rt-btn--sm" style="padding-left:0;">
+        <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+        Volver a preguntas
+    </a>
+</nav>
+
+<header class="rt-page__head rt-grid-bg">
+    {% include "reta2/components/page_header.html" with eyebrow="BANCO DE PREGUNTAS" title="Importar desde CSV" subtitle="Carga masiva de preguntas y sus opciones de respuesta. Cada fila del archivo crea una pregunta con hasta cuatro opciones." %}
+</header>
+
+<section class="rt-card" style="max-width: 720px;" aria-labelledby="rt-import-title">
+    <h2 id="rt-import-title" class="rt-sr-only">Formulario de importación</h2>
+
+    <div class="rt-card__body">
+        <form method="post" enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:var(--rt-space-3);">
             {% csrf_token %}
-            <div>
-                <label class="block text-sm font-medium text-font-important-light dark:text-font-important-dark mb-2">Archivo CSV</label>
-                <input type="file" name="csv_file" required class="block w-full text-sm text-font-secondary-light dark:text-font-secondary-dark
-                    file:mr-4 file:py-2 file:px-4
-                    file:rounded-md file:border-0
-                    file:text-sm file:font-semibold
-                    file:bg-primary-50 file:text-primary-700
-                    hover:file:bg-primary-100" accept=".csv" />
+
+            <div class="rt-field">
+                <label class="rt-label" for="rt-csv-file">Archivo CSV</label>
+                <input type="file"
+                       id="rt-csv-file"
+                       name="csv_file"
+                       required
+                       accept=".csv"
+                       aria-describedby="rt-csv-format"
+                       class="rt-file" />
             </div>
-            
-            <div class="bg-yellow-50 dark:bg-yellow-900/30 p-4 rounded-md border border-yellow-200 dark:border-yellow-800">
-                <h3 class="text-sm font-semibold text-yellow-800 dark:text-yellow-400 mb-2">Formato esperado:</h3>
-                <p class="text-xs text-yellow-700 dark:text-yellow-500 font-mono mb-2">
-                    nivel_id, enunciado, texto_lectura, opcion_correcta (1-4), opc1, opc2, opc3, opc4
-                </p>
-                <p class="text-xs text-yellow-700 dark:text-yellow-500">
-                    Nota: La primera fila debe ser el encabezado y será ignorada. Asegúrate de que el nivel_id existe.
+
+            <div class="rt-note" id="rt-csv-format">
+                <p class="rt-note__title">Formato esperado</p>
+                <code class="rt-code">nivel_id, enunciado, texto_lectura, opcion_correcta (1-4), opc1, opc2, opc3, opc4</code>
+                <p class="rt-note__text">
+                    La primera fila se toma como encabezado y se ignora. Comprueba que el
+                    <code>nivel_id</code> exista antes de subir el archivo.
                 </p>
             </div>
 
-            <div class="flex gap-4">
-                <button type="submit" class="bg-primary-600 hover:bg-primary-700 text-white font-medium text-sm px-4 py-2 rounded-md">
-                    Subir e Importar
+            <div class="rt-page__actions">
+                <button type="submit" class="rt-btn rt-btn--primary">
+                    <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
+                    Subir e importar
                 </button>
-                <a href="{% url 'admin:academics_question_changelist' %}" class="bg-base-200 dark:bg-base-700 text-font-important-light dark:text-font-important-dark font-medium text-sm px-4 py-2 rounded-md">
+                <a href="{% url 'admin:academics_question_changelist' %}" class="rt-btn rt-btn--ghost">
                     Cancelar
                 </a>
             </div>
         </form>
     </div>
-</div>
+</section>
+
 {% endblock %}

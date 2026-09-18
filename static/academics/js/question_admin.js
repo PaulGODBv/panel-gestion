@@ -23,12 +23,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Options
-        const optionInputs = document.querySelectorAll('input[id^="id_options-"][id$="-text"]');
+        const optionInputs = document.querySelectorAll('[id^="id_options-"][id$="-text"]');
         mockupOptions.innerHTML = '';
         optionInputs.forEach((opt, idx) => {
             if (opt.value) {
                 const div = document.createElement('div');
-                div.className = 'px-4 py-3 rounded-xl border border-base-200 dark:border-base-700 bg-base-50 dark:bg-base-900 text-sm';
+                div.className = 'rt-phone__option';
                 div.innerText = opt.value;
                 mockupOptions.appendChild(div);
             }
@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 2. Inline Validation
     if (textInput) {
         const errorSpan = document.createElement('span');
-        errorSpan.className = 'inline-error text-red-500 text-xs mt-1 block';
+        errorSpan.className = 'inline-error';
         errorSpan.innerText = 'Este campo es obligatorio';
         errorSpan.style.display = 'none';
         textInput.parentNode.appendChild(errorSpan);

@@ -4,8 +4,8 @@
 {% block object-tools-items %}
     {{ block.super }}
     <li>
-        <a href="{% url 'admin:academics_question_import_csv' %}" class="bg-primary-600 hover:bg-primary-700 text-white font-medium text-sm px-4 py-2 rounded-md flex items-center">
-            <span class="material-symbols-outlined mr-2">upload_file</span>
+        <a href="{% url 'admin:academics_question_import_csv' %}" class="rt-btn rt-btn--ghost rt-btn--sm">
+            <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
             Importar CSV
         </a>
     </li>

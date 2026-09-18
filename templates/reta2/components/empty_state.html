@@ -1,0 +1,13 @@
+{% comment %}
+    Estado vacío.
+
+    Parámetros:
+      icon  — Material Symbol (opcional, por defecto "inbox")
+      title — mensaje principal
+      text  — explicación o siguiente paso (opcional)
+{% endcomment %}
+<div class="rt-empty rt-grid-bg">
+    <span class="material-symbols-outlined rt-empty__icon" aria-hidden="true">{{ icon|default:"inbox" }}</span>
+    <p class="rt-empty__title">{{ title }}</p>
+    {% if text %}<p class="rt-empty__text">{{ text }}</p>{% endif %}
+</div>
