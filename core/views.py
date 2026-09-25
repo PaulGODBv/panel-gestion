@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Count, Sum, Avg, Max, Q
 from .models import StudentReport, LevelProgressReport
+from .permissions import HasValidApiKey
 from .serializers import StudentReportSerializer
 
 
@@ -16,6 +17,9 @@ def dashboard_callback(request, context):
 # ── API VIEWS ──────────────────────────────────────────────────
 
 class SyncReportView(APIView):
+    # La consume la app Android, que no tiene sesion de Django.
+    permission_classes = [HasValidApiKey]
+
     def post(self, request):
         serializer = StudentReportSerializer(data=request.data)
         if serializer.is_valid():
@@ -35,6 +39,8 @@ class SyncReportView(APIView):
 
 
 class RankingView(APIView):
+    permission_classes = [HasValidApiKey]
+
     def get(self, request):
         username = request.query_params.get('username', '')
 

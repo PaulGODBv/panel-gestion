@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from core.permissions import HasValidApiKey
 from .models import Competence, Level, Question
 from .serializers import (
     CompetenceSerializer,
@@ -14,6 +15,11 @@ class CompetenceListView(APIView):
     GET /api/competences/
     Devuelve todas las competencias con sus niveles (sin preguntas)
     """
+
+    # Endpoint pensado para la app: se protege con la clave compartida, no con
+    # sesion de staff. Hoy la app trae el contenido embebido y no lo llama.
+    permission_classes = [HasValidApiKey]
+
     def get(self, request):
         competences = Competence.objects.prefetch_related('levels').all()
         serializer = CompetenceSerializer(competences, many=True)
@@ -25,6 +31,9 @@ class QuestionsByLevelView(APIView):
     GET /api/questions/<level_id>/
     Devuelve todas las preguntas de un nivel con sus opciones
     """
+
+    permission_classes = [HasValidApiKey]
+
     def get(self, request, level_id):
         try:
             level = Level.objects.get(id=level_id)
