@@ -1258,3 +1258,136 @@ html:root #content span[class*="bg-gray-100"]  { background: var(--rt-surface-2)
     font-size: var(--rt-text-body-sm);
     line-height: 1.4;
 }
+
+/* =============================================================================
+   8. MOVIMIENTO
+   Animaciones del panel. El criterio es el mismo de DESIGN.md: el movimiento
+   explica un cambio de estado, nunca decora. Todo se apaga con
+   prefers-reduced-motion.
+   ============================================================================= */
+
+/* --- 8.1 Cifras que cuentan --------------------------------------------- */
+
+/* Cifras tabulares: sin ancho fijo por dígito, el número "salta" mientras sube. */
+.rt-count,
+.rt-kpi__value {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+}
+
+/* --- 8.2 Cambio de tema: barrido circular -------------------------------- */
+
+/* El barrido lo dibuja reta2.js animando el clip-path del pseudo-elemento
+   nuevo; aquí solo se desactiva el fundido cruzado que trae el navegador para
+   que no se vean las dos capas a la vez. */
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+    z-index: 1;
+}
+
+::view-transition-new(root) {
+    z-index: 2;
+}
+
+/* --- 8.3 Barra lateral ---------------------------------------------------- */
+
+/* Entrada escalonada: --rt-nav-i lo asigna reta2.js según la posición. */
+@keyframes rt-nav-entrada {
+    from {
+        opacity: 0;
+        transform: translateX(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.rt-nav-anim li {
+    animation: rt-nav-entrada 320ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    animation-delay: calc(var(--rt-nav-i, 0) * 40ms);
+}
+
+#nav-sidebar-apps a {
+    position: relative;
+    transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+#nav-sidebar-apps a:hover {
+    transform: translateX(2px);
+}
+
+#nav-sidebar-apps a .material-symbols-outlined {
+    transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+#nav-sidebar-apps a:hover .material-symbols-outlined {
+    transform: scale(1.12);
+}
+
+/* Marca del elemento activo: una barra que crece desde el centro. */
+@keyframes rt-nav-marca {
+    from {
+        transform: scaleY(0);
+    }
+    to {
+        transform: scaleY(1);
+    }
+}
+
+#nav-sidebar-apps a.rt-nav-activo::before {
+    content: "";
+    position: absolute;
+    left: -12px;
+    top: 7px;
+    bottom: 7px;
+    width: 3px;
+    border-radius: 2px;
+    background: var(--rt-udes-500);
+    transform-origin: center;
+    animation: rt-nav-marca 360ms cubic-bezier(0.22, 1, 0.36, 1) 120ms backwards;
+}
+
+html.dark #nav-sidebar-apps a.rt-nav-activo::before {
+    background: var(--rt-udes-400, #3a8fd6);
+}
+
+/* --- 8.4 La rueda del ratón no sale de la barra lateral ------------------- */
+
+/* Con el cursor sobre la barra, la rueda mueve la barra y nunca la página.
+   `contain` corta el encadenado al llegar al tope; el caso en que la barra no
+   tiene nada que desplazar lo cubre el guardia de reta2.js. */
+#nav-sidebar {
+    overscroll-behavior: contain;
+}
+
+#nav-sidebar-apps {
+    overscroll-behavior: contain;
+}
+
+/* --- 8.5 Respeto por el movimiento reducido ------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+    .rt-nav-anim li,
+    #nav-sidebar-apps a.rt-nav-activo::before {
+        animation: none;
+    }
+
+    #nav-sidebar-apps a,
+    #nav-sidebar-apps a .material-symbols-outlined {
+        transition: none;
+    }
+
+    #nav-sidebar-apps a:hover {
+        transform: none;
+    }
+
+    #nav-sidebar-apps a:hover .material-symbols-outlined {
+        transform: none;
+    }
+}

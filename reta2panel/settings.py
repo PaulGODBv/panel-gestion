@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -50,10 +51,22 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
     ],
+    # Por defecto nadie entra. Cada vista declara su permiso: las que consume
+    # la app Android exigen la clave de API y las del panel exigen sesion de
+    # staff. Antes estaba en AllowAny y cualquiera podia escribir reportes.
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',  # Temporal para desarrollo
+        'rest_framework.permissions.IsAdminUser',
     ],
 }
+
+# Clave compartida con la app Android (cabecera X-API-Key). En despliegue se
+# define la variable de entorno RETA2_API_KEY; el valor por defecto solo sirve
+# para desarrollo local. Si se cambia aqui hay que cambiarla tambien en
+# ApiConfig.API_KEY de la app.
+RETA2_API_KEY = os.environ.get(
+    'RETA2_API_KEY',
+    'clave-rotada-el-2026-10-05',
+)
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -151,7 +164,9 @@ UNFOLD = {
     "STYLES": [
         lambda request: static("reta2/css/reta2.css"),
     ],
-    "SCRIPTS": [],
+    "SCRIPTS": [
+        lambda request: static("reta2/js/reta2.js"),
+    ],
     "COLORS": {
     "primary": {
         "50": "240 248 255",

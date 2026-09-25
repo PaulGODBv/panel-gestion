@@ -111,10 +111,11 @@
             .then(response => response.json())
             .then(data => {
                 // Actualizar Stats
-                document.getElementById('stat-students').innerText = data.total_students;
-                document.getElementById('stat-reports').innerText = data.total_reports;
-                document.getElementById('stat-questions').innerText = data.total_questions;
-                document.getElementById('stat-streak').innerText = data.avg_streak + ' días';
+                // rtCountUp (static/reta2/js/reta2.js) sube la cifra desde cero.
+                rtCountUp(document.getElementById('stat-students'), data.total_students);
+                rtCountUp(document.getElementById('stat-reports'), data.total_reports);
+                rtCountUp(document.getElementById('stat-questions'), data.total_questions);
+                rtCountUp(document.getElementById('stat-streak'), data.avg_streak, { decimales: 1, unidad: 'días' });
                 done(document.getElementById('rt-kpi-grid'));
 
                 // Render Competence Progress
