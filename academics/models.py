@@ -1,3 +1,5 @@
+import pathlib
+
 from django.db import models
 from simple_history.models import HistoricalRecords
 
@@ -71,6 +73,58 @@ class ContextAsset(models.Model):
 
     def __str__(self):
         return self.alt_text or self.image.name
+
+    # Las cartillas llegan escaneadas y pesan: los doce PNG iniciales sumaban
+    # 1,8 MB para 12 imagenes. Como ahora viajan al telefono en cada
+    # sincronizacion, se normalizan al guardar en vez de confiar en que quien
+    # sube el contenido las optimice.
+    ANCHO_MAXIMO = 1600
+    CALIDAD_WEBP = 82
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.image and not self.image.name.lower().endswith(".webp"):
+            self._normalizar_a_webp()
+
+    def _normalizar_a_webp(self):
+        """Reescribe la imagen como WebP y borra el original."""
+        from io import BytesIO
+
+        from django.core.files.base import ContentFile
+        from PIL import Image
+
+        original = self.image.name
+        try:
+            self.image.open()
+            try:
+                img = Image.open(self.image)
+                # load() lee el archivo entero: a partir de aqui la imagen ya
+                # no depende del descriptor, y en Windows hay que cerrarlo
+                # antes de borrar el original o el sistema no deja.
+                img.load()
+            finally:
+                self.image.close()
+        except Exception:
+            # Un archivo ilegible no debe impedir guardar la ficha: se queda
+            # como esta y se ve en el admin que algo no cuadra.
+            return
+
+        if img.mode not in ("RGB", "RGBA"):
+            img = img.convert("RGB")
+        if img.width > self.ANCHO_MAXIMO:
+            alto = round(img.height * self.ANCHO_MAXIMO / img.width)
+            img = img.resize((self.ANCHO_MAXIMO, alto), Image.LANCZOS)
+
+        buffer = BytesIO()
+        img.save(buffer, "WEBP", quality=self.CALIDAD_WEBP, method=6)
+
+        nombre = pathlib.PurePath(original).stem + ".webp"
+        self.image.save(nombre, ContentFile(buffer.getvalue()), save=False)
+        super().save(update_fields=["image"])
+
+        # El original ya no lo referencia nadie.
+        if original != self.image.name:
+            self.image.storage.delete(original)
 
 
 class Question(models.Model):

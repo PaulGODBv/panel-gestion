@@ -4,3 +4,4 @@ PROYECTO.md
 /graphify-out
 /.claudebackups/
 /.claude
+db.sqlite3
