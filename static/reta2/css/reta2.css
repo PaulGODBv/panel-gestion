@@ -986,6 +986,130 @@ html:root #content span[class*="bg-red-100"]   { background: var(--rt-danger-bg)
 html:root #content span[class*="bg-gray-100"]  { background: var(--rt-surface-2); color: var(--rt-text-2); border-color: var(--rt-border-strong); }
 
 
+/* --- 5.x Logros del estudiante -------------------------------------------- */
+
+/* Espeja la rejilla de la app: seis insignias en dos filas de tres. Se fija en
+   tres y no en `auto-fit`, que con la tarjeta ancha repartía cuatro y dos y no
+   se parecía a nada. Por debajo de 640px pasan a dos por fila. */
+.rt-logros {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--rt-space-1);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.rt-logros__resumen {
+    margin: 0 0 var(--rt-space-2);
+    font-size: var(--rt-text-body-sm);
+    color: var(--rt-text-2);
+}
+
+.rt-logro {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: var(--rt-space-2) var(--rt-space-1);
+    border: 1px solid var(--rt-border);
+    border-radius: var(--rt-radius);
+    background: var(--rt-surface-inset);
+    text-align: center;
+}
+
+/* Conseguida: el acento se gana, no se reparte. Las pendientes se quedan en
+   el gris de la superficie para que las obtenidas destaquen de un vistazo. */
+.rt-logro--activo {
+    border-color: var(--rt-accent);
+    background: var(--rt-accent-quiet);
+}
+
+.rt-logro__icono {
+    font-size: 26px;
+    color: var(--rt-text-3);
+}
+
+.rt-logro--activo .rt-logro__icono {
+    color: var(--rt-accent);
+}
+
+.rt-logro__titulo {
+    margin: 0;
+    font-size: var(--rt-text-body-sm);
+    font-weight: 500;
+    color: var(--rt-text-2);
+}
+
+.rt-logro--activo .rt-logro__titulo {
+    color: var(--rt-text);
+}
+
+.rt-logro__req {
+    margin: 0;
+    font-size: var(--rt-text-caption);
+    line-height: 1.35;
+    color: var(--rt-text-3);
+}
+
+
+/* --- 5.x Conmutador de tema flotante -------------------------------------- */
+
+/* Unfold esconde el suyo en el desplegable de la cuenta. Este queda a la vista
+   en todas las páginas. No va en la esquina exacta: ahí está el menú de usuario
+   de la cabecera. Se sitúa justo debajo, contra el mismo borde derecho.
+
+   La cabecera de Unfold ocupa 64px (h-16) y deja 16px de margen, así que el
+   contenido arranca en 80px: con `top: 72px` el botón cae en ese hueco y se
+   superpone al principio del contenido, que es lo pedido. */
+.rt-tema {
+    position: fixed;
+    top: 72px;
+    right: 20px;
+    /* Por encima del contenido y de la cabecera (z-40 en Unfold), por debajo
+       de los diálogos y de la paleta de comandos. */
+    z-index: 45;
+
+    /* 38×38 es la medida pedida. */
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid var(--rt-border);
+    border-radius: var(--rt-radius-pill);
+    background: var(--rt-surface);
+    color: var(--rt-text-2);
+    cursor: pointer;
+
+    /* Flota sobre tablas y tarjetas: sin una sombra discreta se confunde con
+       lo que tenga debajo. */
+    box-shadow: 0 1px 2px rgba(10, 10, 10, 0.06), 0 4px 12px rgba(10, 10, 10, 0.08);
+    transition: background-color 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+
+.rt-tema:hover {
+    background: var(--rt-surface-2);
+    border-color: var(--rt-border-strong);
+    color: var(--rt-text);
+}
+
+.rt-tema:active {
+    background: var(--rt-surface-inset);
+}
+
+.rt-tema__icono {
+    font-size: 20px;
+    line-height: 1;
+}
+
+/* En oscuro la sombra no se ve; el borde es lo que separa el botón del fondo. */
+html.dark .rt-tema {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
 /* =============================================================================
    6. RESPONSIVE
    ========================================================================== */
@@ -1108,6 +1232,24 @@ html:root #content span[class*="bg-gray-100"]  { background: var(--rt-surface-2)
        se neutraliza ocultando solo el resumen (el elemento va siempre "open"). */
     .rt-disclosure > summary { display: none; }
     .rt-disclosure[open] > summary { margin-bottom: 0; }
+}
+
+
+/* Las insignias pasan de tres a dos por fila cuando el ancho aprieta: por
+   debajo de unos 120px por tarjeta, el requisito deja de caber. */
+@media (max-width: 640px) {
+    .rt-logros {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* El botón de tema se pega más al borde en pantallas estrechas, donde el
+   contenido usa todo el ancho y 20px de separación se comen texto. */
+@media (max-width: 640px) {
+    .rt-tema {
+        top: 68px;
+        right: 12px;
+    }
 }
 
 

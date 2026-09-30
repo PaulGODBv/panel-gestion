@@ -133,10 +133,35 @@ class StudentDetailAdminView(TemplateView):
             .order_by('competence_name', 'level_name')
         )
 
+        # Las seis insignias de la app, con sus mismos umbrales. Se decide aquí
+        # y no en la plantilla porque {% include with %} no admite
+        # comparaciones, y repetir seis bloques {% if %} invita a que un umbral
+        # se quede desfasado respecto a la app.
+        #
+        # Las de racha se miden contra max_streak_days, no contra la racha
+        # viva: un logro conseguido no se devuelve, igual que en el teléfono.
+        preguntas = latest.total_questions_answered
+        mejor_racha = latest.max_streak_days
+        logros = [
+            {'icon': 'gps_fixed', 'title': 'Primer Intento',
+             'req': 'Responde tu primera pregunta', 'unlocked': preguntas >= 1},
+            {'icon': 'local_fire_department', 'title': 'Constancia',
+             'req': 'Racha de 3 días', 'unlocked': mejor_racha >= 3},
+            {'icon': 'bolt', 'title': 'Semana Completa',
+             'req': 'Racha de 7 días', 'unlocked': mejor_racha >= 7},
+            {'icon': 'military_tech', 'title': 'Imparable',
+             'req': 'Racha de 15 días', 'unlocked': mejor_racha >= 15},
+            {'icon': 'workspace_premium', 'title': 'Maestro Básico',
+             'req': 'Responde 50 preguntas', 'unlocked': preguntas >= 50},
+            {'icon': 'rocket', 'title': 'Explorador',
+             'req': 'Responde 100 preguntas', 'unlocked': preguntas >= 100},
+        ]
+
         context.update({
             'title': f'Estudiante: {username}',
             'username': username,
             'latest': latest,
+            'logros': logros,
             'total_reports': reports.count(),
             'reports': reports,
             'competence_progress': list(competence_progress),

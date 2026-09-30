@@ -38,6 +38,7 @@ class StudentReportSerializer(serializers.ModelSerializer):
             'total_questions_answered',
             'total_practice_time_seconds',
             'current_streak_days',
+            'max_streak_days',
             'daily_practice_time_seconds',
             # La app envia academic_program desde el registro del estudiante.
             # Sin este campo en la lista, DRF lo descartaba en silencio y el

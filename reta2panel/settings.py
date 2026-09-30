@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -59,14 +61,18 @@ REST_FRAMEWORK = {
     ],
 }
 
-# Clave compartida con la app Android (cabecera X-API-Key). En despliegue se
-# define la variable de entorno RETA2_API_KEY; el valor por defecto solo sirve
-# para desarrollo local. Si se cambia aqui hay que cambiarla tambien en
-# ApiConfig.API_KEY de la app.
-RETA2_API_KEY = os.environ.get(
-    'RETA2_API_KEY',
-    'KsY7m_ff8HFNYguna-ooYaXty3oXCpFx07ZDk2G-IKg',
-)
+# Clave compartida con la app Android (cabecera X-API-Key). Sin valor por
+# defecto a proposito: el anterior quedo en el historial de git, y una clave
+# comprometida que sigue funcionando es peor que ninguna. Si se cambia aqui hay
+# que cambiarla tambien en ApiConfig.API_KEY de la app.
+RETA2_API_KEY = os.environ.get('RETA2_API_KEY', '')
+
+if not RETA2_API_KEY:
+    raise ImproperlyConfigured(
+        'Falta la variable de entorno RETA2_API_KEY. Sin ella la API que '
+        'consume la app Android rechaza cualquier peticion. Generar una con: '
+        'python -c "import secrets; print(secrets.token_urlsafe(32))"'
+    )
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
