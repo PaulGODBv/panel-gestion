@@ -24,7 +24,6 @@ Cuatro columnas, las que fija la Fase 4 del anteproyecto.
 | Tarjeta | Descripción |
 | --- | --- |
 | TODO-2 · Carga de preguntas amigable | Las cartillas llegan en PDF con imágenes. Los tres caminos actuales (formulario, CSV, script) no sirven para quien no es desarrollador. |
-| TODO-3 · Imagen de contexto como archivo | `context_image` es hoy un `CharField`. Pasa a `ImageField` + `MEDIA_*` + URL en la API + descarga en la app. |
 | TODO-6 · Estadísticos y explorador | Moda de competencias, media por programa y competencia, y un gráfico filtrable por programa × competencia × nivel × fechas. |
 | TODO-7 · Animaciones de Material Design | Transiciones entre pantallas, entrada de listas, feedback de acierto y error. La respuesta al pulsar ya está hecha en la barra de navegación (25/09/2026). |
 | TODO-B · Nivel de Comunicación Escrita | El módulo del Icfes es de pregunta abierta; se sustituye con ítems cerrados sobre sus tres ejes de calificación. |
@@ -34,6 +33,7 @@ Cuatro columnas, las que fija la Fase 4 del anteproyecto.
 
 | Tarjeta | Descripción |
 | --- | --- |
+| TODO-3 · Imagen de contexto como archivo | **Lado Django hecho:** modelo `ContextAsset` con `ImageField`, `MEDIA_*`, subida con vista previa en el admin, URL absoluta en la API, y las 12 imágenes migradas desde `res/drawable` con 41 preguntas enlazadas. Falta el lado Android: Room, Coil y quitar `getIdentifier()`. |
 | TODO-1 · El panel como fuente de verdad del banco | **Paso 0 hecho:** CompetencyData tiene los originales y el panel se sembró desde él (41 creadas, 36 corregidas). De 60 a 101 preguntas, todas con explicación y 41 con imagen. Quedan los pasos 1–5: exponer versión en la API, escribir Room, reducir CompetencyData a contenido de arranque y unificar el catálogo. |
 
 ## Terminado
@@ -62,6 +62,7 @@ Cuatro columnas, las que fija la Fase 4 del anteproyecto.
 | TODO-4 · Esqueleto de carga | Contraste de 12,63:1 a 1,22:1 y esqueleto por sección con umbral de 350 ms. El ranking lleva su propio estado y su propia tarjeta de fallo. |
 | «Tiempo» de Progreso pasa a ser por día | Se corrige al leer, comparando contra `lastPracticeDate`; no hace falta vigilar el cambio de día. La etiqueta pasa a «Tiempo hoy». Incluye el arreglo de una regresión propia: un leer-modificar-escribir leía de la caché. |
 | Arranque en frío: fondo que sigue al modo oscuro | `windowBackground` desde `@color/fondo_arranque`, con variante en `values-night/`. Sigue al modo del sistema, no al conmutador de Perfil. |
+| El heatmap no seguía al cambio de tema | `isDark` se leía una sola vez y `cal.paint()` corría una sola vez. Ahora repinta con un `MutationObserver` sobre la clase del `<html>`. Sin verificar en pantalla: el CDN de cal-heatmap está bloqueado en el navegador de pruebas. |
 | TODO-17 · Catálogo de logros unificado y visible en el panel | Mandan las seis de la rejilla de Perfil, con dos peldaños nuevos de racha (7 y 15 días), en dos filas de tres. El panel muestra las mismas: `max_streak_days` viaja en la sincronización (modelo, migración 0003 y serializador). |
 | TODO-16 · Los logros se perdían al perder la racha | No se guardaban en ninguna parte: se recalculaban desde los contadores vivos. Dos columnas de máximo histórico en `user_stats` y la primera migración no destructiva del proyecto. Verificado: datos intactos y «Constancia» desbloqueada con la racha en 0. |
 | TODO-12 · R8 rompía toda la red, solo en release | El modo completo de R8 borraba el argumento de tipo del `Continuation`, y Retrofit no podía deducir qué deserializar: ninguna llamada llegaba a salir. Verificado: `POST /api/reports/sync/` 201 y ranking 200. |

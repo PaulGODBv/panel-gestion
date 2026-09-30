@@ -1,7 +1,7 @@
 from django.contrib import admin
 from unfold.admin import ModelAdmin, TabularInline
 from simple_history.admin import SimpleHistoryAdmin
-from .models import Competence, Level, Question, QuestionOption
+from .models import Competence, ContextAsset, Level, Question, QuestionOption
 from django.utils.html import format_html
 
 
@@ -66,6 +66,44 @@ class LevelAdmin(ModelAdmin):
     coverage_indicator.short_description = 'Cobertura'
 
 
+@admin.register(ContextAsset)
+class ContextAssetAdmin(ModelAdmin):
+    """Banco de imagenes de contexto.
+
+    Aqui es donde se sube el archivo. Antes la pregunta pedia el *nombre* de un
+    drawable que tenia que estar ya compilado dentro del APK, asi que el campo
+    era de texto y solo servia si alguien habia metido la imagen en el proyecto
+    Android: el encargado de contenidos no podia anadir una imagen nueva.
+    """
+
+    list_display = ['vista_previa', 'alt_text', 'uso', 'updated_at']
+    search_fields = ['alt_text', 'caption']
+    readonly_fields = ['vista_previa_grande', 'created_at', 'updated_at']
+    fields = ['image', 'vista_previa_grande', 'alt_text', 'caption', 'created_at', 'updated_at']
+
+    @admin.display(description="Imagen")
+    def vista_previa(self, obj):
+        if not obj.image:
+            return "—"
+        return format_html(
+            '<img src="{}" style="height:48px;border-radius:4px;" alt="{}">',
+            obj.image.url, obj.alt_text,
+        )
+
+    @admin.display(description="Vista previa")
+    def vista_previa_grande(self, obj):
+        if not obj.image:
+            return "Sube una imagen para verla aqui."
+        return format_html(
+            '<img src="{}" style="max-width:520px;width:100%;border-radius:8px;" alt="{}">',
+            obj.image.url, obj.alt_text,
+        )
+
+    @admin.display(description="Preguntas que la usan")
+    def uso(self, obj):
+        return obj.questions.count()
+
+
 @admin.register(Question)
 class QuestionAdmin(ModelAdmin, SimpleHistoryAdmin):
     list_display = [
@@ -74,11 +112,33 @@ class QuestionAdmin(ModelAdmin, SimpleHistoryAdmin):
         'correct_option_order',
         'created_at'
     ]
-    list_filter = ['level__competence', 'level']
+    list_filter = ['level__competence', 'level', 'is_active']
     search_fields = ['text']
     ordering = ['level', 'created_at']
     inlines = [QuestionOptionInline]
+    autocomplete_fields = ['context_asset']
+    readonly_fields = ['imagen_actual', 'created_at', 'updated_at']
+    fieldsets = [
+        (None, {'fields': ['level', 'text', 'reading_text', 'correct_option_order', 'explanation']}),
+        ('Imagen de contexto', {
+            'fields': ['context_asset', 'imagen_actual'],
+            'description': 'La imagen se sube en «Imagenes de contexto» y se '
+                           'reutiliza entre preguntas. El campo de texto antiguo '
+                           'se conserva solo para las versiones de la app que '
+                           'todavia resuelven el nombre contra el APK.',
+        }),
+        ('Publicacion', {'fields': ['is_active', 'context_image', 'created_at', 'updated_at']}),
+    ]
     
+    @admin.display(description="Vista previa")
+    def imagen_actual(self, obj):
+        if not (obj.context_asset and obj.context_asset.image):
+            return "Sin imagen."
+        return format_html(
+            '<img src="{}" style="max-width:420px;width:100%;border-radius:8px;" alt="{}">',
+            obj.context_asset.image.url, obj.context_asset.alt_text,
+        )
+
     change_form_template = 'admin/academics/question/change_form.html'
     change_list_template = 'admin/academics/question/change_list.html'
     

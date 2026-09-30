@@ -206,7 +206,7 @@
                 // Initialize Heatmap
                 document.getElementById('heatmap-skeleton').style.display = 'none';
                 document.getElementById('cal-heatmap').style.display = 'block';
-                const cal = new CalHeatmap();
+                let cal = null;
                 // Map API dict {timestamp: count} to array of objects
                 let heatmapDataArray = Object.keys(data.heatmap_data).map(key => {
                     return { date: parseInt(key)*1000, value: data.heatmap_data[key] };
@@ -215,22 +215,59 @@
                 let d = new Date();
                 d.setMonth(d.getMonth() - 11);
 
-                const isDark = document.documentElement.classList.contains('dark');
-                // Serie de datos en la escala del acento institucional (DESIGN.md:
-                // el color del sistema solo aparece como puntuación funcional)
-                const heatRange = isDark
-                    ? ['#1f5e8f', '#2b7ab8', '#4e9fe0', '#7dc5ea']
-                    : ['#b7e9ff', '#7dc5ea', '#4e88ca', '#005b99'];
+                // El heatmap lo pinta cal-heatmap una sola vez con los colores
+                // que lee en ese momento. Antes eso bastaba; desde que el
+                // conmutador de tema está a la vista en todas las páginas, el
+                // usuario cambia de modo con el dashboard abierto y la gráfica
+                // se quedaba con la paleta del tema anterior. Por eso el pintado
+                // vive en una función y se repite cuando cambia el tema.
+                function pintarHeatmap() {
+                    // Se rehace el calendario en vez de repintar el existente:
+                    // cal-heatmap no documenta que `paint()` sea re-invocable, y
+                    // aquí no hay forma de comprobarlo sin el CDN. Recrear es
+                    // determinista y el coste es irrelevante — solo ocurre
+                    // cuando el usuario cambia de tema a mano.
+                    const contenedor = document.getElementById('cal-heatmap');
+                    if (cal) {
+                        contenedor.innerHTML = '';
+                    }
+                    cal = new CalHeatmap();
 
-                cal.paint({
-                    itemSelector: '#cal-heatmap',
-                    domain: { type: 'month', label: { text: 'MMM', textAlign: 'start', position: 'top' } },
-                    subDomain: { type: 'ghDay', radius: 2, width: 11, height: 11, gutter: 4 },
-                    data: { source: heatmapDataArray, x: 'date', y: 'value' },
-                    date: { start: d },
-                    scale: { color: { type: 'threshold', range: heatRange, domain: [1, 3, 6] } },
-                    theme: isDark ? 'dark' : 'light',
-                });
+                    const oscuro = document.documentElement.classList.contains('dark');
+                    // Serie de datos en la escala del acento institucional (DESIGN.md:
+                    // el color del sistema solo aparece como puntuación funcional)
+                    const escala = oscuro
+                        ? ['#1f5e8f', '#2b7ab8', '#4e9fe0', '#7dc5ea']
+                        : ['#b7e9ff', '#7dc5ea', '#4e88ca', '#005b99'];
+
+                    cal.paint({
+                        itemSelector: '#cal-heatmap',
+                        domain: { type: 'month', label: { text: 'MMM', textAlign: 'start', position: 'top' } },
+                        subDomain: { type: 'ghDay', radius: 2, width: 11, height: 11, gutter: 4 },
+                        data: { source: heatmapDataArray, x: 'date', y: 'value' },
+                        date: { start: d },
+                        scale: { color: { type: 'threshold', range: escala, domain: [1, 3, 6] } },
+                        theme: oscuro ? 'dark' : 'light',
+                    });
+                }
+
+                pintarHeatmap();
+
+                // Se vigila la clase del <html>, que es donde Alpine marca el
+                // tema: así sirve igual para el botón flotante y para el
+                // conmutador que Unfold trae en el menú de la cuenta.
+                let temaAnterior = document.documentElement.classList.contains('dark');
+                new MutationObserver(function () {
+                    const ahora = document.documentElement.classList.contains('dark');
+                    if (ahora !== temaAnterior) {
+                        temaAnterior = ahora;
+                        try {
+                            pintarHeatmap();
+                        } catch (e) {
+                            console.error('No se pudo repintar el heatmap:', e);
+                        }
+                    }
+                }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
             })
             .catch(err => console.error("Error loading dashboard data:", err));
     });

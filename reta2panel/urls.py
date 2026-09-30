@@ -14,6 +14,8 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 
@@ -23,3 +25,8 @@ urlpatterns = [
     path('api/', include('academics.urls')),
     path('api/', include('core.urls')),
 ]
+
+# En desarrollo sirve Django las imagenes subidas. En produccion esto no actua:
+# static() solo devuelve rutas con DEBUG activo, y ahi las sirve el servidor
+# web o el CDN que se ponga delante.
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -37,8 +37,18 @@ class QuestionsByLevelView(APIView):
     def get(self, request, level_id):
         try:
             level = Level.objects.get(id=level_id)
-            questions = Question.objects.prefetch_related('options').filter(level=level)
-            serializer = QuestionSerializer(questions, many=True)
+            # select_related evita una consulta por pregunta para la imagen y
+            # el nivel; is_active deja fuera las retiradas sin borrarlas.
+            questions = (
+                Question.objects
+                .filter(level=level, is_active=True)
+                .select_related('context_asset', 'level')
+                .prefetch_related('options')
+            )
+            # El contexto con la peticion es lo que permite devolver la URL de
+            # la imagen absoluta. Sin el, el telefono recibiria "/media/..." y
+            # no sabria contra que host resolverlo.
+            serializer = QuestionSerializer(questions, many=True, context={'request': request})
             return Response({
                 'level_id': level_id,
                 'level_name': level.name,
