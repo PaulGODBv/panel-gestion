@@ -9,6 +9,10 @@ class StudentReport(models.Model):
     total_questions_answered = models.PositiveIntegerField(default=0)
     total_practice_time_seconds= models.PositiveIntegerField(default=0)
     current_streak_days = models.PositiveIntegerField(default=0)
+    # La racha viva se reinicia al romperse; esta no. Es contra la que se miden
+    # los logros de racha, igual que en la app: un logro conseguido no se
+    # devuelve. Default 0 para los reportes anteriores al campo.
+    max_streak_days = models.PositiveIntegerField(default=0, verbose_name="Mejor racha")
     daily_practice_time_seconds = models.PositiveIntegerField(default=0)
     
     reported_at = models.DateTimeField(auto_now_add=True)

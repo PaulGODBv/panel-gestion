@@ -16,3 +16,12 @@
         {% block page %}{% endblock %}
     </div>
 {% endblock %}
+
+{% comment %}
+    El conmutador de tema. Las vistas del admin nativo lo reciben por
+    admin/base_site.html; estas páginas no pasan por ahí, así que lo incluyen
+    aquí. Ninguna página hija declara `footer`, de modo que todas lo heredan.
+{% endcomment %}
+{% block footer %}
+    {% include 'reta2/components/theme_toggle.html' %}
+{% endblock %}

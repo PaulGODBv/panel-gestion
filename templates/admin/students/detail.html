@@ -54,6 +54,23 @@
         </div>
     </section>
 
+    <!-- Logros -->
+    <section class="rt-card" aria-labelledby="rt-logros-title">
+        {% include "reta2/components/card_head.html" with title="Logros" desc="Las mismas seis insignias de la app. Se miden contra marcas históricas, así que una vez conseguidas no se pierden." %}
+        <div class="rt-card__body">
+            <p class="rt-logros__resumen">
+                Mejor racha alcanzada:
+                <strong>{{ latest.max_streak_days }}</strong>
+                {% if latest.max_streak_days == 1 %}día{% else %}días{% endif %}
+            </p>
+            <ul class="rt-logros">
+                {% for logro in logros %}
+                    {% include "reta2/components/logro.html" with icon=logro.icon title=logro.title req=logro.req unlocked=logro.unlocked %}
+                {% endfor %}
+            </ul>
+        </div>
+    </section>
+
     <!-- Niveles completados -->
     <section class="rt-card" aria-labelledby="rt-levels-title">
         {% include "reta2/components/card_head.html" with title="Niveles completados" desc="Niveles superados con 80% o más de aciertos" %}

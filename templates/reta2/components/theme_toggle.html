@@ -1,0 +1,31 @@
+{% comment %}
+
+    Conmutador de tema siempre a la vista.
+
+    Unfold ya trae uno —unfold/helpers/theme_switch.html— pero vive dentro del
+    desplegable de la cuenta: dos clics y ninguna pista de que esté ahí. Este es
+    el mismo conmutador sacado a la superficie. No duplica lógica: llama a
+    `switchTheme` del componente Alpine `theme()`, que está declarado en el
+    <html> y es quien guarda la preferencia.
+
+    Queda fijo bajo la cabecera y no en la esquina exacta porque esa esquina la
+    ocupa el menú de usuario de Unfold, y correrlo obligaría a sobrescribir
+    userlinks.html — una plantilla de terceros que habría que revisar en cada
+    actualización del paquete.
+
+    El barrido circular sale gratis: reta2.js engancha por el selector
+    [x-on:click^="switchTheme"], así que basta con que el atributo empiece así.
+
+{% endcomment %}
+
+{% if not is_popup %}
+    <button type="button"
+            class="rt-tema"
+            x-on:click="switchTheme(adminTheme === 'auto' ? 'light' : (adminTheme === 'light' ? 'dark' : 'auto'))"
+            x-bind:aria-label="adminTheme === 'auto' ? 'Tema automático. Pulsa para pasar a claro' : (adminTheme === 'light' ? 'Tema claro. Pulsa para pasar a oscuro' : 'Tema oscuro. Pulsa para volver a automático')"
+            x-bind:title="adminTheme === 'auto' ? 'Tema: automático' : (adminTheme === 'light' ? 'Tema: claro' : 'Tema: oscuro')">
+        <span class="material-symbols-outlined rt-tema__icono"
+              aria-hidden="true"
+              x-text="adminTheme === 'auto' ? 'computer' : (adminTheme === 'light' ? 'light_mode' : 'dark_mode')">computer</span>
+    </button>
+{% endif %}

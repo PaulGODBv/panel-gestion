@@ -1,0 +1,23 @@
+{% comment %}
+
+    Una insignia del estudiante, conseguida o pendiente.
+
+    Espeja las seis de la app: mismos nombres, mismos umbrales y mismo criterio
+    —se miden contra marcas históricas, así que una vez conseguida no se
+    devuelve—. Si aquí y allí dejan de coincidir, el panel estaría contando otra
+    cosa que el estudiante.
+
+    Parámetros:
+      icon        nombre del símbolo de Material
+      title       nombre de la insignia
+      req         qué hay que hacer para conseguirla
+      unlocked    verdadero si ya está conseguida
+
+{% endcomment %}
+
+<li class="rt-logro{% if unlocked %} rt-logro--activo{% endif %}">
+    <span class="material-symbols-outlined rt-logro__icono" aria-hidden="true">{% if unlocked %}{{ icon }}{% else %}lock{% endif %}</span>
+    <p class="rt-logro__titulo">{{ title }}</p>
+    <p class="rt-logro__req">{{ req }}</p>
+    <span class="rt-sr-only">{% if unlocked %}Conseguida{% else %}Pendiente{% endif %}</span>
+</li>

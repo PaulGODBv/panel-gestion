@@ -1,0 +1,34 @@
+{% extends "admin/base.html" %}
+
+{% comment %}
+
+    Copia de unfold/templates/admin/base_site.html con un único añadido: el
+    conmutador de tema flotante.
+
+    Los tres bloques de abajo se reproducen tal cual los trae Unfold —si se
+    omiten se pierden el título y la marca—.
+
+    El botón cuelga de `messages` y no de `footer`, que sería lo natural, porque
+    change_list.html y change_form.html de Unfold **redefinen** `footer` para su
+    barra de acciones: al ser plantillas hijas, su versión gana y la de aquí se
+    descarta. `messages` lo declara admin/base.html y no lo toca nadie más, y
+    `block.super` conserva los avisos. Dónde caiga en el documento da igual: el
+    botón se posiciona con `position: fixed`.
+
+    Las páginas propias del panel no pasan por aquí: heredan de
+    reta2/base_page.html, que incluye el mismo parcial.
+
+{% endcomment %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block messages %}
+    {{ block.super }}
+    {% include "reta2/components/theme_toggle.html" %}
+{% endblock %}
