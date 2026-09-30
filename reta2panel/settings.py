@@ -150,6 +150,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# Archivos subidos desde el panel: hoy, las imagenes de contexto de las
+# preguntas. Viven fuera del codigo y fuera del APK, que es justo el punto:
+# antes una imagen nueva obligaba a recompilar la app.
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
