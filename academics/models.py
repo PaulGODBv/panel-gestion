@@ -29,7 +29,46 @@ class Level(models.Model):
     description = models.TextField()
     order = models.PositiveBigIntegerField(default=0)
     is_Locked_by_default = models.BooleanField(default=False)
-    
+
+    # Como se juega el nivel cuando es de practica (order = 0).
+    #
+    # Va en el nivel y no en la pregunta porque describe la **forma de
+    # interactuar**, no el contenido: las mismas preguntas de siempre se pueden
+    # presentar de las tres maneras sin cambiar un solo dato.
+    #
+    # Y no hace falta inventar ningun campo mas, porque el banco ya tiene la
+    # forma que piden los dos formatos nuevos:
+    #
+    # - ARRASTRAR: una frase con un hueco y cuatro candidatas es exactamente
+    #   una pregunta de opcion unica. Arrastrar la palabra al hueco en vez de
+    #   tocar una opcion es presentacion, no datos.
+    # - UNIR: las cinco preguntas de "Feelings" comparten las mismas ocho
+    #   opciones y cada una tiene una correcta distinta. Eso ya es una rejilla
+    #   de parejas: enunciados a un lado, respuestas al otro, y las que sobran
+    #   hacen de distractores.
+    FORMATO_OPCION = "opcion"
+    FORMATO_ARRASTRAR = "arrastrar"
+    FORMATO_UNIR = "unir"
+    FORMATOS_DE_PRACTICA = [
+        (FORMATO_OPCION, "Elegir una opcion (como en evaluacion)"),
+        (FORMATO_ARRASTRAR, "Arrastrar la palabra al hueco"),
+        (FORMATO_UNIR, "Unir parejas"),
+    ]
+
+    formato_practica = models.CharField(
+        max_length=12,
+        choices=FORMATOS_DE_PRACTICA,
+        default=FORMATO_OPCION,
+        verbose_name="Formato en practica",
+        help_text="Solo se aplica a los niveles de practica (orden 0). En los "
+                  "de evaluacion se ignora: ahi siempre se elige una opcion.",
+    )
+
+    @property
+    def es_de_practica(self):
+        """Los niveles de practica son los de orden 0, delante del basico."""
+        return self.order == 0
+
     class Meta:
         ordering = ['order']
         verbose_name = 'Nivel'
@@ -81,13 +120,64 @@ class ContextAsset(models.Model):
     ANCHO_MAXIMO = 1600
     CALIDAD_WEBP = 82
 
+    # Rampa de luminancia a alfa al despegar la figura del papel. Por encima de
+    # BLANCO es fondo y desaparece; por debajo de NEGRO es trazo pleno. El tramo
+    # de en medio conserva el suavizado de los bordes.
+    BLANCO = 243
+    NEGRO = 60
+    MARGEN = 8
+
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        if self.image and not self.image.name.lower().endswith(".webp"):
+        if self.image:
             self._normalizar_a_webp()
 
+    @classmethod
+    def _ya_es_figura(cls, img):
+        """Una figura ya tratada llega con fondo transparente.
+
+        Vuelve a pasarle el matiz a una figura ya tratada y sale un rectangulo
+        negro: `convert("RGB")` aplana lo transparente a negro, la luminancia da
+        cero en todas partes y el alfa sale opaco entero. Por eso esta
+        comprobacion no es una optimizacion, es lo que hace que guardar dos
+        veces no destruya la imagen.
+        """
+        return img.mode == "RGBA" and img.getchannel("A").getextrema()[0] == 0
+
+    @classmethod
+    def _a_figura(cls, img):
+        """Blanco del papel a transparencia, trazo a tinta negra, recorte al contenido.
+
+        La app pinta esto sobre su propia superficie y lo tine segun el tema:
+        tinta oscura en claro, clara en oscuro. Asi la figura se ve como parte
+        de la app y no como el recorte de una guia impresa, que es lo que se
+        veia en modo oscuro.
+        """
+        from PIL import Image, ImageOps
+
+        luz = ImageOps.grayscale(img.convert("RGB"))
+        alfa = luz.point(
+            lambda v: 0 if v >= cls.BLANCO else (
+                255 if v <= cls.NEGRO
+                else int(255 * (cls.BLANCO - v) / (cls.BLANCO - cls.NEGRO))
+            )
+        )
+        tinta = Image.new("RGBA", img.size, (0, 0, 0, 255))
+        tinta.putalpha(alfa)
+
+        caja = alfa.getbbox()
+        if caja is None:
+            return tinta
+        izq, arr, der, aba = caja
+        return tinta.crop((
+            max(0, izq - cls.MARGEN),
+            max(0, arr - cls.MARGEN),
+            min(tinta.width, der + cls.MARGEN),
+            min(tinta.height, aba + cls.MARGEN),
+        ))
+
     def _normalizar_a_webp(self):
-        """Reescribe la imagen como WebP y borra el original."""
+        """Reescribe la imagen como figura WebP con alfa y borra el original."""
         from io import BytesIO
 
         from django.core.files.base import ContentFile
@@ -109,14 +199,24 @@ class ContextAsset(models.Model):
             # como esta y se ve en el admin que algo no cuadra.
             return
 
-        if img.mode not in ("RGB", "RGBA"):
-            img = img.convert("RGB")
+        ya_tratada = self._ya_es_figura(img)
+        if ya_tratada and original.lower().endswith(".webp"):
+            # Nada que hacer: ya esta en el formato y con el fondo que toca.
+            return
+
         if img.width > self.ANCHO_MAXIMO:
             alto = round(img.height * self.ANCHO_MAXIMO / img.width)
             img = img.resize((self.ANCHO_MAXIMO, alto), Image.LANCZOS)
 
+        if not ya_tratada:
+            img = self._a_figura(img)
+        elif img.mode != "RGBA":
+            img = img.convert("RGBA")
+
         buffer = BytesIO()
-        img.save(buffer, "WEBP", quality=self.CALIDAD_WEBP, method=6)
+        # Sin perdida: son lineas y texto, donde el ruido de la compresion se
+        # nota mucho mas que en una foto, y ademas suele ocupar menos.
+        img.save(buffer, "WEBP", lossless=True, method=6)
 
         nombre = pathlib.PurePath(original).stem + ".webp"
         self.image.save(nombre, ContentFile(buffer.getvalue()), save=False)

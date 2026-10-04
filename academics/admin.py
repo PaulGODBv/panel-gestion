@@ -34,11 +34,12 @@ class LevelAdmin(ModelAdmin):
         'name',
         'competence',
         'order',
+        'formato_practica',
         'is_Locked_by_default',
         'question_count',
         'coverage_indicator'
     ]
-    list_filter = ['competence']
+    list_filter = ['competence', 'formato_practica']
     ordering = ['competence', 'order']
 
     def question_count(self, obj):

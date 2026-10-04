@@ -52,6 +52,10 @@ class QuestionsByLevelView(APIView):
             return Response({
                 'level_id': level_id,
                 'level_name': level.name,
+                # Como se juega este nivel en practica. La app lo necesita para
+                # saber si pinta opciones, huecos que se arrastran o parejas.
+                'formato_practica': level.formato_practica,
+                'es_de_practica': level.es_de_practica,
                 'question_count': questions.count(),
                 'questions': serializer.data
             })

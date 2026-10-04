@@ -70,6 +70,7 @@ class LevelSerializer(serializers.ModelSerializer):
             'description',
             'order',
             'is_Locked_by_default',
+            'formato_practica',
             'question_count',
             'questions'
         ]
@@ -89,6 +90,7 @@ class LevelSummarySerializer(serializers.ModelSerializer):
             'description',
             'order',
             'is_Locked_by_default',
+            'formato_practica',
             'question_count'
         ]
 

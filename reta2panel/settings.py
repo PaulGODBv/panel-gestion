@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-clave-rotada-el-2026-10-05'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.20.72', '10.81.235.97', '10.10.16.97', '*']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.20.72', '10.81.235.97', '10.10.16.97', '192.168.137.24', '*']
 
 
 # Application definition
