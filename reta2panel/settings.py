@@ -22,13 +22,46 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-clave-rotada-el-2026-10-05'
+# DEBUG se define primero porque de el dependen los valores por defecto de
+# SECRET_KEY y ALLOWED_HOSTS. Para correr en produccion: DJANGO_DEBUG=False.
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() not in ('false', '0', 'no')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# La clave anterior quedo expuesta en el historial de git, asi que no sirve mas.
+# En desarrollo se usa una clave fija y declaradamente insegura: no protege
+# nada y no vale la pena rotarla. En produccion es obligatoria por entorno, y
+# si falta el arranque se detiene en vez de quedar funcionando con una clave
+# publica. Generar una con:
+#   python -c "import secrets; print(secrets.token_urlsafe(50))"
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '')
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.20.72', '10.81.235.97', '10.10.16.97', '192.168.137.24', '*']
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = 'django-insecure-solo-para-desarrollo-local-no-usar-en-produccion'
+    else:
+        raise ImproperlyConfigured(
+            'Falta la variable de entorno DJANGO_SECRET_KEY. Es obligatoria '
+            'cuando DEBUG=False. Generar una con: '
+            'python -c "import secrets; print(secrets.token_urlsafe(50))"'
+        )
+
+# En desarrollo se acepta cualquier host: el telefono con la app Android entra
+# por la IP de la LAN, que cambia de red en red, y hardcodearlas aqui las
+# publicaba en el repositorio. En produccion se declaran explicitamente:
+#   DJANGO_ALLOWED_HOSTS=panel.midominio.com,api.midominio.com
+if DEBUG:
+    ALLOWED_HOSTS = ['*']
+else:
+    ALLOWED_HOSTS = [
+        h.strip() for h in os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',')
+        if h.strip()
+    ]
+
+    if not ALLOWED_HOSTS:
+        raise ImproperlyConfigured(
+            'Falta la variable de entorno DJANGO_ALLOWED_HOSTS. Con DEBUG=False '
+            'Django rechaza cualquier peticion si la lista esta vacia. Formato: '
+            'DJANGO_ALLOWED_HOSTS=dominio1.com,dominio2.com'
+        )
 
 
 # Application definition

@@ -1,0 +1,22 @@
+# Dependencias directas del panel. Las transitivas (asgiref, sqlparse, tzdata)
+# las resuelve pip a partir de estas.
+#
+# Instalacion:
+#   python -m venv venv
+#   venv\Scripts\activate        (Windows)
+#   source venv/bin/activate     (Linux / macOS)
+#   pip install -r requirements.txt
+
+Django==6.0.6
+djangorestframework==3.18.0
+
+# Tema del panel de administracion
+django-unfold==0.104.0
+
+# Historial de cambios por registro (academics.historicalquestion)
+django-simple-history==3.13.0
+
+# Procesamiento de imagenes para los ImageField de academics.models
+pillow==12.3.0
+
+django-crispy-forms==2.7

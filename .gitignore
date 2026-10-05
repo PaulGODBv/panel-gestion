@@ -1,7 +1,54 @@
+# ---- Notas internas de trabajo ----
 CLAUDE.md
 DESIGN.md
 PROYECTO.md
 /graphify-out
-/.claudebackups/
 /.claude
+/.claudebackups/
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+ENV/
+*.egg-info/
+.eggs/
+
+# ---- Django ----
+*.log
+local_settings.py
+
+# Base de datos de desarrollo y todos sus respaldos.
+# El patron db-antes-*.sqlite3 es como se nombran los snapshots manuales:
+# son copias de trabajo con datos, no van al repositorio.
+*.sqlite3
+*.sqlite3-journal
 db.sqlite3
+db-antes-*.sqlite3
+/backups/
+
+# Archivos subidos por usuarios y respaldos de medios.
+# media/ si se versiona (son assets del contenido academico), pero las
+# carpetas con timestamp son snapshots previos a recortes y no.
+/media-originales-*/
+*.antes-del-recorte
+
+# ---- Entorno ----
+# RETA2_API_KEY y SECRET_KEY viven aqui, nunca en el repositorio.
+.env
+.env.*
+!.env.example
+
+# ---- Sistema operativo / editor ----
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*.tmp
