@@ -19,6 +19,30 @@ from django.core.exceptions import ImproperlyConfigured
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+def _cargar_env(ruta=BASE_DIR / '.env'):
+    """Mete en el entorno las variables de `.env`, si el fichero existe.
+
+    Doce lineas en vez de `python-dotenv` porque lo unico que hace falta es
+    `CLAVE=valor` por linea, y las dependencias estan fijadas en
+    requirements.txt. Ver `.env.example` para la plantilla.
+
+    Lo que ya venga en el entorno MANDA sobre el fichero: en produccion las
+    variables las pone el servicio, y un `.env` olvidado en el disco no debe
+    poder pisarlas.
+    """
+    if not ruta.exists():
+        return
+    for linea in ruta.read_text(encoding='utf-8').splitlines():
+        linea = linea.strip()
+        if not linea or linea.startswith('#') or '=' not in linea:
+            continue
+        clave, _, valor = linea.partition('=')
+        os.environ.setdefault(clave.strip(), valor.strip().strip('"').strip("'"))
+
+
+_cargar_env()
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
