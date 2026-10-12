@@ -77,10 +77,12 @@ class ContextAssetAdmin(ModelAdmin):
     Android: el encargado de contenidos no podia anadir una imagen nueva.
     """
 
-    list_display = ['vista_previa', 'alt_text', 'uso', 'updated_at']
+    list_display = ['vista_previa', 'alt_text', 'es_figura', 'uso', 'updated_at']
+    list_filter = ['es_figura']
     search_fields = ['alt_text', 'caption']
     readonly_fields = ['vista_previa_grande', 'created_at', 'updated_at']
-    fields = ['image', 'vista_previa_grande', 'alt_text', 'caption', 'created_at', 'updated_at']
+    fields = ['image', 'vista_previa_grande', 'es_figura', 'alt_text', 'caption',
+              'created_at', 'updated_at']
 
     @admin.display(description="Imagen")
     def vista_previa(self, obj):

@@ -102,6 +102,17 @@ class ContextAsset(models.Model):
         verbose_name="Leyenda",
         help_text="Opcional. Se muestra debajo de la imagen.",
     )
+    es_figura = models.BooleanField(
+        default=True,
+        verbose_name="Es una figura de linea",
+        help_text="Marcado para tablas, graficas y esquemas: se les quita el "
+                  "papel y la app los tine segun el tema, asi parecen parte de "
+                  "la aplicacion y no el recorte de una guia. DESMARCALO para "
+                  "fotografias e historietas: ahi el blanco significa algo "
+                  "—el interior de un bocadillo, una cara— y quitarlo deja la "
+                  "imagen en negativo.",
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -199,16 +210,25 @@ class ContextAsset(models.Model):
             # como esta y se ve en el admin que algo no cuadra.
             return
 
-        ya_tratada = self._ya_es_figura(img)
-        if ya_tratada and original.lower().endswith(".webp"):
+        # Una imagen que no es figura NO pasa por el matte. Se reescribe a
+        # WebP sin perdida y se encoge si viene enorme, que es cuestion de peso
+        # y no toca un solo pixel del dibujo; lo que la destruiria es quitarle
+        # el blanco. En una historieta el blanco es el interior del bocadillo y
+        # la cara del personaje: sin el, la vineta sale en negativo.
+        ya_tratada = self.es_figura and self._ya_es_figura(img)
+        if self.es_figura and ya_tratada and original.lower().endswith(".webp"):
             # Nada que hacer: ya esta en el formato y con el fondo que toca.
+            return
+        if not self.es_figura and original.lower().endswith(".webp"):
             return
 
         if img.width > self.ANCHO_MAXIMO:
             alto = round(img.height * self.ANCHO_MAXIMO / img.width)
             img = img.resize((self.ANCHO_MAXIMO, alto), Image.LANCZOS)
 
-        if not ya_tratada:
+        if not self.es_figura:
+            img = img.convert("RGB")
+        elif not ya_tratada:
             img = self._a_figura(img)
         elif img.mode != "RGBA":
             img = img.convert("RGBA")

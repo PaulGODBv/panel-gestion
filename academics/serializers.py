@@ -17,6 +17,7 @@ class QuestionSerializer(serializers.ModelSerializer):
     competence_id = serializers.IntegerField(source='level.competence_id', read_only=True)
     context_image_url = serializers.SerializerMethodField()
     context_image_alt = serializers.SerializerMethodField()
+    context_image_es_figura = serializers.SerializerMethodField()
 
     class Meta:
         model = Question
@@ -31,6 +32,7 @@ class QuestionSerializer(serializers.ModelSerializer):
             'reading_text',
             'context_image_url',
             'context_image_alt',
+            'context_image_es_figura',
             'is_active',
             'updated_at',
             # Nombre de drawable heredado. Se sigue enviando mientras haya
@@ -56,6 +58,18 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     def get_context_image_alt(self, obj):
         return obj.context_asset.alt_text if obj.context_asset else None
+
+    def get_context_image_es_figura(self, obj):
+        """Si la app debe tenirla con el color del tema.
+
+        Verdadero para tablas y esquemas, que se ven como parte de la
+        aplicacion. Falso para fotografias e historietas, que se muestran tal
+        cual: tenirlas de un color plano las destruiria.
+
+        Por defecto verdadero, que es como se comportaban las doce imagenes
+        que ya existian.
+        """
+        return obj.context_asset.es_figura if obj.context_asset else True
 
 
 class LevelSerializer(serializers.ModelSerializer):
