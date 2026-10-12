@@ -156,9 +156,141 @@ class QuestionAdmin(ModelAdmin, SimpleHistoryAdmin):
         urls = super().get_urls()
         custom_urls = [
             path('import-csv/', self.admin_site.admin_view(self.import_csv), name='academics_question_import_csv'),
+            path('importar/', self.admin_site.admin_view(self.importar_pegando), name='academics_question_importar'),
         ]
         return custom_urls + urls
         
+    def importar_pegando(self, request):
+        """Pegar preguntas escritas a mano, revisarlas y solo entonces guardar.
+
+        Tres diferencias con el importador de CSV, y las tres vienen del mismo
+        sitio: quien sube las preguntas no es quien programo el panel.
+
+        1. **El nivel se elige de una lista**, no se escribe su id. Nadie fuera
+           del equipo sabe que «18» es Comunicacion Escrita.
+        2. **Se ve antes de escribir.** El CSV guardaba fila a fila segun
+           leia: si la quinta estaba mal, las cuatro primeras ya estaban
+           dentro y habia que ir a borrarlas a mano.
+        3. **Entra todo o no entra nada.** La escritura va en una transaccion.
+
+        El texto no se guarda entre la revision y la confirmacion: se vuelve a
+        mandar y se vuelve a analizar. Es deliberado — guardarlo en sesion
+        abriria la puerta a confirmar algo distinto de lo que se enseno, que
+        es justo la confianza que esta pantalla tiene que ganarse.
+        """
+        import hashlib
+
+        from django.contrib import messages
+        from django.db import transaction
+        from django.shortcuts import redirect, render
+
+        from .importador import analizar, normalizar, resumen
+
+        niveles = Level.objects.select_related("competence").order_by(
+            "competence__order", "order", "id"
+        )
+
+        texto = request.POST.get("texto", "")
+        id_de_nivel = request.POST.get("nivel", "")
+        accion = request.POST.get("accion", "")
+
+        bloques = []
+        nivel = None
+        if request.method == "POST":
+            nivel = niveles.filter(pk=id_de_nivel).first()
+            if nivel is None:
+                messages.error(request, "Elige el nivel al que van estas preguntas.")
+            elif not texto.strip():
+                messages.error(request, "No hay nada que leer: el cuadro está vacío.")
+            else:
+                bloques = analizar(texto)
+                self._marcar_duplicadas(bloques, nivel, normalizar)
+
+        # Huella del texto que se reviso. Al confirmar se vuelve a calcular: si
+        # alguien edito el cuadro despues de revisar, no se guarda lo que no se
+        # ha ensenado, se vuelve a revisar. Es la unica forma de que "entra lo
+        # que viste" sea verdad teniendo el texto a la vista todo el rato.
+        huella = hashlib.sha256(texto.encode("utf-8")).hexdigest()
+        if accion == "confirmar" and huella != request.POST.get("huella", ""):
+            messages.warning(
+                request,
+                "El texto cambió después de revisarlo, así que no se guardó nada. "
+                "Aquí tienes la revisión de lo que hay ahora.",
+            )
+            accion = "revisar"
+
+        if accion == "confirmar" and nivel is not None and bloques:
+            creadas = []
+            with transaction.atomic():
+                for bloque in bloques:
+                    if not bloque.valida:
+                        continue
+                    pregunta = Question.objects.create(
+                        level=nivel,
+                        text=bloque.enunciado,
+                        reading_text=bloque.contexto,
+                        explanation=bloque.explicacion,
+                        correct_option_order=bloque.orden_de_la_correcta,
+                    )
+                    for orden, opcion in enumerate(bloque.opciones, start=1):
+                        QuestionOption.objects.create(
+                            question=pregunta, text=opcion.texto, order=orden
+                        )
+                    creadas.append(pregunta)
+
+            if creadas:
+                messages.success(
+                    request,
+                    f"{len(creadas)} pregunta(s) creada(s) en «{nivel.name}». "
+                    "Las que necesiten imagen se la pones desde su ficha.",
+                )
+            else:
+                messages.warning(request, "No había ninguna pregunta lista para guardar.")
+            return redirect("admin:academics_question_changelist")
+
+        return render(
+            request,
+            "admin/academics/question/importar_pegando.html",
+            context=dict(
+                self.admin_site.each_context(request),
+                niveles=niveles,
+                nivel=nivel,
+                texto=texto,
+                bloques=bloques,
+                resumen=resumen(bloques) if bloques else None,
+                revisado=bool(bloques),
+                huella=huella if request.method == "POST" else "",
+            ),
+        )
+
+    @staticmethod
+    def _marcar_duplicadas(bloques, nivel, normalizar):
+        """Senala las que ya estan en ESE nivel, no en el banco entero.
+
+        La misma pregunta en dos niveles distintos es legitima y deliberada:
+        las versiones cortas de Calentamiento conviven con sus originales en
+        los niveles de evaluacion. Lo que no tiene sentido es repetirla dentro
+        del mismo nivel, que es lo que pasa al subir dos veces el mismo lote.
+        """
+        existentes = {
+            normalizar(t): pk
+            for pk, t in Question.objects.filter(level=nivel).values_list("id", "text")
+        }
+        vistas = {}
+        for bloque in bloques:
+            clave = normalizar(bloque.enunciado)
+            if not clave:
+                continue
+            if clave in existentes:
+                bloque.duplicada_de = existentes[clave]
+            elif clave in vistas:
+                bloque.duplicada_de = 0  # repetida dentro del propio texto pegado
+                bloque.avisos.append(
+                    f"Esta pregunta ya aparece más arriba, en el bloque {vistas[clave]}."
+                )
+            else:
+                vistas[clave] = bloque.numero
+
     def import_csv(self, request):
         from django.shortcuts import render, redirect
         from django.contrib import messages

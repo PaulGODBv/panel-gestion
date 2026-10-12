@@ -646,6 +646,18 @@ html:root ::selection {
 .rt-input::placeholder { color: var(--rt-text-3); }
 .rt-input:hover { border-color: var(--rt-slate-edge); }
 
+/* Cuadro de varias lineas: el mismo control, con alto propio y tipografia
+   monoespaciada. Las preguntas se pegan aqui, y con proporcional cuesta ver
+   si una linea empieza por "*", por "-" o por nada, que es justo lo que
+   distingue una opcion de otra. */
+.rt-input--area {
+    min-height: 260px;
+    padding: 12px;
+    font-family: var(--rt-font-mono);
+    line-height: 1.7;
+    resize: vertical;
+}
+
 .rt-input--search { min-width: 220px; }
 .rt-input--date { min-width: 150px; }
 

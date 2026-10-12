@@ -1,0 +1,187 @@
+{% extends 'reta2/base_page.html' %}
+{% load i18n admin_urls static %}
+
+{% block title %}Importar preguntas pegando texto{% endblock %}
+
+{% block page %}
+
+<nav aria-label="Ruta de navegación">
+    <a href="{% url 'admin:academics_question_changelist' %}" class="rt-btn rt-btn--quiet rt-btn--sm" style="padding-left:0;">
+        <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+        Volver a preguntas
+    </a>
+</nav>
+
+<header class="rt-page__head rt-grid-bg">
+    {% include "reta2/components/page_header.html" with eyebrow="BANCO DE PREGUNTAS" title="Importar pegando texto" subtitle="Pega las preguntas como las tengas escritas. Se revisa primero y se guarda después: nada entra en el banco hasta que lo confirmes." %}
+</header>
+
+{# `reta2/base_page.html` no pinta los mensajes de Django: las paginas que lo
+   usan redirigen al listado del admin y es ahi donde se ven. Esta no redirige
+   mientras se revisa, asi que los pinta ella. Sin esto, avisos como «el texto
+   cambio despues de revisarlo» se perdian y la pagina parecia no reaccionar. #}
+{% if messages %}
+    <div class="rt-stack--tight" role="status" aria-live="polite">
+        {% for m in messages %}
+            <div class="rt-note{% if m.level_tag == 'error' or m.level_tag == 'warning' %} rt-note--danger{% endif %}">
+                <p class="rt-note__text" style="margin:0;">{{ m }}</p>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<form method="post" class="rt-stack">
+    {% csrf_token %}
+    <input type="hidden" name="huella" value="{{ huella }}">
+
+    <section class="rt-card" aria-labelledby="rt-pegar-title">
+        <div class="rt-card__head">
+            <h2 id="rt-pegar-title" class="rt-card__title">El texto</h2>
+            <p class="rt-card__desc">Una línea en blanco separa una pregunta de la siguiente.</p>
+        </div>
+
+        <div class="rt-card__body rt-stack">
+            <div class="rt-field">
+                <label class="rt-label" for="rt-nivel">Nivel al que van</label>
+                <select id="rt-nivel" name="nivel" class="rt-input" required>
+                    <option value="">Elige un nivel…</option>
+                    {% for n in niveles %}
+                        <option value="{{ n.pk }}" {% if nivel and nivel.pk == n.pk %}selected{% endif %}>
+                            {{ n.competence.name }} — {{ n.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <p class="rt-hint">Las preguntas se crean todas en este nivel.</p>
+            </div>
+
+            <div class="rt-field">
+                <label class="rt-label" for="rt-texto">Preguntas</label>
+                <textarea id="rt-texto"
+                          name="texto"
+                          rows="14"
+                          class="rt-input rt-input--area"
+                          aria-describedby="rt-formato"
+                          placeholder="Contexto: el pasaje de lectura, si lo hay.&#10;El enunciado de la pregunta.&#10;* La opción correcta&#10;- Otra opción&#10;- Otra opción&#10;&gt; Por qué es esa y no las otras.">{{ texto }}</textarea>
+            </div>
+
+            <div class="rt-note" id="rt-formato">
+                <p class="rt-note__title">Cómo se escribe</p>
+                <table class="rt-table" style="margin-top:8px;">
+                    <tbody>
+                        <tr><td style="width:12ch;"><code class="rt-code">Contexto:</code></td><td>El pasaje de lectura. Opcional.</td></tr>
+                        <tr><td><code class="rt-code">*</code></td><td>La opción correcta. Tiene que haber una, y solo una.</td></tr>
+                        <tr><td><code class="rt-code">-</code></td><td>Las demás opciones.</td></tr>
+                        <tr><td><code class="rt-code">&gt;</code></td><td>La explicación. Es lo que se lee al responder en práctica.</td></tr>
+                        <tr><td><em>sin marca</em></td><td>El enunciado.</td></tr>
+                    </tbody>
+                </table>
+                <p class="rt-note__text">
+                    El orden da igual, y el enunciado o el contexto pueden ocupar
+                    varios renglones: se vuelven a unir. La correcta se marca
+                    <strong>sobre la opción</strong>, así que no hay ningún número
+                    que contar.
+                </p>
+            </div>
+
+            <div class="rt-page__actions">
+                <button type="submit" name="accion" value="revisar" class="rt-btn rt-btn--primary">
+                    <span class="material-symbols-outlined" aria-hidden="true">fact_check</span>
+                    Revisar
+                </button>
+                <a href="{% url 'admin:academics_question_changelist' %}" class="rt-btn rt-btn--ghost">Cancelar</a>
+            </div>
+        </div>
+    </section>
+
+    {% if revisado %}
+    <section class="rt-card" aria-labelledby="rt-revision-title">
+        <div class="rt-card__head">
+            <h2 id="rt-revision-title" class="rt-card__title">Lo que se entendió</h2>
+            <p class="rt-card__desc">
+                {{ resumen.total }} bloque{{ resumen.total|pluralize }} en el texto ·
+                {{ resumen.listas }} list{{ resumen.listas|pluralize:"a,as" }}
+                {% if resumen.con_problemas %}· {{ resumen.con_problemas }} con problemas{% endif %}
+                {% if resumen.duplicadas %}· {{ resumen.duplicadas }} ya en el nivel{% endif %}
+            </p>
+        </div>
+
+        <div class="rt-card__body--flush">
+            <div class="rt-table-wrap">
+                <table class="rt-table">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width:4ch;">#</th>
+                            <th scope="col" style="width:12ch;">Estado</th>
+                            <th scope="col">Pregunta</th>
+                            <th scope="col" style="width:8ch;">Opciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for b in bloques %}
+                        <tr>
+                            <td>{{ b.numero }}</td>
+                            <td>
+                                {% if b.duplicada_de %}
+                                    <span class="rt-badge rt-badge--warn">Ya existe</span>
+                                {% elif b.problemas %}
+                                    <span class="rt-badge rt-badge--danger">No entra</span>
+                                {% elif b.avisos %}
+                                    <span class="rt-badge rt-badge--accent">Lista</span>
+                                {% else %}
+                                    <span class="rt-badge rt-badge--ok">Lista</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong>{{ b.enunciado|default:"(sin enunciado)" }}</strong>
+                                {% if b.contexto %}
+                                    <p class="rt-hint" style="margin-top:4px;">Contexto: {{ b.contexto|truncatechars:110 }}</p>
+                                {% endif %}
+                                {% if b.valida %}
+                                    <p class="rt-hint" style="margin-top:4px;">
+                                        Correcta: «{% for o in b.opciones %}{% if o.correcta %}{{ o.texto|truncatechars:70 }}{% endif %}{% endfor %}»
+                                    </p>
+                                {% endif %}
+                                {% for p in b.problemas %}
+                                    <p class="rt-hint" style="margin-top:4px; color: var(--rt-danger);">
+                                        Línea {{ b.linea }}: {{ p }}
+                                    </p>
+                                {% endfor %}
+                                {% if b.duplicada_de %}
+                                    <p class="rt-hint" style="margin-top:4px;">
+                                        Este enunciado ya está en el nivel (pregunta {{ b.duplicada_de }}). No se vuelve a crear.
+                                    </p>
+                                {% endif %}
+                                {% for a in b.avisos %}
+                                    <p class="rt-hint" style="margin-top:4px;">{{ a }}</p>
+                                {% endfor %}
+                            </td>
+                            <td>{{ b.opciones|length }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="rt-card__body">
+            {% if resumen.listas %}
+                <div class="rt-page__actions">
+                    <button type="submit" name="accion" value="confirmar" class="rt-btn rt-btn--primary">
+                        <span class="material-symbols-outlined" aria-hidden="true">save</span>
+                        Guardar {{ resumen.listas }} pregunta{{ resumen.listas|pluralize }} en «{{ nivel.name }}»
+                    </button>
+                </div>
+                <p class="rt-hint" style="margin-top:8px;">
+                    Entran las {{ resumen.listas }} marcadas como listas, y entran todas
+                    a la vez: si una fallara al guardarse, no se queda ninguna a medias.
+                    Las que necesiten imagen se la pones después desde su ficha.
+                </p>
+            {% else %}
+                {% include "reta2/components/empty_state.html" with icon="report" title="No hay nada que guardar todavía" text="Arregla lo que está marcado arriba y vuelve a revisar." %}
+            {% endif %}
+        </div>
+    </section>
+    {% endif %}
+</form>
+
+{% endblock %}
