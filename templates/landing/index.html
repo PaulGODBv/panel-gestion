@@ -1,0 +1,243 @@
+{% load static %}<!DOCTYPE html>
+<html lang="es-co">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reta2 — Prepárate para Saber Pro desde el teléfono</title>
+    <meta name="description" content="Aplicación de la Universidad de Santander para preparar las competencias genéricas del examen Saber Pro con sesiones cortas, sin conexión y desde el móvil.">
+
+    {% comment %}
+        La página no pasa por la base del panel a propósito: no comparten ni
+        la hoja de estilos ni el público. Lo único en común es el azul UDES.
+    {% endcomment %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'landing/css/landing.css' %}">
+</head>
+<body>
+
+<a class="ld-salto" href="#contenido">Saltar al contenido</a>
+
+<header class="ld-barra">
+    <div class="ld-contenedor ld-barra__fila">
+        <a class="ld-marca" href="#contenido">
+            <span class="ld-marca__punto" aria-hidden="true">R</span>
+            Reta2
+        </a>
+        <nav aria-label="Principal">
+            <a class="ld-btn ld-btn--discreto ld-btn--sm" href="{% url 'admin:index' %}">Panel de gestión</a>
+            {% if hay_apk %}
+                <a class="ld-btn ld-btn--principal ld-btn--sm" href="#descargar">Descargar</a>
+            {% else %}
+                <a class="ld-btn ld-btn--discreto ld-btn--sm" href="#descargar">Cómo instalarla</a>
+            {% endif %}
+        </nav>
+    </div>
+</header>
+
+<main id="contenido">
+
+    <section class="ld-portada">
+        <div class="ld-contenedor ld-portada__fila">
+            <div data-aparece="0">
+                <p class="ld-eyebrow">Universidad de Santander · Ruta del Mejor Saber</p>
+                <h1 class="ld-titular">Prepárate para Saber&nbsp;Pro en ratos de cinco minutos</h1>
+                <p class="ld-entrada">
+                    Reta2 convierte el repaso de las competencias genéricas en sesiones
+                    cortas que caben en la fila del almuerzo. Sin conexión, sin pagar
+                    nada y con tu correo institucional.
+                </p>
+                <div class="ld-acciones">
+                    {% if hay_apk %}
+                        <a class="ld-btn ld-btn--principal" href="{{ apk_url }}" download>
+                            Descargar para Android · {{ apk_megas }} MB
+                        </a>
+                    {% else %}
+                        <span class="ld-btn ld-btn--apagado" aria-disabled="true">Descarga en preparación</span>
+                    {% endif %}
+                    <a class="ld-btn ld-btn--discreto" href="#como-funciona">Cómo funciona</a>
+                </div>
+                <p class="ld-nota">Android 8 o superior. Se instala desde el archivo, no desde la tienda.</p>
+            </div>
+
+            <div class="ld-telefonos" data-aparece="120">
+                <div class="ld-telefono ld-telefono--atras">
+                    <img src="{% static 'landing/img/pantalla-niveles.png' %}"
+                         alt="Pantalla de la aplicación con los niveles de una competencia y su porcentaje de avance"
+                         loading="lazy" width="372" height="827">
+                </div>
+                <div class="ld-telefono">
+                    <img src="{% static 'landing/img/pantalla-pregunta.png' %}"
+                         alt="Pantalla de la aplicación mostrando una pregunta con su texto de contexto y cuatro opciones"
+                         loading="lazy" width="464" height="1031">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="ld-seccion ld-seccion--gris" id="como-funciona">
+        <div class="ld-contenedor">
+            <h2 class="ld-titulo" data-aparece="0">Estudiar poco, pero a menudo</h2>
+            <p class="ld-bajada" data-aparece="60">
+                Las pruebas genéricas se suelen preparar de un tirón la semana
+                anterior. Reta2 parte de lo contrario: sesiones de cinco preguntas
+                que se pueden hacer todos los días sin reservarles un hueco.
+            </p>
+
+            <div class="ld-rejilla">
+                <article class="ld-tarjeta" data-aparece="0">
+                    <span class="ld-icono" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                    </span>
+                    <h3>Sesiones de cinco preguntas</h3>
+                    <p>Lo bastante cortas para no posponerlas. Cada una dice al momento si acertaste y por qué.</p>
+                </article>
+
+                <article class="ld-tarjeta" data-aparece="90">
+                    <span class="ld-icono" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18V9m6 9V5m6 13v-7m6 7V8"/></svg>
+                    </span>
+                    <h3>Dos modos</h3>
+                    <p>Práctica, donde se corrige en el momento y no cuenta; y evaluación, que desbloquea el nivel siguiente.</p>
+                </article>
+
+                <article class="ld-tarjeta" data-aparece="180">
+                    <span class="ld-icono" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c1.8 3 4.5 4.3 4.5 8a4.5 4.5 0 1 1-9 0c0-1.6.6-2.7 1.5-3.8"/></svg>
+                    </span>
+                    <h3>Racha diaria</h3>
+                    <p>Cuenta los días seguidos que practicas, no los aciertos. Fallar no rompe nada.</p>
+                </article>
+
+                <article class="ld-tarjeta" data-aparece="270">
+                    <span class="ld-icono" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A8.5 8.5 0 1 0 11.2 3M3 3v6h6"/><path d="M12 8v4l3 2"/></svg>
+                    </span>
+                    <h3>Funciona sin datos</h3>
+                    <p>Las preguntas se guardan en el teléfono. La conexión solo hace falta para traer contenido nuevo.</p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="ld-seccion">
+        <div class="ld-contenedor">
+            <h2 class="ld-titulo" data-aparece="0">Las cinco competencias genéricas</h2>
+            <p class="ld-bajada" data-aparece="60">
+                Las mismas que evalúa el Icfes en los módulos genéricos de Saber Pro.
+            </p>
+            <div class="ld-fichas" data-aparece="120">
+                <span class="ld-ficha">Lectura Crítica</span>
+                <span class="ld-ficha">Razonamiento Cuantitativo</span>
+                <span class="ld-ficha">Competencias Ciudadanas</span>
+                <span class="ld-ficha">Inglés</span>
+                <span class="ld-ficha">Comunicación Escrita</span>
+            </div>
+        </div>
+    </section>
+
+    {% if video_incrustado or video_url %}
+    <section class="ld-seccion ld-seccion--gris">
+        <div class="ld-contenedor">
+            <h2 class="ld-titulo" data-aparece="0">Míralo en un minuto</h2>
+            <p class="ld-bajada" data-aparece="60">Un recorrido por la aplicación, de la primera pregunta al resultado.</p>
+            <div class="ld-video" data-aparece="120">
+                {% if video_incrustado %}
+                    <iframe src="{{ video_incrustado }}"
+                            title="Vídeo de presentación de Reta2"
+                            allow="accelerometer; clipboard-write; encrypted-media; picture-in-picture"
+                            allowfullscreen loading="lazy"></iframe>
+                {% else %}
+                    <video controls preload="metadata" playsinline>
+                        <source src="{{ video_url }}" type="video/mp4">
+                        Tu navegador no puede reproducir el vídeo.
+                        <a href="{{ video_url }}">Descárgalo aquí</a>.
+                    </video>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <section class="ld-seccion" id="descargar">
+        <div class="ld-contenedor">
+            <h2 class="ld-titulo" data-aparece="0">Cómo se instala</h2>
+            <p class="ld-bajada" data-aparece="60">
+                Reta2 no está en Google Play: se instala desde el archivo. Android
+                pedirá permiso una vez, y es normal.
+            </p>
+
+            <ol class="ld-pasos">
+                <li class="ld-paso" data-aparece="0">
+                    <span class="ld-paso__num" aria-hidden="true"></span>
+                    <div>
+                        <h3>Descarga el archivo en el teléfono</h3>
+                        <p>
+                            {% if hay_apk %}
+                                Pulsa <a href="{{ apk_url }}" download>descargar</a> desde el propio
+                                móvil. Ocupa {{ apk_megas }} MB.
+                            {% else %}
+                                El archivo estará disponible aquí mismo en cuanto se publique la versión del piloto.
+                            {% endif %}
+                        </p>
+                    </div>
+                </li>
+                <li class="ld-paso" data-aparece="90">
+                    <span class="ld-paso__num" aria-hidden="true"></span>
+                    <div>
+                        <h3>Permite la instalación desde esta fuente</h3>
+                        <p>
+                            Al abrirlo saldrá un aviso de que no se permiten instalaciones de
+                            fuentes desconocidas. Toca <strong>Ajustes</strong> y activa el
+                            permiso para el navegador o el gestor de archivos que estés usando.
+                            Es un permiso por aplicación, no un ajuste general del teléfono.
+                        </p>
+                    </div>
+                </li>
+                <li class="ld-paso" data-aparece="180">
+                    <span class="ld-paso__num" aria-hidden="true"></span>
+                    <div>
+                        <h3>Regístrate con tu correo institucional</h3>
+                        <p>
+                            Hace falta una dirección <strong>@mail.udes.edu.co</strong>: es lo que
+                            permite relacionar tu avance con el programa académico en el que estás.
+                        </p>
+                    </div>
+                </li>
+            </ol>
+        </div>
+    </section>
+
+    <section class="ld-seccion">
+        <div class="ld-contenedor">
+            <div class="ld-cierre" data-aparece="0">
+                <h2 class="ld-titulo">Empieza por una sesión de cinco preguntas</h2>
+                <p>Se tarda menos que en leer esta página.</p>
+                {% if hay_apk %}
+                    <a class="ld-btn ld-btn--principal" href="{{ apk_url }}" download>
+                        Descargar para Android · {{ apk_megas }} MB
+                    </a>
+                {% else %}
+                    <span class="ld-btn ld-btn--apagado" aria-disabled="true">Descarga en preparación</span>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<footer class="ld-pie">
+    <div class="ld-contenedor ld-pie__fila">
+        <img src="{% static 'reta2/img/udes.png' %}"
+             alt="Universidad de Santander, acreditada en alta calidad por el Ministerio de Educación Nacional y acreditación internacional EQUAA">
+        <p style="margin:0;">
+            Reta2 · Trabajo de grado · Programa Ruta del Mejor Saber<br>
+            <a href="{% url 'admin:index' %}">Panel de gestión</a>
+        </p>
+    </div>
+</footer>
+
+<script src="{% static 'landing/js/landing.js' %}" defer></script>
+</body>
+</html>

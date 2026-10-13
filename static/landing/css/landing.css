@@ -1,0 +1,425 @@
+/* Página de presentación de Reta2.
+ *
+ * Hoja propia, sin una sola clase del panel. No es purismo: el panel está
+ * diseñado para que alguien de Desarrollo Estudiantil lea tablas durante
+ * media hora, y esto tiene que convencer a un estudiante en quince segundos.
+ * Comparten el azul de la Universidad y nada más.
+ *
+ * Sin dependencias: ni framework ni hoja de terceros. Lo único que se mueve
+ * lo mueve IntersectionObserver, que es del navegador.
+ */
+
+:root {
+    --ld-azul: #005b99;          /* el azul UDES, el mismo del panel */
+    --ld-azul-claro: #4e88ca;
+    --ld-tinta: #0f172a;
+    --ld-tinta-2: #475569;
+    --ld-tinta-3: #94a3b8;
+    --ld-papel: #ffffff;
+    --ld-papel-2: #f6f8fb;
+    --ld-borde: #e2e8f0;
+    --ld-radio: 14px;
+    --ld-ancho: 1080px;
+    --ld-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+    margin: 0;
+    font-family: var(--ld-sans);
+    color: var(--ld-tinta);
+    background: var(--ld-papel);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+}
+
+img { max-width: 100%; display: block; }
+
+a { color: var(--ld-azul); }
+
+.ld-salto {
+    position: absolute;
+    left: -9999px;
+}
+.ld-salto:focus {
+    left: 16px;
+    top: 16px;
+    z-index: 50;
+    background: var(--ld-papel);
+    padding: 10px 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(15, 23, 42, .18);
+}
+
+.ld-contenedor {
+    width: 100%;
+    max-width: var(--ld-ancho);
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+/* ---------- Barra superior ---------- */
+
+.ld-barra {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: rgba(255, 255, 255, .88);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--ld-borde);
+}
+
+.ld-barra__fila {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 64px;
+}
+
+.ld-marca {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--ld-tinta);
+    text-decoration: none;
+    letter-spacing: -.01em;
+}
+
+.ld-marca__punto {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    background: var(--ld-azul);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.ld-barra nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ---------- Botones ---------- */
+
+.ld-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 20px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background .18s ease, border-color .18s ease, transform .18s ease;
+}
+
+.ld-btn--principal {
+    background: var(--ld-azul);
+    color: #fff;
+}
+.ld-btn--principal:hover { background: #004e82; }
+.ld-btn--principal:active { transform: translateY(1px); }
+
+.ld-btn--discreto {
+    background: transparent;
+    color: var(--ld-tinta-2);
+    border-color: var(--ld-borde);
+}
+.ld-btn--discreto:hover { border-color: var(--ld-tinta-3); color: var(--ld-tinta); }
+
+.ld-btn--apagado {
+    background: var(--ld-papel-2);
+    color: var(--ld-tinta-3);
+    border-color: var(--ld-borde);
+    cursor: not-allowed;
+}
+
+.ld-btn--sm { padding: 8px 15px; font-size: 14px; }
+
+/* ---------- Portada ---------- */
+
+.ld-portada {
+    padding: 72px 0 56px;
+    background:
+        radial-gradient(900px 420px at 15% -10%, rgba(0, 91, 153, .10), transparent 62%),
+        var(--ld-papel);
+}
+
+.ld-portada__fila {
+    display: grid;
+    grid-template-columns: 1.15fr .85fr;
+    gap: 48px;
+    align-items: center;
+}
+
+.ld-eyebrow {
+    font-size: 13px;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--ld-azul);
+    font-weight: 600;
+    margin: 0 0 14px;
+}
+
+h1.ld-titular {
+    font-size: clamp(32px, 5vw, 52px);
+    line-height: 1.08;
+    letter-spacing: -.025em;
+    font-weight: 600;
+    margin: 0 0 18px;
+}
+
+.ld-entrada {
+    font-size: 18px;
+    color: var(--ld-tinta-2);
+    margin: 0 0 28px;
+    max-width: 48ch;
+}
+
+.ld-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+
+.ld-nota {
+    font-size: 13px;
+    color: var(--ld-tinta-3);
+    margin: 14px 0 0;
+}
+
+/* ---------- Teléfono ---------- */
+
+.ld-telefonos {
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+}
+
+.ld-telefono {
+    /* Encoge con la columna en vez de empujarla: a anchuras intermedias, un
+       ancho fijo dejaba el titular en 318 px mientras los telefonos se
+       llevaban 436. */
+    width: clamp(168px, 23vw, 232px);
+    border-radius: 30px;
+    border: 9px solid #0f172a;
+    background: #0f172a;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, .26);
+}
+
+.ld-telefono--atras {
+    width: clamp(132px, 18vw, 186px);
+    align-self: center;
+    opacity: .9;
+    transform: translateY(14px) rotate(-4deg);
+}
+
+/* ---------- Secciones ---------- */
+
+.ld-seccion { padding: 72px 0; }
+.ld-seccion--gris { background: var(--ld-papel-2); border-block: 1px solid var(--ld-borde); }
+
+h2.ld-titulo {
+    font-size: clamp(24px, 3.4vw, 34px);
+    line-height: 1.18;
+    letter-spacing: -.02em;
+    font-weight: 600;
+    margin: 0 0 12px;
+}
+
+.ld-bajada {
+    font-size: 17px;
+    color: var(--ld-tinta-2);
+    margin: 0 0 36px;
+    max-width: 62ch;
+}
+
+.ld-rejilla {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 18px;
+}
+
+.ld-tarjeta {
+    background: var(--ld-papel);
+    border: 1px solid var(--ld-borde);
+    border-radius: var(--ld-radio);
+    padding: 24px;
+}
+
+.ld-tarjeta h3 {
+    font-size: 17px;
+    font-weight: 600;
+    margin: 12px 0 8px;
+}
+
+.ld-tarjeta p {
+    margin: 0;
+    color: var(--ld-tinta-2);
+    font-size: 15px;
+}
+
+.ld-icono {
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    background: rgba(0, 91, 153, .10);
+    color: var(--ld-azul);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ld-icono svg { width: 21px; height: 21px; }
+
+/* ---------- Competencias ---------- */
+
+.ld-fichas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.ld-ficha {
+    border: 1px solid var(--ld-borde);
+    background: var(--ld-papel);
+    border-radius: 999px;
+    padding: 9px 18px;
+    font-size: 15px;
+    color: var(--ld-tinta-2);
+}
+
+/* ---------- Vídeo ---------- */
+
+.ld-video {
+    border-radius: var(--ld-radio);
+    overflow: hidden;
+    border: 1px solid var(--ld-borde);
+    background: #000;
+    aspect-ratio: 16 / 9;
+}
+
+.ld-video iframe,
+.ld-video video { width: 100%; height: 100%; display: block; border: 0; }
+
+/* ---------- Pasos ---------- */
+
+.ld-pasos {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 14px;
+    counter-reset: paso;
+}
+
+.ld-paso {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    background: var(--ld-papel);
+    border: 1px solid var(--ld-borde);
+    border-radius: var(--ld-radio);
+    padding: 20px 22px;
+}
+
+.ld-paso__num {
+    counter-increment: paso;
+    flex: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--ld-azul);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+}
+.ld-paso__num::before { content: counter(paso); }
+
+.ld-paso h3 { margin: 2px 0 6px; font-size: 16px; font-weight: 600; }
+.ld-paso p { margin: 0; color: var(--ld-tinta-2); font-size: 15px; }
+
+/* ---------- Cierre y pie ---------- */
+
+.ld-cierre {
+    background: var(--ld-azul);
+    color: #fff;
+    border-radius: var(--ld-radio);
+    padding: 44px;
+    text-align: center;
+}
+.ld-cierre h2 { color: #fff; margin: 0 0 10px; }
+.ld-cierre p { color: rgba(255, 255, 255, .86); margin: 0 0 24px; }
+.ld-cierre .ld-btn--principal { background: #fff; color: var(--ld-azul); }
+.ld-cierre .ld-btn--principal:hover { background: #e9f1f8; }
+
+.ld-pie {
+    border-top: 1px solid var(--ld-borde);
+    padding: 32px 0 44px;
+    color: var(--ld-tinta-3);
+    font-size: 14px;
+}
+
+.ld-pie__fila {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ld-pie img { width: 230px; }
+
+/* ---------- Aparición al desplazar ----------
+ *
+ * El movimiento lo pide el JS añadiendo `.ld-visible`. Sin JavaScript nada
+ * lleva `.ld-aparece`, así que todo se ve desde el principio: la animación es
+ * un añadido y nunca un requisito para leer la página.
+ *
+ * Y se desactiva entera si el sistema pide menos movimiento. */
+.ld-aparece {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity .55s ease, transform .55s cubic-bezier(.2, .8, .2, 1);
+}
+
+.ld-aparece.ld-visible {
+    opacity: 1;
+    transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .ld-aparece { opacity: 1; transform: none; transition: none; }
+}
+
+/* ---------- Teléfonos y tabletas ---------- */
+
+/* A una columna antes de que la portada se estreche: por debajo de esto el
+   titular y los telefonos se estorban en vez de acompanarse. */
+@media (max-width: 960px) {
+    .ld-portada { padding: 48px 0 40px; }
+    .ld-portada__fila { grid-template-columns: 1fr; gap: 36px; }
+    .ld-telefono--atras { display: none; }
+    .ld-seccion { padding: 56px 0; }
+    .ld-cierre { padding: 32px 22px; }
+    .ld-barra nav .ld-btn--discreto { display: none; }
+}

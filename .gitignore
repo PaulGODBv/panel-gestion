@@ -57,3 +57,9 @@ desktop.ini
 
 # Borrador con datos personales para la peticion al Icfes
 docs/solicitud-icfes.md
+
+# Productos de compilacion y multimedia de la pagina de presentacion: el APK
+# son diez megas y el video mas, y ninguno es codigo fuente. Se dejan caer en
+# el servidor al desplegar.
+/media/apk/
+/media/landing/

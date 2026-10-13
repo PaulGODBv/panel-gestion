@@ -204,6 +204,11 @@ LOCALE_PATHS = [BASE_DIR / 'locale']
 # Entrar por /admin/login/ sin un `next` llevaba a /accounts/profile/, que no
 # existe y daba un 404 nada mas iniciar sesion: es el valor de Django por
 # defecto y este proyecto no tiene esa ruta.
+# Direccion de insercion del video de presentacion, si acaba alojado en
+# YouTube o Vimeo en vez de servirse desde media/. Vacio = se usa el archivo
+# local, y si tampoco esta, la pagina oculta esa seccion.
+RETA2_VIDEO_PRESENTACION = os.environ.get('RETA2_VIDEO_PRESENTACION', '')
+
 LOGIN_REDIRECT_URL = '/admin/'
 LOGOUT_REDIRECT_URL = '/admin/login/'
 

@@ -19,7 +19,12 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 
+from core.views_publicas import LandingView
+
 urlpatterns = [
+    # La raiz del sitio. Hasta ahora no existia: daba un 404 y dejaba roto el
+    # enlace "Volver al sitio" del inicio de sesion.
+    path('', LandingView.as_view(), name='landing'),
     path('admin/', admin.site.urls),
     path('panel/', include('core.urls_admin')),
     path('api/', include('academics.urls')),
