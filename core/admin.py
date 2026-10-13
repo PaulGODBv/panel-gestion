@@ -53,3 +53,8 @@ class LevelProgressReportAdmin(ModelAdmin):
     list_filter = ['competence_name', 'is_completed']
     search_fields = ['report__username', 'competence_name', 'level_name']
     readonly_fields = ['percentage']
+
+# Vuelve a registrar User y Group con el admin de Unfold. Sin esto sus
+# formularios usan los widgets de serie de Django y los campos salen sin
+# borde ni fondo: invisibles hasta pulsarlos.
+from . import admin_cuentas  # noqa: F401,E402

@@ -1079,6 +1079,29 @@ html:root #nav-sidebar nav h2 {
 /* La navegación conserva el borde de Unfold, alineado al escalón de superficie */
 html:root #nav-sidebar { border-color: var(--rt-border); }
 
+/* Campos de formulario del admin, con un borde que se vea.
+
+   El de Unfold es #e4e4e7 sobre un fondo #fafafa: once puntos de diferencia,
+   que en una pantalla con brillo bajo o con reflejos desaparecen. El usuario
+   lo dijo asi el 13/10/2026 al ir a crear la cuenta del administrador: «no me
+   entere que habian campos hasta que di clic».
+
+   Se sube al mismo borde que usan los campos propios del panel, para que los
+   dos formularios —el del admin y el de la carga pegando texto— se vean igual
+   de solidos. Lleva `html:root` por delante para ganar en especificidad: la
+   hoja de Unfold se carga despues de esta. */
+html:root #content input[type="text"],
+html:root #content input[type="password"],
+html:root #content input[type="email"],
+html:root #content input[type="url"],
+html:root #content input[type="number"],
+html:root #content input[type="date"],
+html:root #content input[type="time"],
+html:root #content textarea,
+html:root #content select {
+    border-color: var(--rt-border-strong);
+}
+
 /* Botones de acción del changelist/change_form */
 html:root #content .button,
 html:root #content input[type="submit"],
