@@ -256,3 +256,102 @@ class RolesTest(TestCase):
         asegurar_roles()
         asegurar_roles()
         self.assertEqual(Group.objects.get(name=GRUPO_ADMIN).permissions.count(), antes)
+
+
+class AltaDeCuentasTest(TestCase):
+    """Dar permisos es elegir un papel, no combinar cuarenta casillas."""
+
+    def setUp(self):
+        from .roles import asegurar_roles
+
+        asegurar_roles()
+        self.jefe = get_user_model().objects.create_superuser(
+            "jefa", "jefa@mail.udes.edu.co", "irrelevante-para-la-prueba"
+        )
+        self.client.force_login(self.jefe)
+
+    def _crear(self, usuario, papel):
+        return self.client.post(
+            reverse("admin:auth_user_add"),
+            {
+                "username": usuario,
+                "password1": "una-clave-larga-de-prueba",
+                "password2": "una-clave-larga-de-prueba",
+                "papel": papel,
+            },
+            follow=True,
+        )
+
+    def test_elegir_administrador_deja_la_cuenta_lista(self):
+        from django.contrib.auth.models import Group
+
+        from .roles import GRUPO_ADMIN
+
+        self._crear("nueva_admin", "admin")
+        u = get_user_model().objects.get(username="nueva_admin")
+
+        self.assertTrue(u.is_staff, "sin is_staff no puede ni entrar al panel")
+        self.assertFalse(u.is_superuser)
+        self.assertIn(Group.objects.get(name=GRUPO_ADMIN), u.groups.all())
+        self.assertTrue(u.has_perm("academics.add_question"))
+        self.assertFalse(u.has_perm("academics.delete_question"))
+        self.assertFalse(u.has_perm("auth.add_user"))
+
+    def test_elegir_superadministrador_no_deja_el_grupo_puesto(self):
+        """Sus permisos no salen del grupo; dejarselo solo confundiria."""
+        from django.contrib.auth.models import Group
+
+        from .roles import GRUPO_ADMIN
+
+        self._crear("nueva_jefa", "super")
+        u = get_user_model().objects.get(username="nueva_jefa")
+
+        self.assertTrue(u.is_superuser)
+        self.assertNotIn(Group.objects.get(name=GRUPO_ADMIN), u.groups.all())
+        self.assertTrue(u.has_perm("auth.add_user"))
+
+    def test_sin_acceso_crea_la_cuenta_pero_no_la_deja_entrar(self):
+        self._crear("sin_panel", "ninguno")
+        u = get_user_model().objects.get(username="sin_panel")
+        self.assertFalse(u.is_staff)
+        self.assertFalse(u.is_superuser)
+
+    def test_el_formulario_no_pide_permisos_sueltos(self):
+        respuesta = self.client.get(reverse("admin:auth_user_add"))
+        self.assertContains(respuesta, "papel")
+        self.assertNotContains(respuesta, "user_permissions")
+
+    def test_nadie_se_quita_a_si_mismo_el_acceso(self):
+        """Es la unica forma de dejar el panel sin superadministrador."""
+        respuesta = self.client.post(
+            reverse("admin:auth_user_change", args=[self.jefe.pk]),
+            {
+                "username": self.jefe.username,
+                "first_name": "", "last_name": "", "email": self.jefe.email,
+                "papel": "ninguno",
+                "is_active": "on",
+                "last_login_0": "", "last_login_1": "",
+                "date_joined_0": "2026-10-13", "date_joined_1": "10:00:00",
+            },
+            follow=True,
+        )
+        self.jefe.refresh_from_db()
+        self.assertTrue(self.jefe.is_superuser, "se quedo sin acceso a su propio panel")
+        self.assertContains(respuesta, "No puedes cambiar tu propio papel")
+
+    def test_los_permisos_se_leen_en_espanol(self):
+        from django.contrib.auth.models import Permission
+
+        from .roles import traducir_permisos
+
+        traducir_permisos()
+        nombres = list(
+            Permission.objects.filter(
+                content_type__app_label__in=["academics", "auth"]
+            ).values_list("name", flat=True)
+        )
+        self.assertTrue(nombres)
+        for nombre in nombres:
+            self.assertFalse(nombre.startswith("Can "), nombre)
+        self.assertIn("Puede añadir competencia", nombres)
+        self.assertIn("Puede añadir grupo", nombres)

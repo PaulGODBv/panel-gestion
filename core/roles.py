@@ -101,3 +101,66 @@ def es_superadmin(usuario) -> bool:
     propiedad de la cuenta y Django ya la trata como tal en todas partes.
     """
     return bool(usuario and usuario.is_authenticated and usuario.is_superuser)
+
+
+# ---------------------------------------------------------------------------
+# Los nombres de los permisos, en español
+# ---------------------------------------------------------------------------
+#
+# Django los genera como «Can add» + el nombre del modelo y los **guarda en la
+# base**, no los traduce al mostrarlos. Por eso el catalogo de traduccion no
+# sirve aqui y salian cosas como «Can add Competencia»: medio en ingles y medio
+# en español, en la misma linea.
+#
+# Esto los reescribe. Es un dato, no codigo, asi que se puede volver atras
+# borrando la fila y corriendo `migrate`.
+
+ACCIONES = {
+    "add": "Puede añadir",
+    "change": "Puede editar",
+    "delete": "Puede eliminar",
+    "view": "Puede ver",
+}
+
+
+def traducir_permisos(**kwargs) -> None:
+    """Pone en español el nombre de los permisos estandar.
+
+    Solo toca los cuatro que genera Django por modelo. Un permiso propio, con
+    un `codename` que no empiece por una de esas cuatro acciones, se deja como
+    lo escribio quien lo creo: ahi el nombre es suyo y no de una plantilla.
+    """
+    from django.conf import settings
+    from django.contrib.auth.models import Permission
+    from django.utils import translation
+
+    cambiados = []
+
+    # Sin activar el idioma, los `verbose_name` de los modelos del propio
+    # Django —que son cadenas perezosas traducibles— se resuelven en ingles:
+    # `post_migrate` corre fuera de cualquier peticion y ahi no hay idioma
+    # activo. Salia «Puede añadir group» en vez de «Puede añadir grupo».
+    with translation.override(settings.LANGUAGE_CODE):
+        for permiso in Permission.objects.select_related("content_type"):
+            accion = permiso.codename.split("_")[0]
+            etiqueta = ACCIONES.get(accion)
+            if not etiqueta:
+                continue
+
+            modelo = permiso.content_type.model_class()
+            # Un tipo de contenido puede quedar huerfano si su modelo
+            # desaparecio; ahi no hay verbose_name que leer.
+            nombre = (
+                str(modelo._meta.verbose_name) if modelo
+                else permiso.content_type.model
+            )
+
+            # Mayuscula inicial: los verbose_name se escriben en minuscula por
+            # convencion de Django y aqui empiezan frase.
+            nuevo = f"{etiqueta} {nombre[:1].lower()}{nombre[1:]}"
+            if permiso.name != nuevo:
+                permiso.name = nuevo
+                cambiados.append(permiso)
+
+    if cambiados:
+        Permission.objects.bulk_update(cambiados, ["name"])

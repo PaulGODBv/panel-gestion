@@ -13,6 +13,7 @@ class CoreConfig(AppConfig):
         corriendo en esa misma pasada no encontraria ninguno y dejaria un grupo
         vacio sin avisar de nada.
         """
-        from .roles import asegurar_roles
+        from .roles import asegurar_roles, traducir_permisos
 
         post_migrate.connect(asegurar_roles, sender=self)
+        post_migrate.connect(traducir_permisos, sender=self)
