@@ -1,0 +1,41 @@
+# Lo que no tiene por que entrar en la imagen.
+#
+# No es solo tamaño: `db.sqlite3` y `.env` llevan datos y credenciales, y una
+# imagen se sube a un registro y se queda ahí. Lo que entra aquí, sale.
+
+.git
+.gitignore
+.github
+
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Base de desarrollo y sus respaldos. En producción la base es Postgres y esto
+# solo serviría para confundir a quien mire dentro del contenedor.
+db.sqlite3
+db-antes-*.sqlite3
+backups/
+
+# Secretos
+.env
+.credenciales-prueba
+
+# Productos de compilación y multimedia que se dejan caer en el servidor
+media/apk/
+media/landing/
+
+# Los estáticos se recogen al construir la imagen; copiarlos ya recogidos solo
+# duplicaría peso y arriesgaría mezclar versiones viejas con nuevas.
+staticfiles/
+
+# Documentación y herramientas de desarrollo
+docs/
+graphify-out/
+*.md
+!README.md
+
+.claude/
+.vscode/
+.idea/

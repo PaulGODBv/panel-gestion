@@ -20,3 +20,21 @@ django-simple-history==3.13.0
 pillow==12.3.0
 
 django-crispy-forms==2.7
+
+# --- Produccion -------------------------------------------------------------
+# Nada de esto hace falta para desarrollar: sin DATABASE_URL la base sigue
+# siendo SQLite y `runserver` sirve los estaticos por su cuenta. Se instalan
+# igual para que lo que se prueba en local sea lo que se despliega.
+
+# Conector de PostgreSQL. La variante [binary] trae las ruedas ya compiladas y
+# evita necesitar compilador y cabeceras de libpq en la maquina.
+psycopg[binary]==3.2.3
+
+# Sirve los archivos estaticos desde el propio proceso de Django. Para un
+# piloto de veinte estudiantes, montar un servidor web delante solo para los
+# CSS seria mas infraestructura que trafico.
+whitenoise==6.8.2
+
+# Servidor WSGI. `runserver` es de desarrollo y lo dice el propio Django al
+# arrancar: un solo hilo y sin pensar en seguridad.
+gunicorn==23.0.0

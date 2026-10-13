@@ -63,3 +63,7 @@ docs/solicitud-icfes.md
 # el servidor al desplegar.
 /media/apk/
 /media/landing/
+
+# Estaticos recogidos por collectstatic. Se generan al construir la imagen;
+# versionarlos solo serviria para que una version vieja pisara a una nueva.
+/staticfiles/

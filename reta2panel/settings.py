@@ -133,6 +133,11 @@ if not RETA2_API_KEY:
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # Sirve los estaticos desde el propio proceso. Va justo despues del de
+    # seguridad y antes que todo lo demas, que es donde lo pide WhiteNoise:
+    # mas arriba se salta las redirecciones a HTTPS, mas abajo paga el coste
+    # de sesiones y autenticacion para devolver un CSS.
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -164,12 +169,117 @@ WSGI_APPLICATION = 'reta2panel.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+def _base_de_datos():
+    """La base sale de `DATABASE_URL`, y si no hay, es el SQLite de siempre.
+
+    SQLite basta para desarrollar y para las pruebas, pero no para el piloto:
+    bloquea el fichero entero en cada escritura, asi que varios estudiantes
+    sincronizando a la vez se ponen en cola y el que llega tarde recibe
+    «database is locked».
+
+    El valor por defecto se deja en SQLite a proposito: clonar el repositorio y
+    correr `migrate` tiene que seguir funcionando sin instalar ni configurar
+    nada. Quien despliega pone la variable.
+
+    Se analiza a mano, con `urllib`, en lugar de traer `dj-database-url`: son
+    quince lineas para leer una URL, y es el mismo criterio con el que aqui se
+    leyo el `.env` sin `python-dotenv`.
+
+        DATABASE_URL=postgres://usuario:clave@servidor:5432/basededatos
+        DATABASE_URL=postgres://usuario:clave@servidor:5432/base?sslmode=require
+    """
+    url = os.environ.get('DATABASE_URL', '').strip()
+    if not url:
+        return {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
+
+    from urllib.parse import parse_qsl, unquote, urlparse
+
+    partes = urlparse(url)
+    if partes.scheme not in ('postgres', 'postgresql'):
+        raise ImproperlyConfigured(
+            f"DATABASE_URL solo admite postgres://, y trae «{partes.scheme}://». "
+            "Para SQLite, deja la variable sin poner."
+        )
+
+    # Lo que venga en la consulta pasa tal cual al conector. Es por donde entra
+    # `sslmode=require`, que la mayoria de los Postgres gestionados exigen.
+    opciones = dict(parse_qsl(partes.query))
+
+    return {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': unquote(partes.path.lstrip('/')),
+            'USER': unquote(partes.username or ''),
+            # La clave puede traer caracteres codificados: una con '@' o '/'
+            # llegaria partida si no se descodifica.
+            'PASSWORD': unquote(partes.password or ''),
+            'HOST': partes.hostname or '',
+            'PORT': str(partes.port or 5432),
+            'OPTIONS': opciones,
+            # Reutiliza la conexion diez minutos en vez de abrir una por
+            # peticion. Contra un Postgres gestionado, abrirla cuesta mas que
+            # la consulta que se va a hacer.
+            'CONN_MAX_AGE': 600,
+            'CONN_HEALTH_CHECKS': True,
+        }
     }
-}
+
+
+DATABASES = _base_de_datos()
+
+
+# Almacenamiento de archivos estaticos
+#
+# `CompressedManifestStaticFilesStorage` comprime y pone una huella en el
+# nombre de cada archivo. La huella es lo que permite decirle al navegador que
+# los guarde para siempre sin arriesgarse a que se quede con un CSS viejo: si
+# el contenido cambia, cambia el nombre.
+#
+# Solo en produccion. En desarrollo exigiria pasar `collectstatic` tras cada
+# retoque del CSS, y aqui se retoca el CSS todo el rato.
+if not DEBUG:
+    STORAGES = {
+        'default': {
+            'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        },
+    }
+
+
+# Seguridad del transporte, solo con DEBUG=False
+#
+# Hoy la API viaja en claro y la cabecera X-API-Key se puede capturar en la red
+# local con un analizador. Rotar la clave no arregla eso: lo arregla HTTPS.
+# Esto queda listo para cuando haya un dominio de verdad.
+if not DEBUG:
+    # El servicio termina el TLS y habla HTTP con el contenedor. Sin esto
+    # Django cree que la peticion llego en claro y la redirige a HTTPS una y
+    # otra vez: el bucle de redirecciones clasico detras de un balanceador.
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SSL_REDIRECT', 'True').lower() not in ('false', '0', 'no')
+
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+    # Un ano, y solo cuando el dominio ya sirva bien por HTTPS: mientras se
+    # prueba, un HSTS largo deja el navegador negandose a entrar por HTTP
+    # durante meses, y no hay forma de deshacerlo desde el servidor.
+    SECURE_HSTS_SECONDS = int(os.environ.get('DJANGO_HSTS_SECONDS', '0'))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+    # Django 4+ exige el origen completo, con esquema, para aceptar formularios
+    # desde un dominio distinto al del servidor.
+    CSRF_TRUSTED_ORIGINS = [
+        f'https://{h}' for h in ALLOWED_HOSTS if h and h != '*'
+    ]
 
 
 # Password validation
