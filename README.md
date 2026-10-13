@@ -1,9 +1,10 @@
 # Reta2 — Panel de gestión y API
 
-Backend y panel de administración de **Reta2**, una aplicación educativa de
-práctica por competencias. Este repositorio expone la API REST que consume la
-app Android y el panel web donde los docentes gestionan el banco de preguntas y
-siguen el progreso de los estudiantes.
+Backend, panel de administración y página pública de **Reta2**, una aplicación
+educativa de práctica por competencias para la preparación de las pruebas
+Saber Pro. Este repositorio expone la API REST que consume la app Android, el
+panel web donde se gestiona el banco de preguntas y se sigue el progreso de los
+estudiantes, y la página de presentación desde la que se descarga la app.
 
 **Aplicación Android (cliente):** [PaulGODBv/app](https://github.com/PaulGODBv/app)
 
@@ -23,20 +24,22 @@ Reta2 son dos piezas que se comunican por HTTP:
 │  · practica offline     │  HTTP   │  · banco de preguntas        │
 │  · progreso local       │ ──────► │  · API REST                  │
 │    (Room)               │ X-API-  │  · reportes de estudiantes   │
-│  · sincroniza reportes  │  Key    │  · ranking y dashboard       │
+│  · sincroniza reportes  │  Key    │  · métricas y explorador     │
 └─────────────────────────┘         └──────────────────────────────┘
 ```
 
 La app funciona sin conexión: guarda preguntas y progreso en Room y sincroniza
-los reportes cuando hay red. El panel es la fuente de verdad del contenido
-académico.
+los reportes cuando hay red. **El panel es la fuente de verdad del contenido
+académico**, y desde octubre de 2026 también del catálogo: la app pregunta qué
+competencias y niveles existen en vez de llevarlos escritos, así que dar de
+alta un nivel aquí ya no exige publicar una versión de la app.
 
 ## Aplicaciones Django
 
 | App         | Responsabilidad                                                        |
 |-------------|------------------------------------------------------------------------|
 | `academics` | Contenido académico: competencias, niveles, preguntas, opciones e imágenes de contexto |
-| `core`      | Reportes de estudiantes, progreso por nivel, ranking y dashboard       |
+| `core`      | Reportes de estudiantes, progreso por nivel, métricas, explorador, página pública y roles |
 
 ### Modelo de contenido (`academics`)
 
@@ -48,8 +51,13 @@ Competence  ──┬──► Level  ──┬──► Question  ──► Que
 ```
 
 `Question` lleva historial de cambios con `django-simple-history`
-(`HistoricalQuestion`), así que toda edición del banco de preguntas queda
-auditada: quién la hizo y qué cambió.
+(`HistoricalQuestion`), así que toda edición del banco queda auditada: quién la
+hizo y qué cambió.
+
+`ContextAsset.es_figura` distingue una figura de línea —una tabla, una
+gráfica— de una fotografía o una viñeta. A las primeras se les quita el papel
+blanco para que se integren con el tema oscuro de la app; a las segundas no,
+porque ahí el blanco significa algo y el resultado sería un negativo.
 
 ### Reportes (`core`)
 
@@ -57,9 +65,45 @@ auditada: quién la hizo y qué cambió.
 StudentReport  ──► LevelProgressReport
 ```
 
-`StudentReport` acumula las métricas que envía la app (preguntas respondidas,
-tiempo de práctica, racha actual y mejor racha), y `LevelProgressReport`
-desglosa el puntaje y el tiempo nivel por nivel.
+**Un reporte es una foto, no un suceso.** Cada sincronización manda el estado
+completo del estudiante, así que la misma práctica reaparece en todas las fotos
+posteriores. Por eso las métricas se calculan sobre **el último reporte de cada
+estudiante**, definido en un solo sitio (`core/metricas.py`) para que no pueda
+divergir entre dos pantallas. Agregando sobre todos los reportes, el tablero
+llegó a decir 2 015 preguntas donde había 93.
+
+## El panel
+
+| Ruta                            | Contenido                                                      |
+|---------------------------------|----------------------------------------------------------------|
+| `/`                             | Página de presentación: qué es la app, cómo se instala y descarga |
+| `/admin/`                       | Admin con tema Unfold: banco de preguntas y cuentas            |
+| `/panel/estudiantes/`           | Lista de estudiantes, ficha individual y exportación a CSV     |
+| `/panel/explorador/`            | Métricas cruzadas por programa, competencia, nivel y fechas    |
+| `/api/`                         | API REST que consume la app Android                            |
+
+### Carga de preguntas
+
+Quien sube las preguntas no es quien programó el panel, así que hay un camino
+que no exige conocer el formato: **`/admin/academics/question/importar/`**,
+donde se pega el texto tal como venga de una cartilla. Dos símbolos bastan —
+`*` marca la correcta, `-` las demás, `>` la explicación y `Contexto:` el
+pasaje. Se revisa antes de escribir, entra todo o no entra nada, y detecta las
+que ya están en ese nivel.
+
+### Papeles
+
+| | Administrador | Superadministrador |
+|---|---|---|
+| Banco de preguntas | crear y editar | todo |
+| Métricas y fichas | sí | sí |
+| Borrar contenido | **no** | sí |
+| Cuentas del panel | **no** | sí |
+
+Se aplica con permisos de Django y el grupo `Administradores`, que se mantiene
+solo en cada `migrate`. Borrar una competencia se lleva sus niveles y sus
+preguntas en cascada, y eso no se deshace desde ninguna pantalla: de ahí que el
+administrador no borre.
 
 ## API REST
 
@@ -67,7 +111,7 @@ Todos los endpoints viven bajo `/api/`.
 
 | Método | Endpoint                           | Autenticación | Descripción                              |
 |--------|------------------------------------|---------------|------------------------------------------|
-| GET    | `/competences/`                    | API Key       | Competencias con sus niveles             |
+| GET    | `/competences/`                    | API Key       | Catálogo: competencias con sus niveles   |
 | GET    | `/questions/<level_id>/`           | API Key       | Preguntas de un nivel, con opciones      |
 | POST   | `/reports/sync/`                   | API Key       | La app sincroniza el progreso            |
 | GET    | `/ranking/`                        | API Key       | Ranking de estudiantes                   |
@@ -88,6 +132,8 @@ Antes el default era `AllowAny` y cualquiera podía escribir reportes. Cerrarlo
 desde la configuración y no vista por vista evita que una vista nueva quede
 abierta por olvido.
 
+El registro de estudiantes exige correo `@mail.udes.edu.co`.
+
 ## Instalación
 
 ```bash
@@ -103,12 +149,13 @@ pip install -r requirements.txt
 
 ### Variables de entorno
 
-| Variable                | Obligatoria        | Descripción                                        |
-|-------------------------|--------------------|----------------------------------------------------|
-| `RETA2_API_KEY`         | siempre            | Clave compartida con la app Android (`X-API-Key`)  |
-| `DJANGO_SECRET_KEY`     | si `DEBUG=False`   | Clave de firma de Django                           |
-| `DJANGO_DEBUG`          | no (default `True`)| `False` para producción                            |
-| `DJANGO_ALLOWED_HOSTS`  | si `DEBUG=False`   | Dominios separados por coma                        |
+| Variable                    | Obligatoria        | Descripción                                        |
+|-----------------------------|--------------------|----------------------------------------------------|
+| `RETA2_API_KEY`             | siempre            | Clave compartida con la app Android (`X-API-Key`)  |
+| `DJANGO_SECRET_KEY`         | si `DEBUG=False`   | Clave de firma de Django                           |
+| `DJANGO_DEBUG`              | no (default `True`)| `False` para producción                            |
+| `DJANGO_ALLOWED_HOSTS`      | si `DEBUG=False`   | Dominios separados por coma                        |
+| `RETA2_VIDEO_PRESENTACION`  | no                 | Dirección de inserción del vídeo de la página pública |
 
 Generar las claves:
 
@@ -116,8 +163,8 @@ Generar las claves:
 python -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
 
-La misma `RETA2_API_KEY` debe quedar en `ApiConfig.API_KEY` de la app Android,
-o la API rechaza todas sus peticiones.
+La misma `RETA2_API_KEY` debe quedar en el `local.properties` de la app Android
+—que no se versiona— o la API rechaza todas sus peticiones.
 
 En desarrollo (`DEBUG=True`) `ALLOWED_HOSTS` es `['*']`, para que el teléfono
 pueda entrar por la IP de la LAN sin reconfigurar nada en cada red.
@@ -133,11 +180,26 @@ python manage.py runserver 0.0.0.0:8000
 El `0.0.0.0` es necesario para que el teléfono alcance el servidor en la red
 local.
 
-| Ruta      | Contenido                                                  |
-|-----------|------------------------------------------------------------|
-| `/admin/` | Admin de Django con tema Unfold: edición del banco de preguntas |
-| `/panel/` | Vistas propias de reportes y dashboard (`core/urls_admin.py`) |
-| `/api/`   | API REST que consume la app Android                        |
+### Página de presentación
+
+Vive en `/` y se adapta a lo que haya: mientras no estén los archivos no enseña
+un botón roto ni un reproductor vacío.
+
+| Archivo                           | Para qué                                   |
+|-----------------------------------|--------------------------------------------|
+| `media/apk/reta2.apk`             | El APK **firmado** que se ofrece en descarga |
+| `media/landing/presentacion.mp4`  | Vídeo, si se sirve desde aquí              |
+
+Las dos carpetas están fuera de git: son productos de compilación, no código.
+
+### Pruebas
+
+```bash
+python manage.py test core
+```
+
+Cubren las cifras del tablero —con una regresión que reproduce el error de
+agregación—, los estados vacíos, la visita guiada y la separación de papeles.
 
 ## Notas de seguridad
 
@@ -148,12 +210,16 @@ local.
   ignorados: contienen datos de trabajo y no pertenecen al repositorio.
 - Una clave anterior quedó expuesta en el historial de git y fue rotada. Una
   credencial comprometida que sigue funcionando es peor que ninguna.
+- **Pendiente para producción:** la API viaja hoy en claro, así que la cabecera
+  `X-API-Key` se puede capturar en la red local. Rotar la clave no arregla eso;
+  hace falta HTTPS.
 
 ## Documentación interna
 
 | Archivo                                | Contenido                                     |
 |----------------------------------------|-----------------------------------------------|
 | `docs/conciliacion-banco-preguntas.md` | Conciliación del banco de preguntas           |
+| `docs/preguntas-calentamiento.md`      | Versiones cortas para los niveles de práctica |
 | `docs/tablero-trello.md`               | Seguimiento de tareas                         |
 
 ## Licencia
