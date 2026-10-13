@@ -71,7 +71,7 @@
                 <p class="ld-nota">Android 8 o superior. Se instala desde el archivo, no desde la tienda.</p>
             </div>
 
-            <div class="ld-telefonos" data-aparece="120">
+            <div class="ld-telefonos" data-aparece="120" data-mov="derecha">
                 <div class="ld-telefono ld-telefono--atras">
                     <img src="{% static 'landing/img/pantalla-niveles.png' %}"
                          alt="Pantalla de la aplicación con los niveles de una competencia y su porcentaje de avance"
@@ -137,7 +137,7 @@
             <p class="ld-bajada" data-aparece="60">
                 Las mismas que evalúa el Icfes en los módulos genéricos de Saber Pro.
             </p>
-            <div class="ld-fichas" data-aparece="120">
+            <div class="ld-fichas" data-aparece="120" data-mov="escala">
                 <span class="ld-ficha">Lectura Crítica</span>
                 <span class="ld-ficha">Razonamiento Cuantitativo</span>
                 <span class="ld-ficha">Competencias Ciudadanas</span>
@@ -152,7 +152,7 @@
         <div class="ld-contenedor">
             <h2 class="ld-titulo" data-aparece="0">Míralo en un minuto</h2>
             <p class="ld-bajada" data-aparece="60">Un recorrido por la aplicación, de la primera pregunta al resultado.</p>
-            <div class="ld-video" data-aparece="120">
+            <div class="ld-video" data-aparece="120" data-mov="escala">
                 {% if video_incrustado %}
                     <iframe src="{{ video_incrustado }}"
                             title="Vídeo de presentación de Reta2"
@@ -179,7 +179,7 @@
             </p>
 
             <ol class="ld-pasos">
-                <li class="ld-paso" data-aparece="0">
+                <li class="ld-paso" data-aparece="0" data-mov="izquierda">
                     <span class="ld-paso__num" aria-hidden="true"></span>
                     <div>
                         <h3>Descarga el archivo en el teléfono</h3>
@@ -193,7 +193,7 @@
                         </p>
                     </div>
                 </li>
-                <li class="ld-paso" data-aparece="90">
+                <li class="ld-paso" data-aparece="90" data-mov="izquierda">
                     <span class="ld-paso__num" aria-hidden="true"></span>
                     <div>
                         <h3>Permite la instalación desde esta fuente</h3>
@@ -205,7 +205,7 @@
                         </p>
                     </div>
                 </li>
-                <li class="ld-paso" data-aparece="180">
+                <li class="ld-paso" data-aparece="180" data-mov="izquierda">
                     <span class="ld-paso__num" aria-hidden="true"></span>
                     <div>
                         <h3>Regístrate con tu correo institucional</h3>
@@ -221,7 +221,7 @@
 
     <section class="ld-seccion">
         <div class="ld-contenedor">
-            <div class="ld-cierre" data-aparece="0">
+            <div class="ld-cierre" data-aparece="0" data-mov="escala">
                 <h2 class="ld-titulo">Empieza por una sesión de cinco preguntas</h2>
                 <p>Se tarda menos que en leer esta página.</p>
                 {% if hay_apk %}

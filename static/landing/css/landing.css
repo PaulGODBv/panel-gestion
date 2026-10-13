@@ -399,18 +399,52 @@ h2.ld-titulo {
  * Y se desactiva entera si el sistema pide menos movimiento. */
 .ld-aparece {
     opacity: 0;
-    transform: translateY(18px);
-    transition: opacity .55s ease, transform .55s cubic-bezier(.2, .8, .2, 1);
+    transform: translateY(22px);
+    transition: opacity .6s ease, transform .7s cubic-bezier(.2, .8, .2, 1);
+    will-change: opacity, transform;
 }
+
+/* Cada seccion entra de una forma distinta, y no por variar: el gesto dice
+   algo. Lo que ilustra —los telefonos— llega desde fuera, como si se asomara.
+   Los pasos de instalacion entran desde la izquierda, en el sentido en que se
+   leen y en el orden en que se hacen. Lo que es una sola pieza cerrada —las
+   fichas de competencias, la llamada final— crece en su sitio en vez de
+   desplazarse, porque no viene de ningun sitio: ya estaba ahi. */
+.ld-aparece--derecha { transform: translateX(34px); }
+.ld-aparece--izquierda { transform: translateX(-28px); }
+.ld-aparece--escala { transform: scale(.94); }
 
 .ld-aparece.ld-visible {
     opacity: 1;
     transform: none;
 }
 
+/* Al terminar se suelta `will-change`: mantenerlo obliga al navegador a
+   reservar una capa por elemento para siempre, y en un telefono con poca
+   memoria diecisiete capas vivas se notan. */
+.ld-aparece.ld-visible { will-change: auto; }
+
+/* La barra solo se despega del fondo cuando hay contenido debajo. Quieta
+   arriba del todo no necesita sombra, y ponersela de entrada hace que la
+   pagina arranque pareciendo que ya se ha desplazado. */
+.ld-barra { transition: box-shadow .3s ease, border-color .3s ease; }
+
+.ld-barra--despegada {
+    box-shadow: 0 6px 24px rgba(15, 23, 42, .07);
+    border-bottom-color: transparent;
+}
+
 @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
-    .ld-aparece { opacity: 1; transform: none; transition: none; }
+    .ld-aparece,
+    .ld-aparece--derecha,
+    .ld-aparece--izquierda,
+    .ld-aparece--escala {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+    .ld-barra { transition: none; }
 }
 
 /* ---------- Teléfonos y tabletas ---------- */
