@@ -9,8 +9,22 @@ from .serializers import StudentReportSerializer
 
 
 def dashboard_callback(request, context):
+    """Lo que Unfold inyecta en el tablero.
+
+    Marca el primer paso de la visita aqui mismo: el paso es "mira las cifras
+    del programa" y esta es esa pantalla, asi que se da por hecho por estar
+    delante y no por pulsar nada. Pedir una confirmacion para algo que ya
+    acaba de ocurrir es papeleo.
+    """
+    from .visita import PASO_TABLERO, estado, se_puede_reabrir, marcar
+
+    marcar(request.user, PASO_TABLERO)
     context.update({
         'async_dashboard': True,
+        'visita': estado(request.user),
+        # Solo si la escondio teniendo tareas pendientes: reabrir una lista
+        # entera de tachados no ensena nada.
+        'visita_oculta': se_puede_reabrir(request.user),
     })
     return context
 

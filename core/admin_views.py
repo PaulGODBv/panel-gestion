@@ -89,6 +89,10 @@ class StudentDetailAdminView(TemplateView):
     template_name = 'admin/students/detail.html'
 
     def get_context_data(self, **kwargs):
+        from .visita import PASO_ESTUDIANTE, marcar
+
+        marcar(self.request.user, PASO_ESTUDIANTE)
+
         # Obtener contexto base de Admin (necesario para Unfold)
         context = admin.site.each_context(self.request)
         context.update(super().get_context_data(**kwargs))
@@ -201,6 +205,10 @@ class ExplorerAdminView(TemplateView):
         # lateral y la hoja de estilos propia del panel, que se inyecta por
         # UNFOLD["STYLES"]. Sin esta linea la pagina se dibuja entera pero sin
         # una sola regla de estilo, que es exactamente como salio la primera vez.
+        from .visita import PASO_EXPLORADOR, marcar
+
+        marcar(self.request.user, PASO_EXPLORADOR)
+
         ctx = admin.site.each_context(self.request)
         ctx.update(super().get_context_data(**kwargs))
         ctx['title'] = 'Explorador'
@@ -256,3 +264,27 @@ class ExplorerAdminView(TemplateView):
             ),
         })
         return ctx
+
+
+@method_decorator(staff_member_required, name='dispatch')
+class VisitaGuiadaView(TemplateView):
+    """Cerrar la tarjeta de primeros pasos, o volver a abrirla.
+
+    Solo por POST: cambia algo del lado del servidor, y un enlace que cambia
+    estado se dispara solo con cualquier cosa que precargue las direcciones de
+    la pagina.
+
+    Cerrar no es irreversible a proposito. El enlace para volver a abrirla
+    queda en el pie del tablero, porque esconder algo sin dejar forma de
+    recuperarlo convierte un descarte en una perdida.
+    """
+
+    def post(self, request, *args, **kwargs):
+        from django.shortcuts import redirect
+
+        from .visita import _registro
+
+        registro = _registro(request.user)
+        registro.cerrada = request.POST.get('accion') != 'abrir'
+        registro.save(update_fields=['cerrada', 'actualizada_en'])
+        return redirect('admin:index')

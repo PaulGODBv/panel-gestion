@@ -87,3 +87,61 @@ class LevelProgressReport(models.Model):
         if self.total_questions == 0:
             return 0
         return round((self.score / self.total_questions) * 100, 2)
+
+class VisitaGuiada(models.Model):
+    """Qué pasos de los primeros pasos lleva dados cada persona del panel.
+
+    Una fila por usuario. Vive en la base y no en el navegador a proposito: con
+    `localStorage` la visita se repetiria al cambiar de equipo y desapareceria
+    al limpiar el historial, que son dos formas de mentir sobre si alguien ya
+    la vio.
+
+    Los pasos se guardan como claves separadas por comas y no en una tabla
+    aparte ni en un JSONField: son cuatro, caben en una linea, y una tabla de
+    relacion para esto seria mas esquema que dato.
+    """
+
+    usuario = models.OneToOneField(
+        'auth.User',
+        on_delete=models.CASCADE,
+        related_name='visita_guiada',
+        verbose_name="Usuario",
+    )
+
+    pasos = models.CharField(
+        max_length=200,
+        blank=True,
+        default='',
+        verbose_name="Pasos dados",
+        help_text="Claves separadas por comas.",
+    )
+
+    cerrada = models.BooleanField(
+        default=False,
+        verbose_name="Cerrada a mano",
+        help_text="Si se desmarca, la tarjeta de primeros pasos vuelve a salir.",
+    )
+
+    creada_en = models.DateTimeField(auto_now_add=True, verbose_name="Primera vez")
+    actualizada_en = models.DateTimeField(auto_now=True, verbose_name="Ultimo paso")
+
+    class Meta:
+        verbose_name = "Visita guiada"
+        verbose_name_plural = "Visitas guiadas"
+
+    def __str__(self):
+        return f"{self.usuario} - {self.pasos or 'sin empezar'}"
+
+    def _lista(self):
+        return [p for p in self.pasos.split(',') if p]
+
+    def hechos(self, paso: str) -> bool:
+        return paso in self._lista()
+
+    def anotar(self, paso: str) -> None:
+        if self.hechos(paso):
+            return
+        actuales = self._lista()
+        actuales.append(paso)
+        self.pasos = ','.join(actuales)
+        self.save(update_fields=['pasos', 'actualizada_en'])

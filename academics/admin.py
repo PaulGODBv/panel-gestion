@@ -239,6 +239,11 @@ class QuestionAdmin(ModelAdmin, SimpleHistoryAdmin):
                     creadas.append(pregunta)
 
             if creadas:
+                # El paso se da por hecho al guardar, no al abrir la pantalla:
+                # lo que la lista promete es "carga preguntas", no "asomate".
+                from core.visita import PASO_CARGA, marcar
+                marcar(request.user, PASO_CARGA)
+
                 messages.success(
                     request,
                     f"{len(creadas)} pregunta(s) creada(s) en «{nivel.name}». "

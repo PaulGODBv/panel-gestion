@@ -630,6 +630,75 @@ html:root ::selection {
     color: var(--rt-text-2);
 }
 
+/* Primeros pasos: la tarjeta de bienvenida del tablero.
+
+   Lleva el borde de acento para distinguirse de las tarjetas de datos que
+   tiene debajo: no es una cifra mas, es algo que pide una accion y que ademas
+   va a desaparecer. */
+.rt-visita {
+    border-color: var(--rt-accent);
+}
+
+.rt-visita__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--rt-space-3);
+}
+
+.rt-visita__lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--rt-space-2);
+}
+
+.rt-visita__paso {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--rt-space-3);
+    padding: var(--rt-space-3);
+    border: 1px solid var(--rt-border-soft);
+    border-radius: var(--rt-radius);
+}
+
+.rt-visita__marca {
+    flex: none;
+    line-height: 1;
+    color: var(--rt-text-3);
+}
+
+.rt-visita__marca .material-symbols-outlined { font-size: 22px; }
+
+.rt-visita__texto { flex: 1; min-width: 0; }
+
+.rt-visita__titulo {
+    margin: 0;
+    font-size: var(--rt-text-body-sm);
+    color: var(--rt-text);
+}
+
+.rt-visita__accion { flex: none; }
+
+/* Hecho: se apaga en vez de desaparecer. Ver lo que ya se hizo es parte de
+   saber cuanto falta, y una lista que encoge pierde el sitio de referencia. */
+.rt-visita__paso--hecho { opacity: .62; }
+.rt-visita__paso--hecho .rt-visita__marca { color: var(--rt-ok); }
+.rt-visita__paso--hecho .rt-visita__titulo { text-decoration: line-through; }
+
+.rt-visita__reabrir {
+    display: flex;
+    align-items: center;
+    gap: var(--rt-space-2);
+    margin-top: var(--rt-space-3);
+}
+
+@media (max-width: 640px) {
+    .rt-visita__paso { flex-wrap: wrap; }
+    .rt-visita__accion { margin-left: 34px; }
+}
+
 /* El boton «Filtros» del listado, junto al buscador y no en el extremo.
 
    Unfold le pone `lg:ml-auto`, que lo empuja al borde derecho del contenido.

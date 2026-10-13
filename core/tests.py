@@ -115,3 +115,69 @@ class PanelVacioTest(TestCase):
         )
         self.assertContains(respuesta, "Ningún estudiante encaja con estos filtros")
         self.assertNotContains(respuesta, "Todavía no hay nada que cruzar")
+
+
+class VisitaGuiadaTest(TestCase):
+    """Los primeros pasos se tachan al hacerse, no al pulsar «entendido»."""
+
+    def setUp(self):
+        self.usuario = get_user_model().objects.create_superuser(
+            "nueva", "nueva@mail.udes.edu.co", "irrelevante-para-la-prueba"
+        )
+        self.client.force_login(self.usuario)
+
+    def test_empieza_con_los_cuatro_pasos_pendientes(self):
+        from .visita import estado
+
+        v = estado(self.usuario)
+        self.assertEqual(v["total"], 4)
+        self.assertEqual(v["hechos"], 0)
+
+    def test_abrir_el_explorador_tacha_su_paso(self):
+        from .visita import PASO_EXPLORADOR, estado
+
+        self.client.get(reverse("admin_explorador"))
+        pasos = {p["clave"]: p["hecho"] for p in estado(self.usuario)["pasos"]}
+        self.assertTrue(pasos[PASO_EXPLORADOR])
+
+    def test_asomarse_al_importador_no_tacha_la_carga(self):
+        """El paso dice «carga preguntas», no «asómate al importador»."""
+        from .visita import PASO_CARGA, estado
+
+        self.client.get(reverse("admin:academics_question_importar"))
+        pasos = {p["clave"]: p["hecho"] for p in estado(self.usuario)["pasos"]}
+        self.assertFalse(pasos[PASO_CARGA])
+
+    def test_al_esconderla_deja_de_salir_y_se_puede_recuperar(self):
+        from .visita import estado, se_puede_reabrir
+
+        self.client.post(reverse("admin_visita"), {"accion": "cerrar"})
+        self.assertIsNone(estado(self.usuario))
+        self.assertTrue(se_puede_reabrir(self.usuario))
+
+        self.client.post(reverse("admin_visita"), {"accion": "abrir"})
+        self.assertIsNotNone(estado(self.usuario))
+        self.assertFalse(se_puede_reabrir(self.usuario))
+
+    def test_con_los_cuatro_hechos_desaparece_y_no_se_ofrece_recuperarla(self):
+        """Una lista enteramente tachada deja de ser ayuda y pasa a ser ruido."""
+        from .visita import ORDEN, estado, marcar, se_puede_reabrir
+
+        for paso in ORDEN:
+            marcar(self.usuario, paso)
+        self.assertIsNone(estado(self.usuario))
+        self.assertFalse(se_puede_reabrir(self.usuario))
+
+    def test_cada_usuario_lleva_su_propia_cuenta(self):
+        """Va en la base y por usuario, no en el navegador."""
+        from .visita import PASO_EXPLORADOR, estado, marcar
+
+        otra = get_user_model().objects.create_superuser(
+            "otra", "otra@mail.udes.edu.co", "irrelevante-para-la-prueba"
+        )
+        marcar(self.usuario, PASO_EXPLORADOR)
+
+        mios = {p["clave"]: p["hecho"] for p in estado(self.usuario)["pasos"]}
+        suyos = {p["clave"]: p["hecho"] for p in estado(otra)["pasos"]}
+        self.assertTrue(mios[PASO_EXPLORADOR])
+        self.assertFalse(suyos[PASO_EXPLORADOR])

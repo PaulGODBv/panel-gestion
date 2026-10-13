@@ -13,6 +13,52 @@
        mientras tanto, para que no parpadee en cada carga.{% endcomment %}
     <div id="rt-panel-vacio" hidden></div>
 
+    {% comment %}
+        Primeros pasos de quien entra por primera vez. No es un tutorial: son
+        las cuatro cosas que el panel necesita que alguien haga, asi que la
+        lista sigue sirviendo despues del primer dia. Se tachan solas cuando la
+        tarea se hace de verdad, no al pulsar "entendido".
+    {% endcomment %}
+    {% if visita %}
+    <section class="rt-card rt-visita" aria-labelledby="rt-visita-title">
+        <div class="rt-card__head rt-visita__head">
+            <div>
+                <h2 id="rt-visita-title" class="rt-card__title">Primeros pasos</h2>
+                <p class="rt-card__desc">{{ visita.hechos }} de {{ visita.total }} hechos. Se tachan solos al hacerlos.</p>
+            </div>
+            <form method="post" action="{% url 'admin_visita' %}">
+                {% csrf_token %}
+                <button type="submit" class="rt-btn rt-btn--quiet rt-btn--sm" name="accion" value="cerrar">
+                    <span class="material-symbols-outlined" aria-hidden="true">close</span>
+                    Ocultar
+                </button>
+            </form>
+        </div>
+
+        <div class="rt-card__body">
+            <ol class="rt-visita__lista">
+                {% for paso in visita.pasos %}
+                    <li class="rt-visita__paso{% if paso.hecho %} rt-visita__paso--hecho{% endif %}">
+                        <span class="rt-visita__marca" aria-hidden="true">
+                            <span class="material-symbols-outlined">{% if paso.hecho %}check_circle{% else %}radio_button_unchecked{% endif %}</span>
+                        </span>
+                        <div class="rt-visita__texto">
+                            <p class="rt-visita__titulo">
+                                {{ paso.titulo }}
+                                {% if paso.hecho %}<span class="rt-sr-only">(hecho)</span>{% endif %}
+                            </p>
+                            <p class="rt-hint" style="margin:2px 0 0;">{{ paso.texto }}</p>
+                        </div>
+                        {% if paso.url and not paso.hecho %}
+                            <a href="{{ paso.url }}" class="rt-btn rt-btn--ghost rt-btn--sm rt-visita__accion">{{ paso.boton }}</a>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ol>
+        </div>
+    </section>
+    {% endif %}
+
     <!-- Indicadores generales -->
     <section id="rt-kpis-section" aria-labelledby="rt-kpis-title">
         <h2 id="rt-kpis-title" class="rt-sr-only">Indicadores generales</h2>
@@ -100,6 +146,17 @@
             </div>
         </div>
     </section>
+
+    {% if visita_oculta %}
+        <form method="post" action="{% url 'admin_visita' %}" class="rt-visita__reabrir">
+            {% csrf_token %}
+            <span class="rt-hint">Escondiste los primeros pasos.</span>
+            <button type="submit" name="accion" value="abrir" class="rt-btn rt-btn--quiet rt-btn--sm">
+                <span class="material-symbols-outlined" aria-hidden="true">checklist</span>
+                Volver a verlos
+            </button>
+        </form>
+    {% endif %}
 
 </div>
 
