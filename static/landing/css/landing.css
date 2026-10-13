@@ -95,17 +95,15 @@ a { color: var(--ld-azul); }
     letter-spacing: -.01em;
 }
 
-.ld-marca__punto {
-    width: 26px;
-    height: 26px;
-    border-radius: 8px;
-    background: var(--ld-azul);
-    color: #fff;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    font-weight: 700;
+/* El escudo de la Universidad, a la altura de la barra.
+ *
+ * 34 px es lo que cabe con holgura en una barra de 64 y lo que hace falta para
+ * que el condor se lea: por debajo de treinta se convierte en una mancha azul,
+ * y un escudo irreconocible es peor que ninguno. */
+.ld-marca__escudo {
+    height: 34px;
+    width: auto;
+    flex: none;
 }
 
 .ld-barra nav {
@@ -425,5 +423,10 @@ h2.ld-titulo {
     .ld-telefono--atras { display: none; }
     .ld-seccion { padding: 56px 0; }
     .ld-cierre { padding: 32px 22px; }
-    .ld-barra nav .ld-btn--discreto { display: none; }
+    /* En el telefono solo se esconde el enlace al panel, que es para la
+       Universidad y no para el estudiante. Antes se escondian todos los
+       botones discretos de la barra, y como sin APK el de la derecha tambien
+       lo es, la cabecera se quedaba sin una sola accion justo en el aparato
+       desde el que se va a leer esto. */
+    .ld-barra nav .ld-solo-escritorio { display: none; }
 }

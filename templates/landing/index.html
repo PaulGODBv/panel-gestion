@@ -22,11 +22,21 @@
 <header class="ld-barra">
     <div class="ld-contenedor ld-barra__fila">
         <a class="ld-marca" href="#contenido">
-            <span class="ld-marca__punto" aria-hidden="true">R</span>
+            {% comment %}
+                El escudo va con alt vacio y aria-hidden a proposito: el nombre
+                accesible de este enlace tiene que ser "Reta2", que es adonde
+                lleva. La atribucion a la Universidad esta donde corresponde —en
+                el antetitulo de la portada y en el pie, con el escudo completo
+                y sus acreditaciones—, y repetirla aqui solo haria que un lector
+                de pantalla anunciara "Universidad de Santander Reta2".
+            {% endcomment %}
+            <img class="ld-marca__escudo"
+                 src="{% static 'landing/img/escudo-udes.png' %}"
+                 alt="" aria-hidden="true" width="119" height="120">
             Reta2
         </a>
         <nav aria-label="Principal">
-            <a class="ld-btn ld-btn--discreto ld-btn--sm" href="{% url 'admin:index' %}">Panel de gestión</a>
+            <a class="ld-btn ld-btn--discreto ld-btn--sm ld-solo-escritorio" href="{% url 'admin:index' %}">Panel de gestión</a>
             {% if hay_apk %}
                 <a class="ld-btn ld-btn--principal ld-btn--sm" href="#descargar">Descargar</a>
             {% else %}
