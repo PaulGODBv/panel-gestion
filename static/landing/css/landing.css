@@ -36,7 +36,11 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
-img { max-width: 100%; display: block; }
+/* `height: auto` no es opcional: los <img> llevan width y height en el HTML
+   —que es lo que evita que el diseno salte mientras cargan— y sin esto el
+   ancho se adapta al contenedor pero el alto se queda clavado en el atributo.
+   Resultado: la captura del telefono pintada a 181x1031 en vez de 181x402. */
+img { max-width: 100%; height: auto; display: block; }
 
 a { color: var(--ld-azul); }
 
