@@ -355,3 +355,46 @@ class AltaDeCuentasTest(TestCase):
             self.assertFalse(nombre.startswith("Can "), nombre)
         self.assertIn("Puede añadir competencia", nombres)
         self.assertIn("Puede añadir grupo", nombres)
+
+
+class BaseReciencreadaTest(TestCase):
+    """Lo que queda montado tras `migrate` en una base vacia.
+
+    Estas pruebas NO llaman a `asegurar_roles()` a mano: comprueban el estado
+    que deja `post_migrate` por su cuenta, que es lo unico que ocurre en un
+    despliegue. Llamarla las haria pasar siempre y es justo lo que escondio el
+    fallo del 13/10/2026 — enganchada con `sender=core`, corria antes de que
+    existieran los permisos de `academics` y el grupo quedaba con 4 de 20.
+    """
+
+    def test_el_grupo_queda_con_todos_sus_permisos(self):
+        from django.contrib.auth.models import Group
+
+        from .roles import GRUPO_ADMIN, PERMISOS
+
+        esperados = sum(len(a) for m in PERMISOS.values() for a in m.values())
+        grupo = Group.objects.get(name=GRUPO_ADMIN)
+        self.assertEqual(grupo.permissions.count(), esperados)
+
+    def test_un_administrador_puede_trabajar_desde_el_primer_dia(self):
+        from django.contrib.auth.models import Group
+
+        from .roles import GRUPO_ADMIN
+
+        u = get_user_model().objects.create_user(
+            "recien", "recien@mail.udes.edu.co", "irrelevante", is_staff=True
+        )
+        u.groups.add(Group.objects.get(name=GRUPO_ADMIN))
+
+        self.assertTrue(u.has_perm("academics.add_question"))
+        self.assertTrue(u.has_perm("academics.change_level"))
+        self.assertTrue(u.has_perm("core.view_studentreport"))
+        self.assertFalse(u.has_perm("academics.delete_question"))
+
+    def test_ningun_permiso_se_queda_en_ingles(self):
+        from django.contrib.auth.models import Permission
+
+        en_ingles = list(
+            Permission.objects.filter(name__startswith="Can ").values_list("name", flat=True)
+        )
+        self.assertEqual(en_ingles, [], f"{len(en_ingles)} permisos sin traducir")
