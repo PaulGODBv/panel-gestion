@@ -5,6 +5,7 @@ PROYECTO.md
 /graphify-out
 /.claude
 /.claudebackups/
+/docs
 
 # ---- Python ----
 __pycache__/
@@ -53,3 +54,6 @@ desktop.ini
 *.swp
 *.tmp
 .credenciales-prueba
+
+# Borrador con datos personales para la peticion al Icfes
+docs/solicitud-icfes.md

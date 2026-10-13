@@ -1,0 +1,169 @@
+{% extends 'reta2/base_page.html' %}
+{% load i18n l10n %}
+
+{% block title %}Explorador de métricas{% endblock %}
+
+{% block page %}
+
+<header class="rt-page__head rt-grid-bg">
+    {% include "reta2/components/page_header.html" with eyebrow="ANALÍTICA" title="Explorador" subtitle="Cruza programa, competencia, nivel y fechas para ver cómo va cada corte." %}
+</header>
+
+<section aria-labelledby="rt-filtros-title">
+    <h2 id="rt-filtros-title" class="rt-sr-only">Filtros del explorador</h2>
+
+    <details class="rt-disclosure" open>
+        <summary>
+            <span class="material-symbols-outlined" aria-hidden="true">tune</span>
+            Filtros
+        </summary>
+
+        <form method="get" class="rt-filters">
+            <div class="rt-field">
+                <label class="rt-label" for="rt-programa">Programa</label>
+                <select id="rt-programa" name="programa" class="rt-input">
+                    <option value="">Todos</option>
+                    {% for p in opciones_programa %}
+                        <option value="{{ p }}" {% if filtros.programa == p %}selected{% endif %}>{{ p }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="rt-field">
+                <label class="rt-label" for="rt-competencia">Competencia</label>
+                <select id="rt-competencia" name="competencia" class="rt-input">
+                    <option value="">Todas</option>
+                    {% for c in opciones_competencia %}
+                        <option value="{{ c.competence_id }}" {% if filtros.competencia == c.competence_id|stringformat:"s" %}selected{% endif %}>{{ c.competence_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="rt-field">
+                <label class="rt-label" for="rt-nivel">Nivel</label>
+                <select id="rt-nivel" name="nivel" class="rt-input">
+                    <option value="">Todos</option>
+                    {% for n in opciones_nivel %}
+                        <option value="{{ n.level_id }}" {% if filtros.nivel == n.level_id|stringformat:"s" %}selected{% endif %}>{{ n.competence_name }} — {{ n.level_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="rt-field">
+                <label class="rt-label" for="rt-desde">Desde</label>
+                <input type="date" id="rt-desde" name="desde" value="{{ filtros.desde }}" class="rt-input rt-input--date" />
+            </div>
+
+            <div class="rt-field">
+                <label class="rt-label" for="rt-hasta">Hasta</label>
+                <input type="date" id="rt-hasta" name="hasta" value="{{ filtros.hasta }}" class="rt-input rt-input--date" />
+            </div>
+
+            <div class="rt-page__actions">
+                <button type="submit" class="rt-btn rt-btn--primary">
+                    <span class="material-symbols-outlined" aria-hidden="true">search</span>
+                    Ver
+                </button>
+                {% if hay_filtros %}
+                    <a href="{% url 'admin_explorador' %}" class="rt-btn rt-btn--ghost">Quitar filtros</a>
+                {% endif %}
+            </div>
+        </form>
+    </details>
+</section>
+
+{% if cobertura.preguntas %}
+
+    <section class="rt-grid rt-grid--kpi" aria-label="Resumen del corte">
+        {% include "reta2/components/stat_card.html" with label="Estudiantes" icon="group" value=cobertura.estudiantes hint="En este corte" help="Estudiantes distintos con progreso dentro de los filtros aplicados." %}
+        {% include "reta2/components/stat_card.html" with label="Preguntas" icon="quiz" value=cobertura.preguntas hint="Respondidas en el corte" help="Suma de preguntas de los niveles que entran en los filtros, tomando el último reporte de cada estudiante." %}
+        {% include "reta2/components/stat_card.html" with label="Acierto" icon="percent" value=cobertura.porcentaje unit="%" hint="Aciertos sobre preguntas" help="Se calcula sobre los totales, no promediando los porcentajes de cada nivel: así un nivel de 2 preguntas no pesa igual que uno de 13." %}
+        {% if mejor %}
+            {% include "reta2/components/stat_card.html" with label="Se les da mejor" icon="trending_up" value=mejor.nombre text="1" hint="La de mayor acierto en el corte" help="Competencia con mayor porcentaje de acierto dentro del corte." %}
+        {% endif %}
+    </section>
+
+    <section class="rt-card" aria-labelledby="rt-barras-title">
+        {% include "reta2/components/card_head.html" with title="Acierto por competencia" desc="Ordenadas de mejor a peor dentro del corte" %}
+        <div class="rt-card__body">
+            {% for c in competencias %}
+                <div class="rt-progress-row">
+                    <div class="rt-progress-row__top">
+                        <span class="rt-progress-row__name">{{ c.nombre }}</span>
+                        <span class="rt-progress-row__count">
+                            {% if c.porcentaje is not None %}{{ c.porcentaje }}%{% else %}sin datos{% endif %}
+                        </span>
+                    </div>
+                    <div class="rt-progress">
+                        {# `unlocalize` no es un adorno: en es-CO Django escribe el
+                           decimal con coma, y `width: 78,6%` no es CSS valido, asi
+                           que la barra se quedaba a cero. En el texto la coma es
+                           la correcta y por eso solo se quita aqui. #}
+                        <div class="rt-progress__bar" style="width: {{ c.porcentaje|default:0|unlocalize }}%;"
+                             role="img"
+                             aria-label="{{ c.nombre }}: {{ c.porcentaje|default:'sin datos' }} por ciento de acierto"></div>
+                    </div>
+                    <p class="rt-progress-row__meta">
+                        {{ c.aciertos }} de {{ c.preguntas }} preguntas ·
+                        {{ c.estudiantes }} estudiante{{ c.estudiantes|pluralize }} ·
+                        {{ c.completados }} de {{ c.niveles }} nivel{{ c.niveles|pluralize }} completado{{ c.completados|pluralize }}
+                    </p>
+                </div>
+            {% endfor %}
+
+            {% if peor %}
+                <p class="rt-hint" style="margin-top:12px;">
+                    La que más les cuesta es <strong>{{ peor.nombre }}</strong>, con un
+                    {{ peor.porcentaje }}% frente al {{ mejor.porcentaje }}% de {{ mejor.nombre }}.
+                </p>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="rt-card" aria-labelledby="rt-cruce-title">
+        {% include "reta2/components/card_head.html" with title="Media por programa" desc="Porcentaje de acierto de cada programa en cada competencia" %}
+        <div class="rt-card__body--flush">
+            <div class="rt-table-wrap">
+                <table class="rt-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Programa</th>
+                            {% for nombre in nombres_de_competencia %}
+                                <th scope="col" class="rt-num">{{ nombre }}</th>
+                            {% endfor %}
+                            <th scope="col" class="rt-num">Media</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for fila in programas %}
+                        <tr>
+                            <td data-label="Programa">{{ fila.programa }}</td>
+                            {% for valor in fila.celdas %}
+                                <td class="rt-num">{% if valor is not None %}{{ valor }}{% else %}—{% endif %}</td>
+                            {% endfor %}
+                            <td data-label="Media" class="rt-num"><strong>{{ fila.media|default:"—" }}</strong></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="rt-card__body">
+            <p class="rt-hint">
+                Una celda con «—» no es un cero: es que nadie de ese programa ha
+                tocado esa competencia todavía. No son la misma noticia.
+            </p>
+        </div>
+    </section>
+
+{% else %}
+
+    {% if hay_filtros %}
+        {% include "reta2/components/empty_state.html" with icon="filter_alt_off" title="Ningún estudiante encaja con estos filtros" text="Prueba a ampliar el rango de fechas o a quitar el nivel, que es el filtro que más recorta." %}
+    {% else %}
+        {% include "reta2/components/empty_state.html" with icon="insights" title="Todavía no hay nada que cruzar" text="En cuanto un estudiante practique y la app sincronice, aquí podrás comparar su avance por programa, competencia y fecha." %}
+    {% endif %}
+
+{% endif %}
+
+{% endblock %}

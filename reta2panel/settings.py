@@ -263,6 +263,11 @@ UNFOLD = {
                         "icon": "dashboard",
                         "link": reverse_lazy("admin:index"),
                     },
+                    {
+                        "title": "Explorador",
+                        "icon": "insights",
+                        "link": "/panel/explorador/",
+                    },
                 ],
             },
             {

@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Count, Sum, Avg, Max, Q
+from .metricas import ultimos_reportes
 from .models import StudentReport, LevelProgressReport
 from .permissions import HasValidApiKey
 from .serializers import StudentReportSerializer
@@ -122,22 +123,52 @@ class StudentDetailView(APIView):
         })
 
 class DashboardDataAPIView(APIView):
+    """Las cifras del tablero.
+
+    **Un reporte es una foto, no un suceso.** Cada sincronización de la app
+    manda el estado completo del estudiante —sus preguntas acumuladas, su
+    racha, su progreso en cada nivel—, así que la misma práctica aparece
+    repetida en todas las fotos posteriores. Agregar sobre todos los reportes
+    cuenta la misma pregunta tantas veces como veces haya sincronizado quien
+    la respondió.
+
+    Por eso casi todo se calcula sobre **el último reporte de cada estudiante**,
+    que es la única fila que describe su estado actual. Es lo que ya hacía la
+    lista de estudiantes; aquí no se hacía, y el 12/10/2026 el tablero decía
+    2 015 preguntas cuando la cifra real eran 93, veintiún veces más, por sumar
+    61 fotos de cuatro estudiantes. El texto de ayuda de la tarjeta de racha ya
+    decía «en el último evento de cada usuario»: la documentación estaba bien y
+    el código no la seguía.
+
+    Las dos excepciones son deliberadas y están señaladas abajo: el número de
+    sincronizaciones y el mapa de calor sí cuentan reportes, porque lo que
+    miden es precisamente la actividad de sincronización.
+    """
+
     def get(self, request):
         from django.db.models.functions import TruncDate
-        
+
+        ultimos = ultimos_reportes()
+
         # Estadísticas generales
         total_students = StudentReport.objects.values('username').distinct().count()
+        # Esta sí cuenta todos los reportes: la tarjeta se llama
+        # «Sincronizaciones» y eso es justo lo que mide.
         total_reports = StudentReport.objects.count()
-        total_questions = StudentReport.objects.aggregate(
+        total_questions = ultimos.aggregate(
             total=Sum('total_questions_answered')
         )['total'] or 0
-        avg_streak = StudentReport.objects.aggregate(
+        avg_streak = ultimos.aggregate(
             avg=Avg('current_streak_days')
         )['avg'] or 0
 
-        # Progreso por competencia
+        # Progreso por competencia, solo sobre la última foto de cada
+        # estudiante: en todas las anteriores vuelven a aparecer los mismos
+        # niveles, así que contarlas todas multiplicaba los dos números por el
+        # número de sincronizaciones.
         competence_progress = list(
             LevelProgressReport.objects
+            .filter(report__in=ultimos)
             .values('competence_name')
             .annotate(
                 total=Count('id'),
@@ -161,9 +192,9 @@ class DashboardDataAPIView(APIView):
             for item in heatmap_query if item['date']
         }
 
-        # Comparativa de cohortes
+        # Comparativa de cohortes, también sobre la última foto de cada uno.
         cohorts = list(
-            StudentReport.objects
+            ultimos
             .values('academic_program')
             .annotate(
                 avg_questions=Avg('total_questions_answered'),
@@ -181,6 +212,11 @@ class DashboardDataAPIView(APIView):
         ))
 
         return Response({
+            # Un panel recien purgado no es un panel roto, pero lo parece:
+            # cuatro ceros y un mapa de calor en blanco. Esta bandera deja que
+            # la pagina lo diga con palabras en vez de dejarlo a la
+            # interpretacion de quien mira.
+            'panel_vacio': total_students == 0,
             'total_students': total_students,
             'total_reports': total_reports,
             'total_questions': total_questions,

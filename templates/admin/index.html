@@ -8,20 +8,25 @@
         {% include "reta2/components/page_header.html" with eyebrow="PANEL DE SEGUIMIENTO" title="Dashboard Reta2" subtitle="Programa Ruta del Mejor Saber – Universidad de Santander. Los datos se actualizan con cada sincronización recibida desde la app móvil." %}
     </header>
 
+    {# Aviso de panel sin datos. Lo rellena el JS porque las cifras llegan por
+       la API: hasta que no responde no se sabe si hay algo. Vacio y oculto
+       mientras tanto, para que no parpadee en cada carga. #}
+    <div id="rt-panel-vacio" hidden></div>
+
     <!-- Indicadores generales -->
-    <section aria-labelledby="rt-kpis-title">
+    <section id="rt-kpis-section" aria-labelledby="rt-kpis-title">
         <h2 id="rt-kpis-title" class="rt-sr-only">Indicadores generales</h2>
 
         <div class="rt-grid rt-grid--kpi" aria-live="polite" aria-busy="true" id="rt-kpi-grid">
             {% include "reta2/components/stat_card.html" with label="Estudiantes" icon="group" value_id="stat-students" hint="Con al menos un reporte enviado" help="Número total de estudiantes únicos que han enviado al menos un reporte." %}
             {% include "reta2/components/stat_card.html" with label="Sincronizaciones" icon="sync" value_id="stat-reports" hint="Reportes recibidos desde la app" help="Cantidad total de sincronizaciones de datos recibidas desde la app móvil." %}
-            {% include "reta2/components/stat_card.html" with label="Preguntas" icon="quiz" value_id="stat-questions" hint="Total acumulado histórico" help="Suma total de preguntas respondidas por todos los usuarios en la historia." %}
+            {% include "reta2/components/stat_card.html" with label="Preguntas" icon="quiz" value_id="stat-questions" hint="Total acumulado histórico" help="Suma de las preguntas respondidas, tomando el último reporte de cada estudiante. No se suman las sincronizaciones anteriores: cada una repite el acumulado y contarlas todas multiplicaría la cifra." %}
             {% include "reta2/components/stat_card.html" with label="Racha promedio" icon="local_fire_department" value_id="stat-streak" hint="Días consecutivos de práctica" help="Promedio de los días consecutivos de práctica reportados en el último evento de cada usuario." %}
         </div>
     </section>
 
     <!-- Intensidad de práctica -->
-    <section class="rt-card" aria-labelledby="rt-heatmap-title">
+    <section class="rt-card" id="rt-heatmap-section" aria-labelledby="rt-heatmap-title">
         {% include "reta2/components/card_head.html" with title="Intensidad de práctica" desc="Sincronizaciones recibidas por día durante los últimos 12 meses" %}
         <div class="rt-card__body">
             <div id="heatmap-skeleton" class="rt-skeleton rt-skeleton--block" aria-hidden="true"></div>
@@ -110,6 +115,32 @@
         fetch('/api/dashboard-data/')
             .then(response => response.json())
             .then(data => {
+                // Panel sin un solo estudiante: se dice por qué antes de
+                // enseñar cuatro ceros, y se quita el mapa de calor, que
+                // vacío es una cuadrícula en blanco y no informa de nada.
+                if (data.panel_vacio) {
+                    const aviso = document.getElementById('rt-panel-vacio');
+                    aviso.hidden = false;
+                    aviso.innerHTML = `
+                        <div class="rt-card">
+                            <div class="rt-card__body">
+                                <div class="rt-empty rt-grid-bg">
+                                    <span class="material-symbols-outlined rt-empty__icon" aria-hidden="true">rocket_launch</span>
+                                    <p class="rt-empty__title">El panel está listo y esperando datos</p>
+                                    <p class="rt-empty__text">
+                                        Todavía no ha sincronizado ningún estudiante. En cuanto alguien
+                                        se registre en la app, practique un nivel y el teléfono tenga
+                                        conexión, aquí aparecerán sus preguntas respondidas, su racha y
+                                        su avance por competencia. El banco de preguntas ya está cargado
+                                        y no hay nada más que configurar.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>`;
+                    const mapa = document.getElementById('rt-heatmap-section');
+                    if (mapa) mapa.hidden = true;
+                }
+
                 // Actualizar Stats
                 // rtCountUp (static/reta2/js/reta2.js) sube la cifra desde cero.
                 rtCountUp(document.getElementById('stat-students'), data.total_students);

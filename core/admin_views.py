@@ -169,3 +169,90 @@ class StudentDetailAdminView(TemplateView):
             'completed_levels': list(completed_levels),
         })
         return context
+
+
+@method_decorator(staff_member_required, name='dispatch')
+class ExplorerAdminView(TemplateView):
+    """Explorador de metricas: cruzar programa, competencia, nivel y fechas.
+
+    Es TODO-6. El tablero contesta «como va todo»; esto contesta «como va
+    esto», que es la pregunta que de verdad hace Desarrollo Estudiantil.
+
+    **Sin libreria de graficos.** Las barras se dibujan con `rt-progress`, que
+    ya existe en la hoja de estilos del panel. Anadir Chart.js habria traido
+    una dependencia por CDN, un segundo lenguaje visual que no es el del resto
+    del panel, y una pagina que no ensena nada con JavaScript desactivado ni
+    en una captura de pantalla para la memoria.
+
+    **Todo se calcula en el servidor y se filtra por GET.** Asi una consulta
+    concreta —Enfermeria en Lectura Critica el ultimo mes— es una direccion
+    que se puede guardar o pegar en un correo, que es como se comparte un
+    hallazgo de verdad.
+    """
+    template_name = 'admin/explorador.html'
+
+    def get_context_data(self, **kwargs):
+        from .metricas import (
+            cobertura, mejor_y_peor, por_competencia, por_programa,
+            progreso_filtrado, ultimos_reportes,
+        )
+
+        # Contexto base del admin, que Unfold necesita: de ahi salen la barra
+        # lateral y la hoja de estilos propia del panel, que se inyecta por
+        # UNFOLD["STYLES"]. Sin esta linea la pagina se dibuja entera pero sin
+        # una sola regla de estilo, que es exactamente como salio la primera vez.
+        ctx = admin.site.each_context(self.request)
+        ctx.update(super().get_context_data(**kwargs))
+        ctx['title'] = 'Explorador'
+        g = self.request.GET
+
+        programa = g.get('programa', '').strip()
+        competencia = g.get('competencia', '').strip()
+        nivel = g.get('nivel', '').strip()
+        desde = g.get('desde', '').strip() or None
+        hasta = g.get('hasta', '').strip() or None
+
+        filas = progreso_filtrado(
+            programa=programa, competencia=competencia, nivel=nivel,
+            desde=desde, hasta=hasta,
+        )
+        competencias = por_competencia(filas)
+        mejor, peor = mejor_y_peor(competencias)
+
+        # Las listas de los desplegables salen de lo que hay, no de un catalogo
+        # fijo: un filtro que ofrece opciones sin un solo dato detras solo sirve
+        # para llevar a una pantalla vacia.
+        todas = LevelProgressReport.objects.filter(report__in=ultimos_reportes())
+
+        # El orden de las columnas se fija una vez y lo comparten la cabecera de
+        # la tabla y las celdas de cada fila. Si se calcularan por separado,
+        # bastaria una competencia sin datos para desplazar toda una fila y que
+        # los numeros quedaran bajo la columna equivocada.
+        columnas = sorted(c['nombre'] for c in competencias if c['preguntas'])
+
+        ctx.update({
+            'competencias': competencias,
+            'mejor': mejor,
+            'peor': peor,
+            'programas': por_programa(filas, columnas),
+            'cobertura': cobertura(filas),
+            'nombres_de_competencia': columnas,
+            'filtros': {
+                'programa': programa, 'competencia': competencia,
+                'nivel': nivel, 'desde': desde or '', 'hasta': hasta or '',
+            },
+            'hay_filtros': any([programa, competencia, nivel, desde, hasta]),
+            'opciones_programa': sorted(
+                p for p in ultimos_reportes()
+                .values_list('academic_program', flat=True).distinct() if p
+            ),
+            'opciones_competencia': list(
+                todas.values('competence_id', 'competence_name')
+                .distinct().order_by('competence_name')
+            ),
+            'opciones_nivel': list(
+                todas.values('level_id', 'level_name', 'competence_name')
+                .distinct().order_by('competence_name', 'level_name')
+            ),
+        })
+        return ctx
