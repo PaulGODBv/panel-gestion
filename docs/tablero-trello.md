@@ -20,26 +20,23 @@ Cuatro columnas, las que fija la Fase 4 del anteproyecto.
 | Migrar a PostgreSQL | SQLite es suficiente en desarrollo, no para la prueba piloto. |
 | Endurecer configuración | `DEBUG=False`, quitar `'*'` de `ALLOWED_HOSTS`, servir por HTTPS y retirar el permiso de tráfico en claro del manifiesto Android. Las dos claves ya salen de variable de entorno y están rotadas (TODO-32); lo que queda aquí es el HTTPS, que es lo que evita que la cabecera `X-API-Key` viaje en claro. |
 | Hash a PBKDF2 o Argon2 | SHA-256 con salt frena tablas precalculadas pero no fuerza bruta dirigida. Acotado a `PasswordHasher.computeHash()`. |
-| Migraciones Room no destructivas | Hoy `fallbackToDestructiveMigration()` borra el progreso al subir de versión. |
 | APK final y prueba piloto | Objetivo 3 del anteproyecto: usabilidad y pertinencia de las métricas. |
 | Cuentas de estudiante en el servidor | Hoy la cuenta vive solo en el teléfono: registro y entrada son locales contra Room, y Django solo recibe reportes con un `username` de texto libre. Cambiar de aparato es empezar de cero, y dos personas con el mismo nombre se mezclan en el panel. Pide modelo de estudiante, endpoints de registro y sesión, token, y **HTTPS**: hoy la app habla en claro y por ahí no se mandan contraseñas. Depende del despliegue. |
 | Modo competitivo multijugador | Trabajo futuro, requiere WebSockets. |
 
 ## Por hacer
 
+Las dos que quedan son **del autor, no de código**.
+
 | Tarjeta | Descripción |
 | --- | --- |
-| TODO-20 · Acortar los textos de Lectura Crítica | Las 9 preguntas más largas del banco son todas de ahí; el nivel 2 promedia 1 201 caracteres frente a 340–557 del resto. Unas 20 preguntas, trabajo editorial en el panel. El pasaje no se puede recortar sin destruir el ejercicio: lo que no baje se resuelve con TODO-24 y TODO-22. Los pasajes truncados ya no entran aquí: los cinco que cortaban a mitad de frase se repararon el 05/10/2026 contra `CompetencyData` (TODO-29). Lo que queda es solo editorial: acortar lo que sí se puede acortar. |
-| Decidir el uso del material del Icfes | Los términos del cuadernillo **autorizan el uso académico citando la fuente, pero prohíben la transformación**: «cualquier modificación que de la obra se pueda realizar». Y **el banco entero sale de ahí** — el texto de las corridas es `q61` y `q62`, los de Hobbes, Helena y David, Tetra Pak, Mafalda. Pone en cuestión las 16 adaptaciones a formato corto y TODO-20. Usarlas **tal cual y citadas** sí está permitido. Tres salidas: pedir permiso al Icfes, poblar el Calentamiento solo con las que ya son cortas —las de imagen—, o declarar la adaptación y asumir el riesgo. **No bloquea el piloto**, con 111 preguntas va sobrado. |
-| TODO-2 · Carga de preguntas amigable | Las cartillas llegan en PDF con imágenes. Los tres caminos actuales (formulario, CSV, script) no sirven para quien no es desarrollador. |
-| TODO-6 · Estadísticos y explorador | Moda de competencias, media por programa y competencia, y un gráfico filtrable por programa × competencia × nivel × fechas. |
-| TODO-7 · Animaciones de Material Design | Transiciones entre pantallas, entrada de listas, feedback de acierto y error. La respuesta al pulsar ya está hecha en la barra de navegación (25/09/2026). |
+| TODO-20 · Acortar los textos de Lectura Crítica | Las 9 preguntas más largas del banco son todas de ahí; el nivel 2 promedia 1 201 caracteres frente a 340–557 del resto. Unas 20 preguntas, trabajo editorial en el panel. El pasaje no se puede recortar sin destruir el ejercicio. **Bloqueada por la decisión del Icfes**: acortar es transformar. |
+| Decidir el uso del material del Icfes | Los términos del cuadernillo **autorizan el uso académico citando la fuente, pero prohíben la transformación**. El banco entero sale de ahí. Pone en cuestión las 16 adaptaciones a formato corto y TODO-20. El borrador del derecho de petición está en `docs/solicitud-icfes.md`, pendiente de completar datos y radicar. **No bloquea el piloto.** |
 
 ## En progreso
 
-| Tarjeta | Descripción |
-| --- | --- |
-| TODO-1 · El panel como fuente de verdad del banco | **Casi cerrado.** El banco vive en Room y lo actualiza el panel; `CompetencyData` quedó como contenido de arranque. Falta el último paso: **el catálogo de competencias y niveles sigue escrito en el código**, así que dar de alta un nivel exige publicar versión. El arreglo pequeño sería que la sincronización cree el nivel que no conoce en vez de saltárselo. |
+Vacío. Lo que queda de código está en el Backlog, y lo que bloquea el piloto es
+el despliegue con HTTPS.
 
 ## Terminado
 
@@ -101,3 +98,19 @@ Cuatro columnas, las que fija la Fase 4 del anteproyecto.
 | TODO-9 · Tres defectos de estado en la UI | El proyecto no compilaba (faltaba `CatalogoCache`). Esqueleto de Inicio: la carga se pedía en el `ON_RESUME`, que dentro de un `NavHost` no llega hasta que acaba la transición. Aviso de racha y tarjeta de estadísticas naciendo en cero. Tiempo clavado en «0 seg» por un `derivedStateOf` sin dependencias. Verificado en dispositivo. |
 | El tamaño de sesión se queda en 5 | Decidido en la reunión del 30/09/2026: la objeción del profesor es de *microlearning*, sesiones cortas. `calculateQuestionCount()` no cambia. Efecto secundario a declarar en la memoria: el umbral del 70 % sigue siendo 4 de 5. |
 | TODO-8 · Paleta del modo oscuro (opción B) | Azul para acción, ámbar para logro, bordes visibles, esqueleto discreto. Verificado en dispositivo. |
+
+### Añadido entre el 10 y el 13 de octubre de 2026
+
+| Tarjeta | Descripción |
+| --- | --- |
+| TODO-1 · El panel como fuente de verdad | **Cerrado.** La app pide `GET /api/competences/` y de ahí saca qué niveles hay: dar de alta un nivel ya no exige publicar versión. Cada nivel guarda su id del panel para que reordenar no renumere el progreso de nadie. |
+| TODO-2 · Carga de preguntas amigable | Se pega el texto como venga de la cartilla; dos símbolos marcan la correcta y la explicación. Se revisa antes de escribir, entra todo o nada, y detecta duplicados del nivel. |
+| TODO-6 · Estadísticos y explorador | Explorador con filtros cruzados y tabla por programa. Por el camino apareció que **el tablero decía 2 015 preguntas donde había 93**: agregaba sobre todos los reportes en vez del último de cada estudiante. Corregido, con prueba de regresión. |
+| TODO-7 · Animaciones de Material Design | El movimiento cuenta la jerarquía: bajar desliza, cambiar de pestaña se funde. El veredicto deja de depender del color. Respeta «quitar animaciones» del sistema. |
+| Migraciones de Room no destructivas | `fallbackToDestructiveMigrationOnDowngrade()`. Si falta una migración al subir, revienta en desarrollo en vez de borrar la cuenta de un estudiante. Se quitó además un segundo builder que era código muerto. |
+| Confirmar antes de abandonar un cuestionario | Las respuestas se registran al terminar: salir a medias pierde la sesión entera. Cubre la flecha y el gesto del sistema. |
+| Página de presentación | En `/`, con qué es la app, cómo se instala y la descarga. Sin React, y por qué. |
+| Visita guiada del panel | Cuatro primeros pasos que se tachan al hacerse de verdad, no al pulsar «entendido». |
+| Administrador y superadministrador | La diferencia es exactamente dos cosas: las cuentas del panel y borrar. Con permisos de Django y un grupo. |
+| El panel entero en español | django-unfold no trae catálogo: 128 cadenas traducidas, más los `verbose_name` que faltaban y los nombres de los permisos, que Django guarda en la base. |
+| Dar permisos eligiendo un papel | El formulario pregunta «qué puede hacer» en vez de enseñar cuarenta casillas. |
