@@ -1,0 +1,51 @@
+{% extends 'reta2/base_page.html' %}
+
+{% comment %}
+    Lo que ve un administrador al llegar a algo que es solo del
+    superadministrador — en la práctica, las cuentas del panel.
+
+    Existe para que eso sea una frase y no un 403 pelado del servidor. La
+    diferencia importa: «no tienes permiso» deja a alguien preguntándose si ha
+    hecho algo mal o si el panel está roto; decir qué es y a quién pedírselo lo
+    deja sabiendo qué hacer.
+
+    No enumera lo que sí puede hacer: quien llega aquí venía de un enlace
+    concreto, y una lista de alternativas al lado de lo que buscaba se lee como
+    un premio de consolación.
+{% endcomment %}
+
+{% block title %}No disponible{% endblock %}
+
+{% block page %}
+
+<header class="rt-page__head rt-grid-bg">
+    {% include "reta2/components/page_header.html" with eyebrow="PERMISOS" title="No disponible" subtitle="Esta parte del panel es solo para el superadministrador." %}
+</header>
+
+<section class="rt-card" style="max-width: 640px;">
+    <div class="rt-card__body rt-stack">
+        <div class="rt-note">
+            <p class="rt-note__title">Qué está pasando</p>
+            <p class="rt-note__text">
+                Tu cuenta es de <strong>administrador</strong>: puedes trabajar con el
+                banco de preguntas y consultar las métricas y las fichas de los
+                estudiantes, pero la gestión de las cuentas del panel y el borrado de
+                contenido quedan reservados al superadministrador.
+            </p>
+        </div>
+
+        <p class="rt-hint" style="margin:0;">
+            Si necesitas entrar aquí, pídeselo a quien administre el panel. No has
+            hecho nada mal y no hay nada roto.
+        </p>
+
+        <div class="rt-page__actions">
+            <a href="{% url 'admin:index' %}" class="rt-btn rt-btn--primary">
+                <span class="material-symbols-outlined" aria-hidden="true">dashboard</span>
+                Volver al tablero
+            </a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

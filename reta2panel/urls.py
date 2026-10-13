@@ -19,7 +19,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 
-from core.views_publicas import LandingView
+from core.views_publicas import LandingView, no_disponible
 
 urlpatterns = [
     # La raiz del sitio. Hasta ahora no existia: daba un 404 y dejaba roto el
@@ -35,3 +35,9 @@ urlpatterns = [
 # static() solo devuelve rutas con DEBUG activo, y ahi las sirve el servidor
 # web o el CDN que se ponga delante.
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
+# Que un administrador llegue a algo del superadministrador no es un error del
+# servidor: es una frase. El manejador propio esta para que esa frase salga con
+# los estilos del panel y no como texto suelto.
+handler403 = no_disponible

@@ -64,3 +64,29 @@ class LandingView(TemplateView):
             "video_incrustado": getattr(settings, "RETA2_VIDEO_PRESENTACION", ""),
         })
         return ctx
+
+
+def no_disponible(request, exception=None):
+    """La pantalla de «esto es solo del superadministrador».
+
+    Reemplaza al manejador de 403 de Django por una razon concreta: el suyo
+    dibuja la plantilla con un contexto minimo, y esta extiende la base del
+    panel, que necesita el contexto del admin para saber de donde sacar la hoja
+    de estilos. Sin eso la pagina sale entera pero sin una sola regla, que es
+    exactamente como salio la primera vez.
+
+    El contexto se pide dentro de un `try`: a un 403 tambien se puede llegar
+    sin haber iniciado sesion, y ahi `each_context` no tiene de donde tirar.
+    Mas vale una pagina sin barra lateral que un error dentro del manejador de
+    errores.
+    """
+    from django.contrib import admin
+    from django.shortcuts import render
+
+    contexto = {}
+    try:
+        contexto = admin.site.each_context(request)
+    except Exception:
+        pass
+
+    return render(request, "403.html", contexto, status=403)

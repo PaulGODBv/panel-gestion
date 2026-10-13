@@ -181,3 +181,78 @@ class VisitaGuiadaTest(TestCase):
         suyos = {p["clave"]: p["hecho"] for p in estado(otra)["pasos"]}
         self.assertTrue(mios[PASO_EXPLORADOR])
         self.assertFalse(suyos[PASO_EXPLORADOR])
+
+
+class RolesTest(TestCase):
+    """Administrador y superadministrador: qué los separa, exactamente."""
+
+    def setUp(self):
+        from django.contrib.auth.models import Group
+
+        from .roles import GRUPO_ADMIN, asegurar_roles
+
+        asegurar_roles()
+        U = get_user_model()
+
+        self.jefe = U.objects.create_superuser(
+            "jefe", "jefe@mail.udes.edu.co", "irrelevante-para-la-prueba"
+        )
+        self.admin = U.objects.create_user(
+            "admin", "admin@mail.udes.edu.co", "irrelevante-para-la-prueba",
+            is_staff=True,
+        )
+        self.admin.groups.add(Group.objects.get(name=GRUPO_ADMIN))
+
+    def test_el_admin_trabaja_el_banco_de_preguntas(self):
+        self.assertTrue(self.admin.has_perm("academics.add_question"))
+        self.assertTrue(self.admin.has_perm("academics.change_question"))
+        self.assertTrue(self.admin.has_perm("academics.view_question"))
+
+    def test_el_admin_no_borra_nada(self):
+        """Borrar una competencia se lleva sus niveles y sus preguntas detrás."""
+        for permiso in ("academics.delete_competence", "academics.delete_level",
+                        "academics.delete_question", "core.delete_studentreport"):
+            self.assertFalse(self.admin.has_perm(permiso), permiso)
+
+    def test_el_admin_no_gestiona_las_cuentas_del_panel(self):
+        for permiso in ("auth.view_user", "auth.add_user", "auth.change_user",
+                        "auth.delete_user", "auth.change_group"):
+            self.assertFalse(self.admin.has_perm(permiso), permiso)
+
+    def test_los_reportes_se_miran_pero_no_se_editan(self):
+        """Editarlos a mano seria falsear la medicion."""
+        self.assertTrue(self.admin.has_perm("core.view_studentreport"))
+        self.assertFalse(self.admin.has_perm("core.change_studentreport"))
+
+    def test_el_superadmin_lo_puede_todo(self):
+        self.assertTrue(self.jefe.has_perm("auth.add_user"))
+        self.assertTrue(self.jefe.has_perm("academics.delete_competence"))
+
+    def test_el_admin_entra_al_panel_y_a_las_preguntas(self):
+        self.client.force_login(self.admin)
+        self.assertEqual(self.client.get(reverse("admin:index")).status_code, 200)
+        self.assertEqual(
+            self.client.get(reverse("admin:academics_question_changelist")).status_code,
+            200,
+        )
+
+    def test_al_admin_las_cuentas_le_salen_como_no_disponible(self):
+        self.client.force_login(self.admin)
+        respuesta = self.client.get(reverse("admin:auth_user_changelist"))
+        self.assertEqual(respuesta.status_code, 403)
+        self.assertContains(respuesta, "No disponible", status_code=403)
+        self.assertContains(
+            respuesta, "solo para el superadministrador", status_code=403
+        )
+
+    def test_volver_a_correr_asegurar_roles_no_acumula_permisos(self):
+        """Un grupo que solo crece acaba dando acceso que nadie concedio."""
+        from django.contrib.auth.models import Group
+
+        from .roles import GRUPO_ADMIN, asegurar_roles
+
+        grupo = Group.objects.get(name=GRUPO_ADMIN)
+        antes = grupo.permissions.count()
+        asegurar_roles()
+        asegurar_roles()
+        self.assertEqual(Group.objects.get(name=GRUPO_ADMIN).permissions.count(), antes)
