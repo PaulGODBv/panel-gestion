@@ -6,7 +6,7 @@
 {% block page %}
 
 <header class="rt-page__head rt-grid-bg">
-    {% include "reta2/components/page_header.html" with eyebrow="ANALÍTICA" title="Explorador" subtitle="Cruza programa, competencia, nivel y fechas para ver cómo va cada corte." %}
+    {% include "reta2/components/page_header.html" with eyebrow="ANALÍTICA" title="Explorador" subtitle="Cruza programa, competencia, nivel y fechas, y mira cómo le va al grupo que quede seleccionado." %}
 </header>
 
 <section aria-labelledby="rt-filtros-title">
@@ -74,17 +74,17 @@
 
 {% if cobertura.preguntas %}
 
-    <section class="rt-grid rt-grid--kpi" aria-label="Resumen del corte">
-        {% include "reta2/components/stat_card.html" with label="Estudiantes" icon="group" value=cobertura.estudiantes hint="En este corte" help="Estudiantes distintos con progreso dentro de los filtros aplicados." %}
-        {% include "reta2/components/stat_card.html" with label="Preguntas" icon="quiz" value=cobertura.preguntas hint="Respondidas en el corte" help="Suma de preguntas de los niveles que entran en los filtros, tomando el último reporte de cada estudiante." %}
+    <section class="rt-grid rt-grid--kpi" aria-label="Resumen de la selección">
+        {% include "reta2/components/stat_card.html" with label="Estudiantes" icon="group" value=cobertura.estudiantes hint="Con los filtros puestos" help="Estudiantes distintos con progreso dentro de los filtros aplicados." %}
+        {% include "reta2/components/stat_card.html" with label="Preguntas" icon="quiz" value=cobertura.preguntas hint="Respondidas por esos estudiantes" help="Suma de preguntas de los niveles que entran en los filtros, tomando el último reporte de cada estudiante." %}
         {% include "reta2/components/stat_card.html" with label="Acierto" icon="percent" value=cobertura.porcentaje unit="%" hint="Aciertos sobre preguntas" help="Se calcula sobre los totales, no promediando los porcentajes de cada nivel: así un nivel de 2 preguntas no pesa igual que uno de 13." %}
         {% if mejor %}
-            {% include "reta2/components/stat_card.html" with label="Se les da mejor" icon="trending_up" value=mejor.nombre text="1" hint="La de mayor acierto en el corte" help="Competencia con mayor porcentaje de acierto dentro del corte." %}
+            {% include "reta2/components/stat_card.html" with label="Se les da mejor" icon="trending_up" value=mejor.nombre text="1" hint="La de mayor acierto aquí" help="Competencia con mayor porcentaje de acierto entre los estudiantes que dejan pasar los filtros." %}
         {% endif %}
     </section>
 
     <section class="rt-card" aria-labelledby="rt-barras-title">
-        {% include "reta2/components/card_head.html" with title="Acierto por competencia" desc="Ordenadas de mejor a peor dentro del corte" %}
+        {% include "reta2/components/card_head.html" with title="Acierto por competencia" desc="Ordenadas de mejor a peor, solo con los estudiantes que dejan pasar los filtros" %}
         <div class="rt-card__body">
             {% for c in competencias %}
                 <div class="rt-progress-row">

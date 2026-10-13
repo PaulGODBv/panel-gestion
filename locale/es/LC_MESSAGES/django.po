@@ -1,0 +1,432 @@
+# Traduccion al espanol de las cadenas de django-unfold.
+#
+# Unfold NO trae catalogo de traduccion: sus plantillas usan {% trans %} pero
+# el paquete no incluye ni un locale/, asi que todo lo que no coincida por
+# casualidad con una cadena del propio Django sale en ingles. Eso dejaba el
+# panel a medio traducir: "All applications" junto a "Limpiar", "Type to
+# search" sobre una tabla en espanol.
+#
+# Aqui estan solo las que Django no traduce ya por su cuenta: 128 de las 183
+# que usa Unfold. Las otras 55 las resuelve el catalogo de Django, y pisarlas
+# aqui solo serviria para que dos sitios dijeran cosas distintas.
+#
+# Para regenerar el .mo:
+#   msgfmt -o locale/es/LC_MESSAGES/django.mo locale/es/LC_MESSAGES/django.po
+msgid ""
+msgstr ""
+"Project-Id-Version: reta2panel\n"
+"Report-Msgid-Bugs-To: \n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "%(class_name)s %(instance)s"
+msgstr "%(class_name)s %(instance)s"
+
+msgid "Add new item"
+msgstr "Añadir elemento"
+
+msgid "Add row"
+msgstr "Añadir fila"
+
+msgid "After you've created a user, you’ll be able to edit more user options."
+msgstr "Después de crear el usuario podrás editar más opciones."
+
+msgid "All applications"
+msgstr "Todas las aplicaciones"
+
+msgid "Apply Filters"
+msgstr "Aplicar filtros"
+
+msgid "Available shortcuts"
+msgstr "Atajos disponibles"
+
+msgid "Below is a preview of data to be imported. If you are satisfied with the results, click 'Confirm import'"
+msgstr "Abajo está la vista previa de lo que se va a importar. Si el resultado te convence, pulsa «Confirmar importación»."
+
+msgid "Bold"
+msgstr "Negrita"
+
+msgid "Cancel"
+msgstr "Cancelar"
+
+msgid "Change History"
+msgstr "Historial de cambios"
+
+msgid "Change reason"
+msgstr "Motivo del cambio"
+
+msgid "Changed by"
+msgstr "Modificado por"
+
+msgid "Changelist shortcuts"
+msgstr "Atajos del listado"
+
+msgid "Changes"
+msgstr "Cambios"
+
+msgid "Choose a date from the list below to revert to a previous version of this object"
+msgstr "Elige una fecha de la lista para volver a una versión anterior de este objeto"
+
+msgid "Choose file to upload"
+msgstr "Elige el archivo que vas a subir"
+
+msgid "Click to cancel"
+msgstr "Pulsa para cancelar"
+
+msgid "Click to download"
+msgstr "Pulsa para descargar"
+
+msgid "Code"
+msgstr "Código"
+
+msgid "Collapse"
+msgstr "Plegar"
+
+msgid "Command tool shortcuts"
+msgstr "Atajos del buscador de comandos"
+
+msgid "Comment"
+msgstr "Comentario"
+
+msgid "Confirm import"
+msgstr "Confirmar importación"
+
+msgid "Create new record"
+msgstr "Crear registro"
+
+msgid "Current file"
+msgstr "Archivo actual"
+
+msgid "Dark"
+msgstr "Oscuro"
+
+msgid "Dataset not found. No action performed."
+msgstr "No se encontró el conjunto de datos. No se hizo nada."
+
+msgid "Date"
+msgstr "Fecha"
+
+msgid "Date from"
+msgstr "Desde"
+
+msgid "Date to"
+msgstr "Hasta"
+
+msgid "Default"
+msgstr "Por defecto"
+
+msgid "Edit"
+msgstr "Editar"
+
+msgid "Enter an URL"
+msgstr "Escribe una dirección"
+
+msgid "Export"
+msgstr "Exportar"
+
+msgid "False"
+msgstr "Falso"
+
+msgid "Field"
+msgstr "Campo"
+
+msgid "Field <strong class=\"font-semibold\">{field_name}</strong> is not an autocomplete field. Please add it to the `autocomplete_fields` list."
+msgstr "El campo <strong class=\"font-semibold\">{field_name}</strong> no es de autocompletado. Añádelo a la lista `autocomplete_fields`."
+
+msgid "From"
+msgstr "Desde"
+
+msgid "General"
+msgstr "General"
+
+msgid "Global shortcuts"
+msgstr "Atajos generales"
+
+msgid "Go back"
+msgstr "Volver"
+
+msgid "Group"
+msgstr "Grupo"
+
+msgid "Group permissions"
+msgstr "Permisos del grupo"
+
+msgid "Heading"
+msgstr "Título"
+
+msgid "Image preview"
+msgstr "Vista previa de la imagen"
+
+msgid "Import"
+msgstr "Importar"
+
+msgid "Indent decrease"
+msgstr "Reducir sangría"
+
+msgid "Indent increase"
+msgstr "Aumentar sangría"
+
+msgid "Italic"
+msgstr "Cursiva"
+
+msgid "Light"
+msgstr "Claro"
+
+msgid "Line number"
+msgstr "Número de línea"
+
+msgid "Link"
+msgstr "Enlace"
+
+msgid "Manage group"
+msgstr "Gestionar grupo"
+
+msgid "Manage user"
+msgstr "Gestionar usuario"
+
+msgid "Name"
+msgstr "Nombre"
+
+msgid "Navigate"
+msgstr "Moverse"
+
+msgid "New"
+msgstr "Nuevo"
+
+msgid "New value"
+msgstr "Valor nuevo"
+
+msgid "Next"
+msgstr "Siguiente"
+
+msgid "No"
+msgstr "No"
+
+msgid "No data"
+msgstr "Sin datos"
+
+msgid "No results found"
+msgstr "Sin resultados"
+
+msgid "Non field specific"
+msgstr "No corresponde a ningún campo"
+
+msgid "Not enough data."
+msgstr "No hay datos suficientes."
+
+msgid "Nothing matched your search"
+msgstr "Nada coincide con tu búsqueda"
+
+msgid "Object"
+msgstr "Objeto"
+
+msgid "Object permissions"
+msgstr "Permisos del objeto"
+
+msgid "Old value"
+msgstr "Valor anterior"
+
+msgid "Open command tool"
+msgstr "Abrir el buscador de comandos"
+
+msgid "Open selection"
+msgstr "Abrir lo seleccionado"
+
+msgid "Open selection in new tab"
+msgstr "Abrir lo seleccionado en otra pestaña"
+
+msgid "Open shortcuts list"
+msgstr "Ver la lista de atajos"
+
+msgid "Ordered list"
+msgstr "Lista numerada"
+
+msgid "Paragraph"
+msgstr "Párrafo"
+
+msgid "Please correct these errors in your data where possible, then reupload it using the form above."
+msgstr "Corrige estos errores en tus datos y vuelve a subir el archivo con el formulario de arriba."
+
+msgid "Previous"
+msgstr "Anterior"
+
+msgid "Quote"
+msgstr "Cita"
+
+msgid "Recent searches"
+msgstr "Búsquedas recientes"
+
+msgid "Record picture"
+msgstr "Imagen del registro"
+
+msgid "Redo"
+msgstr "Rehacer"
+
+msgid "Reset filters"
+msgstr "Quitar filtros"
+
+msgid "Reset to default"
+msgstr "Volver a lo de por defecto"
+
+msgid "Return to site"
+msgstr "Volver al sitio"
+
+msgid "Revert"
+msgstr "Revertir"
+
+msgid "Row"
+msgstr "Fila"
+
+msgid "Run"
+msgstr "Ejecutar"
+
+msgid "Search apps and models..."
+msgstr "Buscar aplicaciones y modelos…"
+
+msgid "Select"
+msgstr "Elegir"
+
+msgid "Select action"
+msgstr "Elige una acción"
+
+msgid "Select action to run"
+msgstr "Elige la acción que se va a ejecutar"
+
+msgid "Select currency"
+msgstr "Elige la moneda"
+
+msgid "Select format"
+msgstr "Elige el formato"
+
+msgid "Select record"
+msgstr "Elige el registro"
+
+msgid "Select value"
+msgstr "Elige el valor"
+
+msgid "Skipped"
+msgstr "Omitidas"
+
+msgid "Some rows failed to validate"
+msgstr "Algunas filas no pasaron la validación"
+
+msgid "Strike"
+msgstr "Tachado"
+
+msgid "Submit"
+msgstr "Enviar"
+
+msgid "System"
+msgstr "Del sistema"
+
+msgid "This exporter will export the following fields"
+msgstr "Se exportarán estos campos"
+
+msgid "This exporter will export the following fields: "
+msgstr "Se exportarán estos campos: "
+
+msgid "This importer will import the following fields: "
+msgstr "Se importarán estos campos: "
+
+msgid "This item will be deleted."
+msgstr "Este elemento se va a borrar."
+
+msgid "This object doesn't have a change history."
+msgstr "Este objeto no tiene historial de cambios."
+
+msgid "This page yielded into no results. Create a new item or reset your filters."
+msgstr "Esta página no devolvió resultados. Crea un elemento o quita los filtros."
+
+msgid "To"
+msgstr "Hasta"
+
+msgid "Toggle dark/light mode"
+msgstr "Cambiar entre modo claro y oscuro"
+
+msgid "Toggle filter"
+msgstr "Mostrar u ocultar el filtro"
+
+msgid "Toggle password visibility"
+msgstr "Mostrar u ocultar la contraseña"
+
+msgid "Toggle sidebar"
+msgstr "Mostrar u ocultar la barra lateral"
+
+msgid "True"
+msgstr "Verdadero"
+
+msgid "Type to search"
+msgstr "Escribe para buscar"
+
+msgid "Underlined"
+msgstr "Subrayado"
+
+msgid "Undo"
+msgstr "Deshacer"
+
+msgid "Unlink"
+msgstr "Quitar el enlace"
+
+msgid "Unordered list"
+msgstr "Lista con viñetas"
+
+msgid "Update"
+msgstr "Actualizar"
+
+msgid "User permissions"
+msgstr "Permisos del usuario"
+
+msgid "Value"
+msgstr "Valor"
+
+msgid "View traceback"
+msgstr "Ver el detalle del error"
+
+msgid "Welcome"
+msgstr "Bienvenido"
+
+msgid "Welcome back to"
+msgstr "Te damos la bienvenida a"
+
+msgid "You can not create nested object without parent"
+msgstr "No se puede crear un objeto anidado sin su padre"
+
+msgid "You have been successfully logged out from the administration"
+msgstr "Has cerrado la sesión del panel"
+
+msgid "hide warning"
+msgstr "ocultar el aviso"
+
+msgid "impersonate"
+msgstr "suplantar"
+
+msgid "stop impersonating"
+msgstr "dejar de suplantar"
+
+
+# --- Castellano de Colombia -------------------------------------------------
+# Estas si las traduce Django, pero con el uso de Espana: «Grabar» por
+# «Guardar» y «Terminar sesion» por «Cerrar sesion». Se pisan a proposito,
+# que el panel lo va a leer gente de la UDES.
+
+msgid "Save"
+msgstr "Guardar"
+
+msgid "Save and add another"
+msgstr "Guardar y añadir otra"
+
+msgid "Save and continue editing"
+msgstr "Guardar y seguir editando"
+
+msgid "Save as new"
+msgstr "Guardar como nueva"
+
+msgid "Add another"
+msgstr "Añadir otra"
+
+msgid "Log out"
+msgstr "Cerrar sesión"
+

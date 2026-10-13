@@ -630,6 +630,42 @@ html:root ::selection {
     color: var(--rt-text-2);
 }
 
+/* El boton «Filtros» del listado, junto al buscador y no en el extremo.
+
+   Unfold le pone `lg:ml-auto`, que lo empuja al borde derecho del contenido.
+   En una pantalla ancha ese borde cae justo donde flota el conmutador de tema
+   y los dos se pisan. Pegado al buscador no estorba a ninguna anchura, y de
+   paso los dos controles de la misma fila —buscar y filtrar— quedan juntos,
+   que es donde se buscan.
+
+   Va con `a.` por delante para ganar en especificidad a la clase de utilidad:
+   la hoja de Unfold se carga despues de esta, asi que con la misma
+   especificidad ganaria ella. */
+a.filter-open-button {
+    margin-left: 0;
+}
+
+/* Escudo de la Universidad en las pantallas sin sesion.
+
+   Sobre papel blanco a proposito: la marca es azul oscuro y en el modo oscuro
+   del panel, suelta, desapareceria. Repintarla no es una opcion, porque es una
+   marca institucional y se reproduce tal cual. */
+.rt-marca {
+    background: #ffffff;
+    border-radius: var(--rt-radius);
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: center;
+}
+
+.rt-marca img {
+    width: 100%;
+    max-width: 280px;
+    height: auto;
+    display: block;
+}
+
 .rt-input {
     min-height: 40px;
     padding: 8px 12px;

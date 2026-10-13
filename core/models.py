@@ -3,20 +3,20 @@ from django.db import models
 # Create your models here.
 
 class StudentReport(models.Model):
-    username = models.CharField(max_length=150)
-    email = models.CharField(max_length=254, blank=True)
+    username = models.CharField(max_length=150, verbose_name="Usuario")
+    email = models.CharField(max_length=254, blank=True, verbose_name="Correo")
     
-    total_questions_answered = models.PositiveIntegerField(default=0)
-    total_practice_time_seconds= models.PositiveIntegerField(default=0)
-    current_streak_days = models.PositiveIntegerField(default=0)
+    total_questions_answered = models.PositiveIntegerField(default=0, verbose_name="Preguntas respondidas")
+    total_practice_time_seconds = models.PositiveIntegerField(default=0, verbose_name="Tiempo de práctica (s)")
+    current_streak_days = models.PositiveIntegerField(default=0, verbose_name="Racha actual (días)")
     # La racha viva se reinicia al romperse; esta no. Es contra la que se miden
     # los logros de racha, igual que en la app: un logro conseguido no se
     # devuelve. Default 0 para los reportes anteriores al campo.
     max_streak_days = models.PositiveIntegerField(default=0, verbose_name="Mejor racha")
-    daily_practice_time_seconds = models.PositiveIntegerField(default=0)
+    daily_practice_time_seconds = models.PositiveIntegerField(default=0, verbose_name="Tiempo de hoy (s)")
     
-    reported_at = models.DateTimeField(auto_now_add=True)
-    app_version = models.CharField(max_length=20, blank=True)
+    reported_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha del reporte")
+    app_version = models.CharField(max_length=20, blank=True, verbose_name="Versión de la app")
     academic_program = models.CharField(max_length=100, blank=True, null=True, verbose_name="Programa Académico")
     
     class Meta:
@@ -62,17 +62,18 @@ class LevelProgressReport(models.Model):
     report = models.ForeignKey(
         StudentReport,
         on_delete=models.CASCADE,
-        related_name='level_progress'
+        related_name='level_progress',
+        verbose_name="Reporte",
     )
     
-    competence_name = models.CharField(max_length=100)
-    level_name = models.CharField(max_length=100)
-    competence_id = models.PositiveIntegerField()
-    level_id = models.PositiveIntegerField()
-    score = models.PositiveIntegerField(default=0)
-    total_questions = models.PositiveIntegerField(default=0)
-    is_completed = models.BooleanField(default=False)
-    time_spent_seconds = models.PositiveIntegerField(default=0)
+    competence_name = models.CharField(max_length=100, verbose_name="Competencia")
+    level_name = models.CharField(max_length=100, verbose_name="Nivel")
+    competence_id = models.PositiveIntegerField(verbose_name="Id de competencia")
+    level_id = models.PositiveIntegerField(verbose_name="Id de nivel")
+    score = models.PositiveIntegerField(default=0, verbose_name="Aciertos")
+    total_questions = models.PositiveIntegerField(default=0, verbose_name="Preguntas")
+    is_completed = models.BooleanField(default=False, verbose_name="Completado")
+    time_spent_seconds = models.PositiveIntegerField(default=0, verbose_name="Tiempo dedicado (s)")
     
     class Meta:
         verbose_name = "Progreso por nivel"

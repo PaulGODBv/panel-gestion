@@ -5,9 +5,9 @@ from simple_history.models import HistoricalRecords
 
 # Create your models here.
 class Competence(models.Model):
-    name = models.CharField(max_length=100)
-    description = models.TextField()
-    order = models.PositiveBigIntegerField(default=0)
+    name = models.CharField(max_length=100, verbose_name="Nombre")
+    description = models.TextField(verbose_name="Descripción")
+    order = models.PositiveBigIntegerField(default=0, verbose_name="Orden")
     
     class Meta:
         ordering = ['order']
@@ -20,15 +20,16 @@ class Competence(models.Model):
 
 class Level(models.Model):
     competence = models.ForeignKey(
-        Competence, 
-        on_delete=models.CASCADE, 
-        related_name='levels'
+        Competence,
+        on_delete=models.CASCADE,
+        related_name='levels',
+        verbose_name="Competencia",
     )
     
-    name = models.CharField(max_length=100)
-    description = models.TextField()
-    order = models.PositiveBigIntegerField(default=0)
-    is_Locked_by_default = models.BooleanField(default=False)
+    name = models.CharField(max_length=100, verbose_name="Nombre")
+    description = models.TextField(verbose_name="Descripción")
+    order = models.PositiveBigIntegerField(default=0, verbose_name="Orden")
+    is_Locked_by_default = models.BooleanField(default=False, verbose_name="Bloqueado de entrada")
 
     # Como se juega el nivel cuando es de practica (order = 0).
     #
@@ -113,8 +114,8 @@ class ContextAsset(models.Model):
                   "imagen en negativo.",
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de alta")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Última modificación")
 
     class Meta:
         verbose_name = "Imagen de contexto"
@@ -250,9 +251,10 @@ class ContextAsset(models.Model):
 class Question(models.Model):
     history = HistoricalRecords()
     level = models.ForeignKey(
-        Level, 
-        on_delete=models.CASCADE, 
-        related_name='questions'
+        Level,
+        on_delete=models.CASCADE,
+        related_name='questions',
+        verbose_name="Nivel",
     )
     
     text = models.TextField(verbose_name="Enunciado")
@@ -300,7 +302,7 @@ class Question(models.Model):
                   "romper los intentos ya registrados.",
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de alta")
     # Marca de cambio: es el cursor con el que la app pide solo lo nuevo.
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Ultima modificacion")
     
@@ -313,9 +315,10 @@ class Question(models.Model):
     
 class QuestionOption(models.Model):
     question = models.ForeignKey(
-        Question, 
-        on_delete=models.CASCADE, 
-        related_name='options'
+        Question,
+        on_delete=models.CASCADE,
+        related_name='options',
+        verbose_name="Pregunta",
     )
     
     text = models.TextField(verbose_name="Texto de la opcion")

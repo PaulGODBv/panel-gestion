@@ -196,6 +196,17 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'es-co'
 
+# Catalogo propio para las cadenas de django-unfold, que no trae ninguno.
+# Django busca aqui antes que en las aplicaciones, asi que basta con tener las
+# que faltan: el resto las sigue resolviendo el catalogo del propio Django.
+LOCALE_PATHS = [BASE_DIR / 'locale']
+
+# Entrar por /admin/login/ sin un `next` llevaba a /accounts/profile/, que no
+# existe y daba un 404 nada mas iniciar sesion: es el valor de Django por
+# defecto y este proyecto no tiene esa ruta.
+LOGIN_REDIRECT_URL = '/admin/'
+LOGOUT_REDIRECT_URL = '/admin/login/'
+
 TIME_ZONE = 'America/Bogota'
 
 USE_I18N = True

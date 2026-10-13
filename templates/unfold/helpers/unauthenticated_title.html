@@ -1,0 +1,33 @@
+{% load i18n static %}
+
+{% comment %}
+    Cabecera de las páginas sin sesión: el inicio de sesión, el cierre y el
+    restablecimiento de contraseña.
+
+    Sustituye a la de Unfold para anteponer el escudo de la Universidad. Es la
+    única pantalla del panel que ve alguien antes de identificarse, así que es
+    donde tiene sentido decir de quién es esto.
+
+    El escudo va sobre un fondo blanco propio y no suelto: la marca es azul
+    oscuro sobre blanco y, en el modo oscuro del panel, suelta desaparecería.
+    Repintarla no es una opción —es una marca institucional y se reproduce tal
+    cual—, así que se le pone el papel debajo.
+
+    Del banner original se recortó «Aula Extendida», que identifica la
+    plataforma Moodle de la Universidad y no este panel.
+{% endcomment %}
+
+<div class="rt-marca">
+    <img src="{% static 'reta2/img/udes.png' %}"
+         alt="Universidad de Santander, acreditada en alta calidad por el Ministerio de Educación Nacional y acreditación internacional EQUAA">
+</div>
+
+<div class="border-b border-base-200 mb-8 pb-6 dark:border-base-800">
+    <h1 class="font-semibold">
+        {% if subtitle %}
+            <span class="block text-font-important-light dark:text-font-important-dark">{{ subtitle }} </span>
+        {% endif %}
+
+        <span class="block font-semibold text-primary-600 tracking-tight text-xl dark:text-primary-500">{{ title }}</span>
+    </h1>
+</div>
