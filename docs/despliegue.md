@@ -3,21 +3,30 @@
 Panel de Reta2 en **Azure Container Apps** con **Postgres gestionado**. Escrito
 el 13/10/2026, con la migración a Postgres ya verificada en local.
 
-> **Qué está hecho y qué no.** El código está listo: la base sale de
-> `DATABASE_URL`, los estáticos los sirve WhiteNoise, la seguridad del
-> transporte se activa sola con `DEBUG=False` y hay un `Dockerfile`. La
-> migración de los datos se probó de verdad contra un PostgreSQL 17.6.
+> **Estado al 13/10/2026: todo lo que no necesita una cuenta de Azure está
+> hecho y verificado.** La migración de datos se probó contra un PostgreSQL
+> 17.6, y la imagen se construyó y se ejecutó:
 >
-> **Lo que no se ha podido probar aquí: la imagen.** En esta máquina no hay
-> Docker, así que el `Dockerfile` está escrito pero **nunca se ha construido**.
-> Es lo primero que hay que hacer, y antes de tocar Azure.
+> | | |
+> | --- | --- |
+> | Página pública y login | 200 |
+> | Estáticos | servidos con huella en el nombre: `landing.54e655664a4b.css` |
+> | Compresión y caché | gzip, `max-age` de diez años, `immutable` |
+> | Cabeceras de seguridad | `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, COOP |
+> | API sin clave / con clave | 403 / 200 |
+>
+> Lo único que queda sin probar es el contenedor **contra Postgres**: se ejecutó
+> sin `DATABASE_URL`, así que usó su SQLite de usar y tirar. El camino de
+> Postgres se verificó con el mismo código fuera del contenedor, y lo que los
+> separa es una variable de entorno.
 
 ---
 
 ## 1. Antes de nada: construir la imagen
 
 No tiene sentido pelearse con la nube para descubrir que la imagen no compila.
-Con Docker Desktop instalado:
+Esto **ya se hizo y funcionó**; queda escrito para repetirlo tras cualquier
+cambio. Con Docker Desktop instalado:
 
 ```bash
 docker build -t reta2panel .
@@ -33,9 +42,10 @@ docker run --rm -p 8000:8000 \
 `DJANGO_SSL_REDIRECT=False` solo para esta prueba: sin él, Django redirige a
 `https://localhost`, que no existe, y parece que el contenedor está roto.
 
-Debería responder en `http://localhost:8000` con la página pública. Sin
-`DATABASE_URL` usará un SQLite de usar y tirar dentro del contenedor, que para
-comprobar que arranca es suficiente.
+Responde en `http://localhost:8000` con la página pública. Sin `DATABASE_URL`
+usa un SQLite de usar y tirar dentro del contenedor, que para comprobar que
+arranca es suficiente — la API contesta `[]` porque esa base está vacía, y eso
+es lo correcto.
 
 ## 2. Los recursos en Azure
 
