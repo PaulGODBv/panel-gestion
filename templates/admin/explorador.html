@@ -95,10 +95,10 @@
                         </span>
                     </div>
                     <div class="rt-progress">
-                        {# `unlocalize` no es un adorno: en es-CO Django escribe el
+                        {% comment %}`unlocalize` no es un adorno: en es-CO Django escribe el
                            decimal con coma, y `width: 78,6%` no es CSS valido, asi
                            que la barra se quedaba a cero. En el texto la coma es
-                           la correcta y por eso solo se quita aqui. #}
+                           la correcta y por eso solo se quita aqui.{% endcomment %}
                         <div class="rt-progress__bar" style="width: {{ c.porcentaje|default:0|unlocalize }}%;"
                              role="img"
                              aria-label="{{ c.nombre }}: {{ c.porcentaje|default:'sin datos' }} por ciento de acierto"></div>
@@ -106,7 +106,7 @@
                     <p class="rt-progress-row__meta">
                         {{ c.aciertos }} de {{ c.preguntas }} preguntas ·
                         {{ c.estudiantes }} estudiante{{ c.estudiantes|pluralize }} ·
-                        {{ c.completados }} de {{ c.niveles }} nivel{{ c.niveles|pluralize }} completado{{ c.completados|pluralize }}
+                        {{ c.completados }} de {{ c.niveles }} nivel{{ c.niveles|pluralize:"es" }} completado{{ c.niveles|pluralize }}
                     </p>
                 </div>
             {% endfor %}

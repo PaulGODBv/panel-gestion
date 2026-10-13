@@ -16,10 +16,10 @@
     {% include "reta2/components/page_header.html" with eyebrow="BANCO DE PREGUNTAS" title="Importar pegando texto" subtitle="Pega las preguntas como las tengas escritas. Se revisa primero y se guarda después: nada entra en el banco hasta que lo confirmes." %}
 </header>
 
-{# `reta2/base_page.html` no pinta los mensajes de Django: las paginas que lo
+{% comment %}`reta2/base_page.html` no pinta los mensajes de Django: las paginas que lo
    usan redirigen al listado del admin y es ahi donde se ven. Esta no redirige
    mientras se revisa, asi que los pinta ella. Sin esto, avisos como «el texto
-   cambio despues de revisarlo» se perdian y la pagina parecia no reaccionar. #}
+   cambio despues de revisarlo» se perdian y la pagina parecia no reaccionar.{% endcomment %}
 {% if messages %}
     <div class="rt-stack--tight" role="status" aria-live="polite">
         {% for m in messages %}

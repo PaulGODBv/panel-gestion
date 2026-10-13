@@ -8,9 +8,9 @@
         {% include "reta2/components/page_header.html" with eyebrow="PANEL DE SEGUIMIENTO" title="Dashboard Reta2" subtitle="Programa Ruta del Mejor Saber – Universidad de Santander. Los datos se actualizan con cada sincronización recibida desde la app móvil." %}
     </header>
 
-    {# Aviso de panel sin datos. Lo rellena el JS porque las cifras llegan por
+    {% comment %}Aviso de panel sin datos. Lo rellena el JS porque las cifras llegan por
        la API: hasta que no responde no se sabe si hay algo. Vacio y oculto
-       mientras tanto, para que no parpadee en cada carga. #}
+       mientras tanto, para que no parpadee en cada carga.{% endcomment %}
     <div id="rt-panel-vacio" hidden></div>
 
     <!-- Indicadores generales -->
