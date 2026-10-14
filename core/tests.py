@@ -398,3 +398,64 @@ class BaseReciencreadaTest(TestCase):
             Permission.objects.filter(name__startswith="Can ").values_list("name", flat=True)
         )
         self.assertEqual(en_ingles, [], f"{len(en_ingles)} permisos sin traducir")
+
+
+class MediosEnProduccionTest(TestCase):
+    """Que las imagenes de contexto se sirvan cuando no hay DEBUG.
+
+    Las 23 preguntas con imagen la pedian a `/media/...` y recibian un 404 en
+    Azure: `static()` en urls.py solo actua con DEBUG, y el comentario que hay
+    alli daba por supuesto un servidor web por delante. En Container Apps no
+    existe, asi que lo sirve WhiteNoise desde `wsgi.py`.
+
+    La prueba entra por la aplicacion WSGI y no por el cliente de Django, que
+    pasa por `urls.py` y se saltaria justo la capa que se quiere comprobar.
+    """
+
+    def _pedir(self, ruta):
+        import io
+        import sys
+
+        from reta2panel.wsgi import application
+
+        entorno = {
+            "REQUEST_METHOD": "GET",
+            "PATH_INFO": ruta,
+            "SERVER_NAME": "testserver",
+            "SERVER_PORT": "80",
+            "SERVER_PROTOCOL": "HTTP/1.1",
+            "HTTP_HOST": "testserver",
+            "wsgi.url_scheme": "https",
+            "wsgi.input": io.BytesIO(b""),
+            "wsgi.errors": sys.stderr,
+            "wsgi.multithread": False,
+            "wsgi.multiprocess": False,
+            "wsgi.run_once": False,
+        }
+        capturado = {}
+
+        def empezar(estado, cabeceras, exc_info=None):
+            capturado["estado"] = int(estado.split()[0])
+            capturado["cabeceras"] = dict(cabeceras)
+
+        cuerpo = b"".join(application(entorno, empezar))
+        return capturado["estado"], capturado.get("cabeceras", {}), cuerpo
+
+    def test_una_imagen_de_contexto_se_sirve(self):
+        from django.conf import settings
+
+        carpeta = settings.MEDIA_ROOT / "question-context"
+        imagenes = sorted(carpeta.glob("*.webp")) if carpeta.is_dir() else []
+        if not imagenes:
+            self.skipTest("no hay imagenes de contexto en el repositorio")
+
+        estado, cabeceras, cuerpo = self._pedir(
+            f"/media/question-context/{imagenes[0].name}"
+        )
+        self.assertEqual(estado, 200)
+        self.assertEqual(cabeceras.get("Content-Type"), "image/webp")
+        self.assertEqual(len(cuerpo), imagenes[0].stat().st_size)
+
+    def test_una_imagen_que_no_existe_sigue_dando_404(self):
+        estado, _, _ = self._pedir("/media/question-context/no-existe-jamas.webp")
+        self.assertEqual(estado, 404)
