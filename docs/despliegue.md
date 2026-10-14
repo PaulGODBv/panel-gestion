@@ -621,8 +621,50 @@ az ad app federated-credential create --id "$APP_ID" --parameters '{
 }'
 
 # Acotado al grupo de recursos, NO a la suscripcion.
-az role assignment create --assignee "$APP_ID" --role Contributor   --scope "/subscriptions/20a514f2-a0f5-4e27-8f7f-6761944a5185/resourceGroups/reta2"
+#
+# El MSYS_NO_PATHCONV no es adorno: ver el aviso de abajo.
+MSYS_NO_PATHCONV=1 az role assignment create --assignee "$APP_ID" --role Contributor   --scope "/subscriptions/20a514f2-a0f5-4e27-8f7f-6761944a5185/resourceGroups/reta2"
 ```
+
+> **En Git Bash, el `--scope` llega convertido en una ruta de Windows.** Sin
+> `MSYS_NO_PATHCONV=1`, la orden falla con un mensaje que no apunta a su causa
+> por ningun lado:
+>
+> ```
+> ERROR: (MissingSubscription) The request did not have a subscription or a valid
+> tenant level resource provider.
+> ```
+>
+> Git Bash traduce cualquier argumento que parezca una ruta absoluta de POSIX, y
+> las comillas no lo evitan. Lo que recibe Azure es
+> `C:/Program Files/Git/subscriptions/20a514f2-.../resourceGroups/reta2`, donde
+> no hay ninguna suscripcion, y de ahi el mensaje. Se comprueba en un segundo:
+>
+> ```bash
+> python -c "import sys; print(sys.argv[1])" "/subscriptions/x/resourceGroups/y"
+> ```
+>
+> `--scope` es **obligatorio** en `az role assignment create`, asi que no hay
+> forma de dar el permiso sin pasar una ruta. Desde PowerShell no pasa, porque
+> ahi no hay conversion.
+
+Tres cosas mas sobre este montaje, aprendidas al hacerlo:
+
+**`az ad app create` parchea en vez de fallar si el nombre ya existe.** Avisa
+con «Found an existing application instance: (id) ... We will patch it.», que
+parece un problema y no lo es: lo normal es haber lanzado la orden dos veces. No
+crea nada duplicado.
+
+**El `id` de ese aviso no es el que va a GitHub.** Es el *object id* de la
+aplicacion. El que hace de `AZURE_CLIENT_ID` es el `appId`, y se saca con:
+
+```bash
+az ad app list --display-name "reta2-despliegue-github" --query "[].appId" -o tsv
+```
+
+**La asignacion de permiso puede fallar nada mas crear la identidad**, con
+«cannot find user or service principal in graph database». Tarda unos segundos
+en propagarse; se espera y se repite.
 
 Y en el repositorio, **Settings → Secrets and variables → Actions**, tres
 valores que no son secretos de verdad pero van ahí por costumbre:
