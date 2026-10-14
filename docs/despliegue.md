@@ -106,6 +106,18 @@ Comprobar:
 az provider show --namespace Microsoft.DBforPostgreSQL --query registrationState -o tsv
 ```
 
+> **El aviso de «Paid Tier» no significa que los créditos no se apliquen.** Solo
+> dice que ese SKU no está entre los gratuitos para siempre. El saldo de Azure
+> for Students es prepago y paga exactamente este tipo de recurso: se ve el
+> saldo bajar, no un cobro a una tarjeta.
+>
+> Son unos 12–15 USD al mes de cómputo más 3–4 de almacenamiento. **El servidor
+> se puede parar** hasta siete días seguidos y mientras no consume cómputo:
+>
+> ```bash
+> az postgres flexible-server stop --resource-group reta2 --name reta2-db
+> ```
+
 > **Sobre la contraseña del servidor.** La eliges tú en el momento de crearlo, y
 > Azure no la vuelve a enseñar. Genérala al azar y guárdala antes de pegarla:
 >
@@ -140,8 +152,34 @@ az postgres flexible-server create \
   --public-access 0.0.0.0
 
 az postgres flexible-server db create \
-  --resource-group reta2 --server-name reta2-db --database-name reta2panel
+  --resource-group reta2 --server-name reta2-db --name reta2panel
 ```
+
+**Ojo con las banderas de esta familia de comandos**, que no siguen el patrón del
+resto de la CLI y dan un error que no ayuda:
+
+| Comando | El servidor | La cosa creada |
+| --- | --- | --- |
+| `flexible-server create` | `--name` | — |
+| `flexible-server db create` | `--server-name` | `--name`, **no** `--database-name` |
+| `flexible-server firewall-rule` | `--server-name` | `--name` |
+
+**Y comprueba el cortafuegos después.** `--public-access 0.0.0.0` debería dejar
+una regla que permita conectarse a los servicios de Azure, y aquí **no la dejó**:
+el servidor quedó sin ninguna, es decir, incomunicado.
+
+```bash
+az postgres flexible-server firewall-rule list   --resource-group reta2 --server-name reta2-db -o table
+```
+
+Si sale vacío:
+
+```bash
+az postgres flexible-server firewall-rule create   --resource-group reta2 --server-name reta2-db   --name PermitirServiciosDeAzure   --start-ip-address 0.0.0.0 --end-ip-address 0.0.0.0
+```
+
+El rango `0.0.0.0`–`0.0.0.0` **no es «todo internet»**: es el marcador especial
+de Azure para «servicios de Azure». Parece justo lo contrario de lo que hace.
 
 `--public-access 0.0.0.0` permite la entrada desde servicios de Azure. **No es
 acceso abierto a internet**, pero conviene revisar las reglas del cortafuegos
