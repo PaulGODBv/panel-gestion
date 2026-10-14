@@ -740,5 +740,25 @@ Falta, y no es poco:
    almacenamiento externo del paso 7.
 3. **El paso 9**, el HSTS. Ya se puede: HTTPS sirve bien. Pero es la puerta de
    un solo sentido que se explica ahí, asi que se decide, no se hace de paso.
-4. **Borrar la regla del cortafuegos** `equipo-del-autor` cuando no haga falta
-   cargar mas datos.
+4. ~~Borrar la regla del cortafuegos `equipo-del-autor`.~~ **Hecha**, y la
+   razon llego sola: la IP de casa cambio a media sesion —al pasar a datos
+   moviles— y la regla se quedo apuntando a una direccion que ya no era del
+   autor. Para volver a entrar desde una maquina propia hay que crearla de
+   nuevo con la IP del momento (seccion 4).
+
+5. ~~Cambiar la contrasena del Postgres.~~ **Hecha el 14/10/2026.** Se roto por
+   dos cosas que por separado no eran graves y juntas si: la anterior se habia
+   escrito en claro en una conversacion, y esta guia —que vive en un repositorio
+   publico— nombra al usuario `reta2admin` y la direccion del servidor. Con el
+   cortafuegos dejando entrar a «servicios de Azure», que es cualquier tenant y
+   no solo el nuestro, eso era usuario conocido y contrasena debil.
+
+   La nueva tiene 38 caracteres, solo con caracteres que no hay que codificar
+   dentro de una URL, y esta en `.credenciales-prueba`, que no viaja ni al
+   repositorio ni a la imagen. Comprobado despues: la replica arranca **sin
+   ningun reinicio** y la API sirve las 5 competencias y los 18 niveles, asi que
+   `migrate` conecto con la clave nueva.
+
+   > Cambiar un secreto **no** basta por si solo: en un entorno express no
+   > alcanza a la replica que esta corriendo. Hay que reciclarla, con el baile de
+   > la seccion 5.
