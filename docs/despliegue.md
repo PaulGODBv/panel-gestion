@@ -81,7 +81,43 @@ paga esa distancia.
 > az monitor log-analytics workspace delete --resource-group reta2 >   --workspace-name <el-huerfano> --force true --yes
 > ```
 
-## 3. Los recursos
+## 3. Registrar los proveedores
+
+Una suscripción nueva no tiene habilitados los servicios que va a usar, y el
+error no lo dice de forma útil: `MissingSubscriptionRegistration`. Se registran
+una vez y de golpe, antes de crear nada:
+
+```bash
+for n in Microsoft.App Microsoft.OperationalInsights Microsoft.DBforPostgreSQL Microsoft.ContainerRegistry; do
+  az provider register --namespace $n --wait
+done
+```
+
+En esta suscripción, `Microsoft.App` y `Microsoft.OperationalInsights` ya venían
+registrados —los activó el primer intento de crear el entorno—, pero
+`Microsoft.DBforPostgreSQL` y `Microsoft.ContainerRegistry` no. El de Postgres
+hizo fallar la creación del servidor; el del registro habría hecho fallar el
+despliegue más adelante, así que conviene registrarlos los cuatro a la vez y no
+descubrirlos de uno en uno.
+
+Comprobar:
+
+```bash
+az provider show --namespace Microsoft.DBforPostgreSQL --query registrationState -o tsv
+```
+
+> **Sobre la contraseña del servidor.** La eliges tú en el momento de crearlo, y
+> Azure no la vuelve a enseñar. Genérala al azar y guárdala antes de pegarla:
+>
+> ```bash
+> python -c "import secrets; print(secrets.token_urlsafe(24))"
+> ```
+>
+> No la escribas en un chat, en un commit ni en una captura. Si se te escapa,
+> cámbiala: `az postgres flexible-server update --resource-group reta2 --name
+> reta2-db --admin-password "LA-NUEVA"`.
+
+## 4. Los recursos
 
 Hace falta una suscripción. **Si la Universidad da créditos académicos, úsalos**:
 el Postgres gestionado más barato ronda los 15 dólares al mes y el piloto dura
@@ -111,7 +147,7 @@ az postgres flexible-server db create \
 acceso abierto a internet**, pero conviene revisar las reglas del cortafuegos
 después y dejar solo lo necesario.
 
-## 4. La aplicación
+## 5. La aplicación
 
 ```bash
 az containerapp env create --name reta2-env --resource-group reta2 --location mexicocentral
@@ -151,7 +187,7 @@ entorno corriente se ve en el portal y en `az containerapp show`.
 **La `RETA2_API_KEY` tiene que ser la misma que el `local.properties` de la
 app Android**, o la API rechaza todas sus peticiones.
 
-## 5. Llevar los datos
+## 6. Llevar los datos
 
 Las migraciones las corre el contenedor al arrancar. Los datos hay que
 pasarlos, y el procedimiento es el que ya se verificó en local:
@@ -197,7 +233,7 @@ duplicada, hay que reiniciar las secuencias:
 python manage.py sqlsequencereset academics core | python manage.py dbshell
 ```
 
-## 6. La cuenta y los archivos
+## 7. La cuenta y los archivos
 
 ```bash
 az containerapp exec --name reta2panel --resource-group reta2 \
@@ -211,7 +247,7 @@ el piloto, lo más simple es subirlos a un Azure Storage y servir `MEDIA_URL`
 desde ahí. Mientras no estén, la página pública no enseña un botón roto: dice
 que la descarga está en preparación.
 
-## 7. Cerrar el círculo con la app Android
+## 8. Cerrar el círculo con la app Android
 
 Con el dominio funcionando:
 
@@ -225,7 +261,7 @@ Hasta aquí, la cabecera `X-API-Key` viajaba legible por la red local y se podí
 capturar con un analizador sin descompilar nada. Esto es lo que lo arregla; rotar
 la clave nunca lo arregló.
 
-## 8. Cuando ya sirva bien por HTTPS
+## 9. Cuando ya sirva bien por HTTPS
 
 Subir el HSTS, y solo entonces:
 
@@ -247,5 +283,5 @@ DJANGO_DEBUG=False DJANGO_SECRET_KEY=... DJANGO_ALLOWED_HOSTS=... RETA2_API_KEY=
 ```
 
 Debe quedar en dos avisos y solo dos: el del HSTS en cero —deliberado hasta el
-paso 8— y, si usas una clave corta de prueba, el de la `SECRET_KEY`. Cualquier
+paso 9— y, si usas una clave corta de prueba, el de la `SECRET_KEY`. Cualquier
 otro hay que mirarlo.
