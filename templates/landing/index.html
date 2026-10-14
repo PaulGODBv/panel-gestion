@@ -10,6 +10,16 @@
         La página no pasa por la base del panel a propósito: no comparten ni
         la hoja de estilos ni el público. Lo único en común es el azul UDES.
     {% endcomment %}
+    {% comment %}
+        El icono de la pestana. El escudo entero, con sus anillos de texto, que
+        a 16 px no se leen: se eligio asi a proposito, fidelidad por delante de
+        legibilidad. El panel lo declara por su cuenta, desde UNFOLD, porque su
+        plantilla base la pone Unfold y no pasa por aqui.
+    {% endcomment %}
+    <link rel="icon" href="{% static 'marca/favicon.ico' %}" sizes="16x16 32x32 48x48" type="image/x-icon">
+    <link rel="icon" href="{% static 'marca/favicon-32.png' %}" sizes="32x32" type="image/png">
+    <link rel="apple-touch-icon" href="{% static 'marca/apple-touch-icon.png' %}" sizes="180x180">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">

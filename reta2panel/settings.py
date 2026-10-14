@@ -355,6 +355,45 @@ UNFOLD = {
     "SITE_HEADER": "Reta2 – Gestión Académica",
     "SITE_URL": "/",
     "SITE_ICON": None,
+
+    # El icono de la pestana. Hasta el 14/10/2026 no habia ninguno y el
+    # navegador pintaba su hoja en blanco de siempre, que no dice de quien es
+    # el panel ni lo distingue de cualquier otra pestana abierta.
+    #
+    # Es el escudo entero, a sabiendas de que sus dos anillos de texto no se
+    # leen a 16 px: se eligio entre tres trazados y gano la fidelidad al escudo
+    # institucional sobre la legibilidad de un texto que a ese tamano no iba a
+    # leerse de ninguna manera.
+    #
+    # Van las tres medidas dentro del .ico y el navegador escoge; con una sola,
+    # el reescalado lo hace el y sale peor. El PNG de 32 esta para los que
+    # prefieren PNG antes que ICO, y el de 180 para cuando alguien guarda el
+    # panel en la pantalla de inicio de un movil.
+    #
+    # Los `lambda` no son adorno: `static()` tiene que resolverse al atender la
+    # peticion, no al importar los ajustes. En produccion el almacenamiento
+    # pone una huella en el nombre leyendo un manifiesto que todavia no existe
+    # cuando este fichero se importa.
+    "SITE_FAVICONS": [
+        {
+            "rel": "icon",
+            "sizes": "16x16 32x32 48x48",
+            "type": "image/x-icon",
+            "href": lambda request: static("marca/favicon.ico"),
+        },
+        {
+            "rel": "icon",
+            "sizes": "32x32",
+            "type": "image/png",
+            "href": lambda request: static("marca/favicon-32.png"),
+        },
+        {
+            "rel": "apple-touch-icon",
+            "sizes": "180x180",
+            "type": "image/png",
+            "href": lambda request: static("marca/apple-touch-icon.png"),
+        },
+    ],
     "DASHBOARD_CALLBACK": "core.views.dashboard_callback",
     "STYLES": [
         lambda request: static("reta2/css/reta2.css"),
