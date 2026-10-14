@@ -496,17 +496,56 @@ que la descarga está en preparación.
 
 ## 8. Cerrar el círculo con la app Android
 
-Con el dominio funcionando:
+**Hecho el 14/10/2026**, salvo compilar. Queda escrito porque la forma importa:
+las dos cosas se hicieron de manera que el desarrollo en la LAN siga funcionando.
 
-1. `ApiConfig` apunta a `https://reta2panel.<sufijo>.eastus.azurecontainerapps.io/api/`.
-2. **Quitar `usesCleartextTraffic` del manifiesto.** Es lo que permitía hablar en
-   claro con la IP de la LAN; con HTTPS deja de hacer falta y dejarlo puesto
-   mantiene abierta la puerta que el despliegue viene a cerrar.
-3. Recompilar, **firmar** y subir el APK a la página pública.
+**La URL deja de ser una constante.** `ApiConfig.BASE_URL` era la IP de la LAN con
+cinco IPs mas comentadas debajo, una por red. Ahora entra por `buildConfigField`,
+igual que la clave de la API:
 
-Hasta aquí, la cabecera `X-API-Key` viajaba legible por la red local y se podía
+```kotlin
+// app/build.gradle.kts
+release  ->  la URL de produccion, escrita aqui, por HTTPS
+debug    ->  RETA2_BASE_URL de local.properties, o produccion si no se pone
+```
+
+La de `release` **no** sale de `local.properties` a proposito: un APK que se
+reparte no puede depender de un fichero que vive en una sola maquina. Y el
+dominio no es ningun secreto, al contrario que la clave.
+
+**`usesCleartextTraffic` se mueve, no se borra.** Quitarlo del todo habria dejado
+sin poder probar contra el `runserver`, que sirve por HTTP en la IP de la LAN y no
+tiene certificado. Pasa a `app/src/debug/AndroidManifest.xml`, que solo se fusiona
+en las compilaciones de desarrollo:
+
+```xml
+<!-- app/src/debug/AndroidManifest.xml -->
+<application android:usesCleartextTraffic="true" />
+```
+
+No hace falta `tools:replace`: el manifiesto principal ya no declara el atributo,
+asi que no hay conflicto que resolver. **El APK de `release` queda sin el permiso
+y Android le rechaza cualquier HTTP.**
+
+Hasta aqui, la cabecera `X-API-Key` viajaba legible por la red local y se podia
 capturar con un analizador sin descompilar nada. Esto es lo que lo arregla; rotar
-la clave nunca lo arregló.
+la clave nunca lo arreglo, porque el problema no era la clave sino el canal.
+
+**Lo que falta: compilar.** Hay que recompilar, **firmar** y subir el APK, y
+comprobar en el manifiesto fusionado de `release` que `usesCleartextTraffic` no
+aparece:
+
+```bash
+./gradlew :app:assembleRelease
+# y despues, buscar el atributo en el manifiesto ya fusionado:
+#   app/build/intermediates/merged_manifests/release/AndroidManifest.xml
+```
+
+> En la maquina del autor Gradle no arranca desde la terminal: el demonio no
+> consigue aceptar su propia conexion de bucle local y falla con
+> «`SocketException: Invalid argument: connect`». Es un tropiezo conocido de
+> Windows cuando hay muchos adaptadores de red —ahi aparecen VirtualBox, Npcap y
+> varios WAN Miniport—. Desde Android Studio no ocurre.
 
 ## 9. Cuando ya sirva bien por HTTPS
 
@@ -557,9 +596,10 @@ fallo que solo se veia contra una base nueva, y esta lo era.
 
 Falta, y no es poco:
 
-1. **El paso 8 entero.** `ApiConfig` sigue apuntando a la IP de la LAN y el
-   manifiesto de Android conserva `usesCleartextTraffic`. Hasta que eso se
-   cambie, el despliegue no sirve de nada para la app.
+1. **Compilar la app y comprobarlo.** El paso 8 esta hecho en el codigo:
+   `ApiConfig` ya apunta al dominio y `usesCleartextTraffic` solo existe en
+   `debug`. Falta `assembleRelease`, firmar, y mirar el manifiesto fusionado de
+   `release` para confirmar que el atributo no esta.
 2. **El APK firmado y el vídeo**, que van en `media/` y necesitan el
    almacenamiento externo del paso 7.
 3. **El paso 9**, el HSTS. Ya se puede: HTTPS sirve bien. Pero es la puerta de
