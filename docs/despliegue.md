@@ -47,15 +47,53 @@ usa un SQLite de usar y tirar dentro del contenedor, que para comprobar que
 arranca es suficiente — la API contesta `[]` porque esa base está vacía, y eso
 es lo correcto.
 
-## 2. Los recursos en Azure
+## 2. Antes de crear nada: en qué regiones te deja
+
+**Azure for Students solo permite cinco regiones.** Lo impone una política de la
+suscripción, y si pides otra, el error no dice «región no permitida» de forma
+evidente — dice `RequestDisallowedByAzure`. Míralas primero:
+
+```bash
+az policy assignment list   --query "[?displayName=='Allowed resource deployment regions'].parameters.listOfAllowedLocations.value" -o json
+```
+
+En esta suscripción, el 13/10/2026, eran: `canadacentral`, `brazilsouth`,
+`mexicocentral`, `eastus` y `northcentralus`.
+
+**Y una que está permitida puede no tener sitio.** `eastus` está en la lista y
+aun así falló con *«There is not enough space on the disk»*. **No es tu disco**:
+es como Azure dice que la región no tiene capacidad para ese recurso en ese
+momento. `eastus` es la más saturada que tienen.
+
+Se eligió **`mexicocentral`**: de las cinco permitidas es la más cercana a
+Bucaramanga, y en una aplicación que sincroniza desde teléfonos cada petición
+paga esa distancia.
+
+> **Si un intento falla, limpia antes de repetir.** Cada intento deja detrás un
+> *workspace* de Log Analytics creado automáticamente, y un entorno a medias se
+> queda en estado `Failed` ocupando el nombre — el siguiente intento entonces
+> falla por un motivo distinto y confuso. Aquí quedaron cuatro *workspaces*
+> huérfanos y un entorno muerto:
+>
+> ```bash
+> az resource list --resource-group reta2 -o table
+> az containerapp env delete --name reta2-env --resource-group reta2 --yes
+> az monitor log-analytics workspace delete --resource-group reta2 >   --workspace-name <el-huerfano> --force true --yes
+> ```
+
+## 3. Los recursos
 
 Hace falta una suscripción. **Si la Universidad da créditos académicos, úsalos**:
 el Postgres gestionado más barato ronda los 15 dólares al mes y el piloto dura
 unas semanas.
 
+La región del **grupo de recursos** da igual —solo guarda metadatos—, pero **la
+aplicación y la base tienen que compartir región**: separadas, cada consulta
+paga el viaje.
+
 ```bash
 az login
-az group create --name reta2 --location eastus
+az group create --name reta2 --location mexicocentral
 
 # Postgres gestionado, el más pequeño que hay
 az postgres flexible-server create \
@@ -73,10 +111,10 @@ az postgres flexible-server db create \
 acceso abierto a internet**, pero conviene revisar las reglas del cortafuegos
 después y dejar solo lo necesario.
 
-## 3. La aplicación
+## 4. La aplicación
 
 ```bash
-az containerapp env create --name reta2-env --resource-group reta2 --location eastus
+az containerapp env create --name reta2-env --resource-group reta2 --location mexicocentral
 
 az containerapp up \
   --name reta2panel --resource-group reta2 --environment reta2-env \
@@ -113,7 +151,7 @@ entorno corriente se ve en el portal y en `az containerapp show`.
 **La `RETA2_API_KEY` tiene que ser la misma que el `local.properties` de la
 app Android**, o la API rechaza todas sus peticiones.
 
-## 4. Llevar los datos
+## 5. Llevar los datos
 
 Las migraciones las corre el contenedor al arrancar. Los datos hay que
 pasarlos, y el procedimiento es el que ya se verificó en local:
@@ -159,7 +197,7 @@ duplicada, hay que reiniciar las secuencias:
 python manage.py sqlsequencereset academics core | python manage.py dbshell
 ```
 
-## 5. La cuenta y los archivos
+## 6. La cuenta y los archivos
 
 ```bash
 az containerapp exec --name reta2panel --resource-group reta2 \
@@ -173,7 +211,7 @@ el piloto, lo más simple es subirlos a un Azure Storage y servir `MEDIA_URL`
 desde ahí. Mientras no estén, la página pública no enseña un botón roto: dice
 que la descarga está en preparación.
 
-## 6. Cerrar el círculo con la app Android
+## 7. Cerrar el círculo con la app Android
 
 Con el dominio funcionando:
 
@@ -187,7 +225,7 @@ Hasta aquí, la cabecera `X-API-Key` viajaba legible por la red local y se podí
 capturar con un analizador sin descompilar nada. Esto es lo que lo arregla; rotar
 la clave nunca lo arregló.
 
-## 7. Cuando ya sirva bien por HTTPS
+## 8. Cuando ya sirva bien por HTTPS
 
 Subir el HSTS, y solo entonces:
 
@@ -209,5 +247,5 @@ DJANGO_DEBUG=False DJANGO_SECRET_KEY=... DJANGO_ALLOWED_HOSTS=... RETA2_API_KEY=
 ```
 
 Debe quedar en dos avisos y solo dos: el del HSTS en cero —deliberado hasta el
-paso 7— y, si usas una clave corta de prueba, el de la `SECRET_KEY`. Cualquier
+paso 8— y, si usas una clave corta de prueba, el de la `SECRET_KEY`. Cualquier
 otro hay que mirarlo.
