@@ -561,6 +561,100 @@ HTTP durante un año, **y no hay forma de deshacerlo desde el servidor**: lo
 recuerda el navegador de cada persona. Con un dominio a medio configurar, eso
 deja a alguien sin poder entrar y sin que tú puedas arreglarlo.
 
+## 10. CI/CD con GitHub Actions
+
+**Sí se puede, y las tres condiciones que lo decidían están comprobadas**, no
+supuestas:
+
+| | |
+| --- | --- |
+| Los dos repositorios son **públicos** | Actions es gratis e ilimitado; en uno privado serían 2 000 minutos al mes |
+| El tenant de la UDES deja crear aplicaciones | `authorizationPolicy.defaultUserRolePermissions.allowedToCreateApps: true` |
+| Tu cuenta es **Owner** de la suscripción | Hace falta para asignarle permiso a esa aplicación |
+
+Hay dos ficheros en `.github/workflows/`:
+
+**`pruebas.yml`** corre `check`, las pruebas, `check --deploy` y
+`makemigrations --check` en cada propuesta de cambio. Es la mitad que de verdad
+vale y la que no puede romper nada: no habla con Azure y no necesita ningún
+secreto. Existe por el fallo del 13/10/2026, que dejaba al grupo
+`Administradores` con 4 permisos de 20 en una base nueva y solo se veía ahí.
+
+**`despliegue.yml`** se lanza al empujar a `main`, **llama a `pruebas.yml`** y
+solo si pasan construye la imagen, la sube y la pone. No hay camino que
+despliegue sin pasar por las pruebas, que es el motivo de tener esto.
+
+### Lo que la forma de esos ficheros debe a lo aprendido a mano
+
+**La imagen se construye en el corredor, no en Azure.** `az containerapp up
+--source` usaría ACR Tasks, bloqueado en las suscripciones de estudiante. El
+corredor de GitHub trae Docker.
+
+**Solo se toca `--image`, nunca variables ni secretos.** En un entorno express
+esos cambios no alcanzan a una réplica viva (sección 5). Un cambio de imagen sí
+la reemplaza, y por eso el flujo se limita a eso. **Cambiar una variable o un
+secreto sigue siendo a mano**, con el baile de bajar a cero réplicas.
+
+**La etiqueta es el sha del commit.** Volver atrás es una sola orden, y el
+resumen de cada tirada la deja escrita con el sha exacto.
+
+**Se comprueba que responda.** Hasta cuatro minutos esperando un 200. El
+contenedor corre `migrate` al arrancar, así que una migración que falle lo deja
+en bucle: sin esta comprobación el despliegue quedaría en verde y el panel caído.
+
+### El montaje, que es de una sola vez
+
+Identidad federada, sin contraseña: GitHub emite un token para este repositorio
+y esta rama, y Azure lo cambia por un acceso. No queda ningún secreto de Azure
+guardado en GitHub que pueda filtrarse o caducar.
+
+```bash
+APP_ID=$(az ad app create --display-name "reta2-despliegue-github" --query appId -o tsv)
+az ad sp create --id "$APP_ID"
+
+# Solo este repositorio y solo main. Otra rama no puede desplegar.
+az ad app federated-credential create --id "$APP_ID" --parameters '{
+  "name": "github-main",
+  "issuer": "https://token.actions.githubusercontent.com",
+  "subject": "repo:PaulGODBv/panel-gestion:ref:refs/heads/main",
+  "audiences": ["api://AzureADTokenExchange"]
+}'
+
+# Acotado al grupo de recursos, NO a la suscripcion.
+az role assignment create --assignee "$APP_ID" --role Contributor   --scope "/subscriptions/20a514f2-a0f5-4e27-8f7f-6761944a5185/resourceGroups/reta2"
+```
+
+Y en el repositorio, **Settings → Secrets and variables → Actions**, tres
+valores que no son secretos de verdad pero van ahí por costumbre:
+
+| Secreto | Valor |
+| --- | --- |
+| `AZURE_CLIENT_ID` | el `APP_ID` de arriba |
+| `AZURE_TENANT_ID` | `13d44989-0830-4867-9fd6-da7ae500a47f` |
+| `AZURE_SUBSCRIPTION_ID` | `20a514f2-a0f5-4e27-8f7f-6761944a5185` |
+
+> **Lo que se concede, dicho claro.** `Contributor` sobre el grupo `reta2` deja
+> a esa identidad tocar también el Postgres y el registro, no solo la aplicación
+> de contenedores. Es más de lo estrictamente necesario; lo ajustado serían dos
+> papeles estrechos —`AcrPush` en el registro y `Contributor` solo en la
+> aplicación—. Se deja así porque el grupo contiene únicamente este proyecto, y
+> porque un papel de menos descubierto a mitad de un despliegue cuesta más que
+> lo que ahorra. Si el grupo llegara a compartirse, hay que estrecharlo.
+
+> **Durante el piloto, conviene pensarlo dos veces.** Un empujón a `main`
+> reemplaza el panel que los estudiantes están usando. Si eso incomoda, en
+> **Settings → Environments** se crea un entorno con revisor obligatorio y se le
+> añade `environment:` al trabajo `desplegar`: entonces cada despliegue espera
+> una aprobación tuya. El `paths-ignore` ya evita lo más tonto, que es
+> reconstruir por haber cambiado un `.md`.
+
+### Si no hubiera Actions
+
+El camino a mano sigue siendo el de la sección 5, y son tres órdenes: `docker
+build` con una etiqueta nueva, `docker push`, y `az containerapp update
+--image`. Lo que se pierde no es la comodidad: es que nadie se acuerde de correr
+las pruebas antes.
+
 ## Repaso final
 
 ```bash

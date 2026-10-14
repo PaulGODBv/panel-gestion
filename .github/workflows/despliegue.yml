@@ -1,0 +1,139 @@
+# Despliegue del panel a Azure Container Apps.
+#
+# Primero pasan las pruebas, y solo si pasan se construye y se sube. No hay
+# forma de desplegar sin pasar por ahi, que es el motivo de tener esto.
+#
+# TRES COSAS QUE SE APRENDIERON DESPLEGANDO A MANO, Y QUE EXPLICAN LA FORMA DE
+# ESTE FICHERO. Estan en docs/despliegue.md con mas detalle.
+#
+# 1. **La imagen se construye aqui, no en Azure.** `az containerapp up --source`
+#    usaria ACR Tasks, que esta bloqueado en las suscripciones de estudiante
+#    («TasksOperationsNotAllowed»). El corredor de GitHub trae Docker, asi que
+#    construye el, y Azure solo recibe la imagen hecha.
+#
+# 2. **Aqui solo se toca `--image`, nunca las variables ni los secretos.** El
+#    entorno es «express», y ahi un cambio de variables, secretos o comando NO
+#    alcanza a una replica viva: la plantilla cambia, `az show` lo confirma, y la
+#    replica sigue con la vieja. Para eso hace falta destruirla y despertarla a
+#    mano. Un cambio de imagen si la reemplaza por su cuenta, y por eso este
+#    flujo se limita a eso.
+#
+# 3. **La etiqueta es el commit, no `latest`.** Con `latest` no queda rastro de
+#    que imagen estaba antes, asi que volver atras es imposible. Con el sha, el
+#    paso atras es una sola orden, y esta al final de este fichero.
+#
+# Y UN RIESGO QUE CONVIENE TENER PRESENTE: el contenedor corre `migrate` al
+# arrancar. Una migracion que falle deja el contenedor en bucle, y recuperarse
+# de eso es el baile del paso 5 de la guia. El ultimo paso de aqui comprueba que
+# el sitio responda y pone la tirada en rojo si no, para que no se quede roto en
+# silencio.
+name: Despliegue
+
+on:
+  push:
+    branches: [main]
+    # Cambiar un .md no justifica reconstruir y reemplazar el contenedor.
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  workflow_dispatch:
+
+# Dos despliegues a la vez se pisarian: el segundo podria dejar puesta una
+# imagen mas vieja que el primero. Se encolan, y no se cancelan a medias, porque
+# cancelar entre el `push` y el `update` dejaria la imagen subida sin desplegar.
+concurrency:
+  group: despliegue-panel
+  cancel-in-progress: false
+
+env:
+  REGISTRO: ca41b540ca9aacr
+  IMAGEN: reta2panel
+  APP: reta2panel
+  GRUPO: reta2
+  DOMINIO: reta2panel.graymeadow-2656f405.mexicocentral.azurecontainerapps.io
+
+jobs:
+  # Las mismas pruebas que corren en cada propuesta de cambio, reutilizadas. Si
+  # fallan, el trabajo de abajo no llega a empezar.
+  pruebas:
+    uses: ./.github/workflows/pruebas.yml
+
+  desplegar:
+    needs: pruebas
+    runs-on: ubuntu-latest
+
+    # Hace falta para que Azure acepte la identidad federada: el corredor pide
+    # un token a GitHub y Azure lo cambia por un acceso. Sin esto, `azure/login`
+    # falla con un error que no dice que falta este permiso.
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Sin contrasena: la identidad es federada y el token lo emite GitHub para
+      # este repositorio y esta rama. No hay ningun secreto de Azure guardado
+      # aqui que pueda filtrarse o caducar.
+      - name: Entrar en Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Entrar en el registro
+        run: az acr login --name "$REGISTRO"
+
+      - name: Construir y subir la imagen
+        run: |
+          etiqueta="${{ github.sha }}"
+          destino="$REGISTRO.azurecr.io/$IMAGEN:$etiqueta"
+          echo "Construyendo $destino"
+          docker build -t "$destino" .
+          docker push "$destino"
+          echo "IMAGEN_COMPLETA=$destino" >> "$GITHUB_ENV"
+
+      - name: Poner la imagen nueva
+        run: |
+          az containerapp update \
+            --name "$APP" --resource-group "$GRUPO" \
+            --image "$IMAGEN_COMPLETA" \
+            --output none
+          echo "Puesta $IMAGEN_COMPLETA"
+
+      # Un despliegue que no se comprueba no es un despliegue, es una esperanza.
+      # Se le dan hasta cuatro minutos: el contenedor tiene que arrancar, correr
+      # `migrate` contra un Postgres gestionado que puede estar dormido, y
+      # levantar gunicorn.
+      - name: Comprobar que responde
+        run: |
+          for intento in $(seq 1 24); do
+            codigo=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "https://$DOMINIO/" || echo 000)
+            echo "intento $intento -> HTTP $codigo"
+            if [ "$codigo" = "200" ]; then
+              echo "El panel responde."
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::El panel no respondio 200 en cuatro minutos. Mira los registros del contenedor (docs/despliegue.md, seccion 5) y considera volver atras con la imagen anterior."
+          exit 1
+
+      # Solo si todo fue bien. Deja a mano la orden del paso atras, con el sha
+      # exacto, para no tener que buscarlo en el registro si algo aparece luego.
+      - name: Resumen
+        run: |
+          {
+            echo "### Panel desplegado"
+            echo ""
+            echo "- Imagen: \`$IMAGEN_COMPLETA\`"
+            echo "- Responde: https://$DOMINIO/"
+            echo ""
+            echo "Para volver a esta version desde cualquier sitio:"
+            echo ""
+            echo '```bash'
+            echo "az containerapp update --name $APP --resource-group $GRUPO \\"
+            echo "  --image $IMAGEN_COMPLETA"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

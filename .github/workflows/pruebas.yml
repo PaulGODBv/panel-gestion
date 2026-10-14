@@ -1,0 +1,98 @@
+# Las pruebas, en cada empujon y en cada propuesta de cambio.
+#
+# Esto es la mitad que de verdad vale, y es la que no puede romper nada: no
+# habla con Azure, no necesita ningun secreto y no despliega. Si falla, lo unico
+# que pasa es que sale una cruz roja antes de que el cambio llegue a nadie.
+#
+# La razon de existir, con nombre y apellido: el 13/10/2026 un fallo de orden en
+# `post_migrate` dejaba al grupo Administradores con 4 permisos de 20 en una
+# base nueva. Solo se veia contra una base recien creada —exactamente lo que
+# seria Azure— y en esta maquina nunca aparecio, porque `migrate` se habia
+# corrido decenas de veces. Las pruebas que lo cazan ya estan escritas; esto es
+# lo que hace que se ejecuten sin que nadie se acuerde de ejecutarlas.
+name: Pruebas
+
+on:
+  # No hay disparador de `push` a main a proposito. El despliegue llama a este
+  # fichero, asi que main ya las corre por esa via. Si estuvieran las dos, un
+  # empujon a main lanzaria dos tiradas que comparten grupo de concurrencia, y
+  # con `cancel-in-progress` una cancelaria a la otra: la cancelada podria ser
+  # la del despliegue, que entonces fallaria sin que nada estuviera roto.
+  pull_request:
+  # Para poder lanzarlas a mano desde la pestana Actions.
+  workflow_dispatch:
+  # Y para que el despliegue las reutilice en vez de copiar estos pasos. Si se
+  # duplicaran, el dia que cambie uno se cambiaria en un sitio y no en el otro,
+  # y el despliegue acabaria pasando pruebas distintas de las que se ven aqui.
+  workflow_call:
+
+# Si se empuja dos veces seguidas, la primera tirada se cancela: interesa el
+# resultado del ultimo commit, no el de uno que ya quedo atras.
+concurrency:
+  group: pruebas-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # La misma version que el Dockerfile. Si se separan, se prueba en una y se
+      # despliega en otra, que es como se cuela un fallo que solo pasa en
+      # produccion.
+      - name: Preparar Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      # Sin DATABASE_URL la base es SQLite, que es contra lo que corren las
+      # pruebas tambien en local. Las claves son de usar y tirar: aqui no hay
+      # nada que proteger, y pedirlas como secretos haria que este trabajo
+      # dejara de funcionar en las propuestas de cambio de otra persona.
+      - name: Comprobaciones del proyecto
+        env:
+          DJANGO_SECRET_KEY: clave-de-usar-y-tirar-solo-para-las-pruebas-de-integracion
+          RETA2_API_KEY: clave-de-usar-y-tirar-solo-para-las-pruebas
+        run: python manage.py check
+
+      - name: Pruebas
+        env:
+          DJANGO_SECRET_KEY: clave-de-usar-y-tirar-solo-para-las-pruebas-de-integracion
+          RETA2_API_KEY: clave-de-usar-y-tirar-solo-para-las-pruebas
+        run: python manage.py test core academics --verbosity 2
+
+      # El repaso de despliegue de Django, con DEBUG=False. Debe quedar en un
+      # solo aviso: el del HSTS en cero, deliberado hasta que se decida subirlo.
+      # Cualquier otro aviso es algo que hay que mirar, asi que esto falla si
+      # aparece uno nuevo.
+      - name: Repaso de produccion
+        env:
+          DJANGO_DEBUG: 'False'
+          DJANGO_SSL_REDIRECT: 'True'
+          DJANGO_SECRET_KEY: clave-de-usar-y-tirar-pero-larga-para-no-disparar-su-propio-aviso
+          DJANGO_ALLOWED_HOSTS: ejemplo.invalid
+          RETA2_API_KEY: clave-de-usar-y-tirar-solo-para-las-pruebas
+        run: |
+          salida=$(python manage.py check --deploy 2>&1 || true)
+          echo "$salida"
+          avisos=$(echo "$salida" | grep -c '^?: (security' || true)
+          if [ "$avisos" -gt 1 ]; then
+            echo "::error::check --deploy devolvio $avisos avisos de seguridad; se esperaba 1 (el del HSTS)."
+            exit 1
+          fi
+
+      # Que una migracion falte es un fallo que no se ve hasta que alguien
+      # despliega: el contenedor corre `migrate` al arrancar y se queda en bucle.
+      # La regla del proyecto es que un cambio de modelo trae su migracion en el
+      # mismo commit, y esto es lo que la comprueba.
+      - name: Ninguna migracion sin escribir
+        env:
+          DJANGO_SECRET_KEY: clave-de-usar-y-tirar-solo-para-las-pruebas-de-integracion
+          RETA2_API_KEY: clave-de-usar-y-tirar-solo-para-las-pruebas
+        run: python manage.py makemigrations --check --dry-run
