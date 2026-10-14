@@ -666,6 +666,46 @@ az ad app list --display-name "reta2-despliegue-github" --query "[].appId" -o ts
 «cannot find user or service principal in graph database». Tarda unos segundos
 en propagarse; se espera y se repite.
 
+> **El sujeto que GitHub manda lleva numeros, y no esta en la documentacion
+> que uno encuentra primero.** La orden de arriba registra el formato clasico:
+>
+> ```
+> repo:PaulGODBv/panel-gestion:ref:refs/heads/main
+> ```
+>
+> Pero lo que GitHub presenta de verdad es esto:
+>
+> ```
+> repo:PaulGODBv@143920362/panel-gestion@1310636617:ref:refs/heads/main
+> ```
+>
+> Son los identificadores inmutables del dueno y del repositorio, metidos en el
+> `sub` para que renombrar cualquiera de los dos no rompa la confianza. Con solo
+> el formato clasico registrado, el despliegue muere en el primer paso:
+>
+> ```
+> AADSTS700213: No matching federated identity record found for presented
+> assertion subject 'repo:PaulGODBv@143920362/panel-gestion@1310636617:ref:refs/heads/main'
+> ```
+>
+> El mensaje es de los buenos: **trae escrito el sujeto exacto que esperaba**.
+> Se copia de ahi y se registra una segunda credencial con el. Se deja tambien
+> la clasica, que no estorba y cubre el caso de que GitHub vuelva al formato
+> viejo.
+>
+> ```bash
+> az ad app federated-credential create --id "$APP_ID" --parameters '{
+>   "name": "github-main-ids-inmutables",
+>   "issuer": "https://token.actions.githubusercontent.com",
+>   "subject": "repo:<DUENO>@<idDueno>/<REPO>@<idRepo>:ref:refs/heads/main",
+>   "audiences": ["api://AzureADTokenExchange"]
+> }'
+> ```
+>
+> Los dos numeros no hay que buscarlos: salen en el error. Y si se quieren antes
+> de la primera tirada, el del repositorio lo da
+> `curl -s https://api.github.com/repos/<DUENO>/<REPO> | grep '"id"'`.
+
 Y en el repositorio, **Settings → Secrets and variables → Actions**, tres
 valores que no son secretos de verdad pero van ahí por costumbre:
 
