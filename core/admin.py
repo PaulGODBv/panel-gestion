@@ -1,6 +1,11 @@
 from django.contrib import admin
 from unfold.admin import ModelAdmin
-from .models import StudentReport, LevelProgressReport
+from .models import (
+    StudentReport,
+    LevelProgressReport,
+    ProgramaAcademico,
+    VarianteDePrograma,
+)
 
 
 @admin.register(StudentReport)
@@ -14,7 +19,7 @@ class StudentReportAdmin(ModelAdmin):
         'risk_status_tag',
         'reported_at'
     ]
-    list_filter = ['reported_at', 'academic_program']
+    list_filter = ['reported_at', 'variante_programa__programa']
     search_fields = ['username', 'email', 'academic_program']
     readonly_fields = ['reported_at', 'practice_time_formatted', 'risk_status_tag']
     ordering = ['-reported_at']
@@ -58,3 +63,43 @@ class LevelProgressReportAdmin(ModelAdmin):
 # formularios usan los widgets de serie de Django y los campos salen sin
 # borde ni fondo: invisibles hasta pulsarlos.
 from . import admin_cuentas  # noqa: F401,E402
+
+
+@admin.register(ProgramaAcademico)
+class ProgramaAcademicoAdmin(ModelAdmin):
+    """El catálogo oficial. Se consulta más de lo que se edita."""
+
+    list_display = ['nombre', 'nivel', 'activo', 'cuantas_variantes']
+    list_filter = ['nivel', 'activo']
+    search_fields = ['nombre']
+    ordering = ['nivel', 'nombre']
+
+    def cuantas_variantes(self, obj):
+        return obj.variantes.count()
+    cuantas_variantes.short_description = 'Variantes'
+
+
+@admin.register(VarianteDePrograma)
+class VarianteDeProgramaAdmin(ModelAdmin):
+    """Cada forma en que alguien escribió su programa, y a cuál corresponde.
+
+    Esta pantalla existe para una tarea concreta: asignar las variantes que el
+    sistema no puede resolver solo. «Ingeniería de software» se engancha sola
+    porque normalizada es idéntica a la del catálogo; «Admon Negocios
+    Internacionales» no, y eso lo decide una persona.
+
+    Se asigna desde la propia lista —`list_editable`— porque obligar a entrar
+    en cada ficha para cambiar un desplegable convierte diez minutos en media
+    hora. El filtro de arriba abre directamente en las que faltan.
+    """
+
+    list_display = ['texto_original', 'programa', 'cuantos_reportes']
+    list_editable = ['programa']
+    list_filter = ['programa']
+    search_fields = ['texto_original', 'texto_normalizado']
+    readonly_fields = ['texto_normalizado']
+    ordering = ['programa', 'texto_normalizado']
+
+    def cuantos_reportes(self, obj):
+        return obj.reportes.count()
+    cuantos_reportes.short_description = 'Reportes'

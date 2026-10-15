@@ -459,3 +459,132 @@ class MediosEnProduccionTest(TestCase):
     def test_una_imagen_que_no_existe_sigue_dando_404(self):
         estado, _, _ = self._pedir("/media/question-context/no-existe-jamas.webp")
         self.assertEqual(estado, 404)
+
+
+class ProgramaAcademicoTest(TestCase):
+    """Que dos grafías de la misma carrera dejen de ser dos carreras.
+
+    Los casos son los que había de verdad en producción el 15/10/2026, no
+    inventados: el panel enseñaba «Ingeniería de software», «Ingeniería de
+    Software» y «Admon Negocios Internacionales» como tres filas.
+
+    Las dos primeras son el mismo programa con otra caja y se tienen que
+    fundir solas. La tercera NO: no se parece lo suficiente a ningún nombre
+    oficial, y el sistema tiene que admitir que no lo sabe en vez de adivinar.
+    """
+
+    def setUp(self):
+        from .models import ProgramaAcademico
+
+        self.software = ProgramaAcademico.objects.get(nombre="Ingeniería de Software")
+        self.negocios = ProgramaAcademico.objects.get(
+            nombre="Administración de Negocios Internacionales"
+        )
+
+    def _reporte(self, usuario, programa):
+        return StudentReport.objects.create(
+            username=usuario,
+            email=f"{usuario}@mail.udes.edu.co",
+            academic_program=programa,
+            total_questions_answered=10,
+        )
+
+    def test_el_catalogo_se_siembra_entero(self):
+        from .models import ProgramaAcademico
+
+        self.assertEqual(ProgramaAcademico.objects.count(), 49)
+        self.assertEqual(ProgramaAcademico.objects.filter(nivel="pregrado").count(), 33)
+        self.assertEqual(ProgramaAcademico.objects.filter(nivel="tecnologia").count(), 3)
+        self.assertEqual(ProgramaAcademico.objects.filter(nivel="tecnico").count(), 13)
+
+    def test_la_caja_y_las_tildes_no_hacen_dos_carreras(self):
+        a = self._reporte("ana", "Ingeniería de software")
+        b = self._reporte("beto", "INGENIERIA DE SOFTWARE")
+        c = self._reporte("caro", "  Ingeniería de Software  ")
+
+        for reporte in (a, b, c):
+            self.assertEqual(reporte.variante_programa.programa, self.software)
+
+    def test_el_texto_original_no_se_toca(self):
+        """La evidencia de lo que mandó el estudiante no se reescribe."""
+        reporte = self._reporte("ana", "Ingeniería de software")
+        reporte.refresh_from_db()
+        self.assertEqual(reporte.academic_program, "Ingeniería de software")
+
+    def test_un_sinonimo_queda_sin_asignar_y_no_se_adivina(self):
+        reporte = self._reporte("dani", "Admon Negocios Internacionales")
+        self.assertIsNotNone(reporte.variante_programa)
+        self.assertIsNone(
+            reporte.variante_programa.programa,
+            "un parecido no es una coincidencia: esto lo decide una persona",
+        )
+
+    def test_mapear_una_variante_arregla_todos_sus_reportes(self):
+        """Asignar en el admin no tiene que recorrer los reportes uno a uno."""
+        from .metricas import por_programa
+        from .models import LevelProgressReport
+
+        for usuario in ("dani", "eli"):
+            reporte = self._reporte(usuario, "Admon Negocios Internacionales")
+            LevelProgressReport.objects.create(
+                report=reporte, competence_id=1, competence_name="Inglés",
+                level_id=1, level_name="Nivel 1", score=8, total_questions=10,
+            )
+
+        variante = StudentReport.objects.get(username="dani").variante_programa
+        variante.programa = self.negocios
+        variante.save()
+
+        filas = por_programa(LevelProgressReport.objects.all(), ["Inglés"])
+        nombres = [f["programa"] for f in filas]
+        self.assertIn("Administración de Negocios Internacionales", nombres)
+        self.assertNotIn("Admon Negocios Internacionales (sin asignar)", nombres)
+
+    def test_la_tabla_por_programa_funde_las_dos_grafias(self):
+        from .metricas import por_programa
+        from .models import LevelProgressReport
+
+        for usuario, escrito in (("ana", "Ingeniería de software"),
+                                 ("beto", "Ingeniería de Software")):
+            reporte = self._reporte(usuario, escrito)
+            LevelProgressReport.objects.create(
+                report=reporte, competence_id=1, competence_name="Inglés",
+                level_id=1, level_name="Nivel 1", score=5, total_questions=10,
+            )
+
+        filas = por_programa(LevelProgressReport.objects.all(), ["Inglés"])
+        software = [f for f in filas if f["programa"] == "Ingeniería de Software"]
+        self.assertEqual(len(software), 1, "las dos grafías tienen que ser una fila")
+
+    def test_sin_programa_y_sin_asignar_son_cosas_distintas(self):
+        """Un hueco de dato no es una carrera desconocida."""
+        from .metricas import por_programa
+        from .models import LevelProgressReport
+
+        for usuario, escrito in (("fer", ""), ("gabi", "Admon Negocios Internacionales")):
+            reporte = self._reporte(usuario, escrito)
+            LevelProgressReport.objects.create(
+                report=reporte, competence_id=1, competence_name="Inglés",
+                level_id=1, level_name="Nivel 1", score=5, total_questions=10,
+            )
+
+        nombres = [f["programa"] for f in por_programa(
+            LevelProgressReport.objects.all(), ["Inglés"]
+        )]
+        self.assertIn("Sin programa", nombres)
+        self.assertIn("Admon Negocios Internacionales (sin asignar)", nombres)
+
+    def test_filtrar_por_programa_trae_las_dos_grafias(self):
+        from .metricas import progreso_filtrado
+        from .models import LevelProgressReport
+
+        for usuario, escrito in (("ana", "Ingeniería de software"),
+                                 ("beto", "Ingeniería de Software")):
+            reporte = self._reporte(usuario, escrito)
+            LevelProgressReport.objects.create(
+                report=reporte, competence_id=1, competence_name="Inglés",
+                level_id=1, level_name="Nivel 1", score=5, total_questions=10,
+            )
+
+        filas = progreso_filtrado(programa="Ingeniería de Software")
+        self.assertEqual(filas.count(), 2)

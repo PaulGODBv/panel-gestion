@@ -207,18 +207,23 @@ class DashboardDataAPIView(APIView):
         }
 
         # Comparativa de cohortes, también sobre la última foto de cada uno.
+        # Agrupada por el programa del catalogo y no por el texto que escribio
+        # cada uno: si no, la misma carrera escrita de dos formas aparecia
+        # como dos cohortes, cada una con la mitad de la gente.
         cohorts = list(
             ultimos
-            .values('academic_program')
+            .values('variante_programa__programa__nombre')
             .annotate(
                 avg_questions=Avg('total_questions_answered'),
                 avg_streak=Avg('current_streak_days'),
                 students=Count('username', distinct=True)
             )
-            .exclude(academic_program__isnull=True)
-            .exclude(academic_program='')
+            .exclude(variante_programa__programa__isnull=True)
             .order_by('-students')
         )
+        # La plantilla espera la clave de siempre.
+        for c in cohorts:
+            c['academic_program'] = c.pop('variante_programa__programa__nombre')
 
         # Últimos reportes
         latest_reports = list(StudentReport.objects.order_by('-reported_at')[:5].values(

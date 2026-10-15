@@ -26,6 +26,31 @@ from django.db.models import Count, Max, Q, Sum
 from .models import LevelProgressReport, StudentReport
 
 
+#: Lo que se le pone detras a una variante que nadie ha mapeado todavia. Sale a
+#: la vista a proposito: un hueco visible es mejor que un dato inventado, y es
+#: lo que avisa de que hay algo que asignar en el admin.
+SIN_ASIGNAR = " (sin asignar)"
+
+
+def etiqueta_de_programa(nombre_canonico, texto_original):
+    """Como se llama una fila de la tabla por programa.
+
+    Tres casos, y los tres dicen una cosa distinta que no conviene mezclar:
+
+    - Hay programa del catalogo: su nombre oficial.
+    - Hay variante pero nadie la ha mapeado: lo que se escribio, marcado. Son
+      los «Admon Negocios Internacionales» del mundo, que no se pueden asignar
+      sin que una persona decida.
+    - No hay ni variante: el estudiante no dijo su programa. Eso no es un
+      programa desconocido, es la ausencia del dato, y merece su propia fila.
+    """
+    if nombre_canonico:
+        return nombre_canonico
+    if texto_original:
+        return texto_original + SIN_ASIGNAR
+    return "Sin programa"
+
+
 def ultimos_reportes():
     """Un reporte por estudiante: el más reciente.
 
@@ -50,7 +75,12 @@ def progreso_filtrado(programa="", competencia="", nivel="", desde=None, hasta=N
     """
     reportes = ultimos_reportes()
     if programa:
-        reportes = reportes.filter(academic_program=programa)
+        # Por el nombre del catalogo, no por el texto crudo: filtrar por
+        # «Ingenieria de Software» tiene que traer tambien a quien lo escribio
+        # en minusculas, que es el mismo estudiante de la misma carrera.
+        reportes = reportes.filter(
+            variante_programa__programa__nombre=programa
+        )
     if desde:
         reportes = reportes.filter(reported_at__date__gte=desde)
     if hasta:
@@ -138,13 +168,23 @@ def por_programa(filas, columnas):
     """
     datos = (
         filas
-        .values("report__academic_program", "competence_name")
+        .values(
+            # Se agrupa por el programa del catalogo, no por el texto que
+            # escribio el estudiante. Antes, «Ingenieria de software» e
+            # «Ingenieria de Software» salian como dos carreras distintas.
+            "report__variante_programa__programa__nombre",
+            "report__variante_programa__texto_original",
+            "competence_name",
+        )
         .annotate(aciertos=Sum("score"), preguntas=Sum("total_questions"))
     )
 
     crudo: dict[str, dict] = {}
     for d in datos:
-        nombre = d["report__academic_program"] or "Sin programa"
+        nombre = etiqueta_de_programa(
+            d["report__variante_programa__programa__nombre"],
+            d["report__variante_programa__texto_original"],
+        )
         preguntas = d["preguntas"] or 0
         fila = crudo.setdefault(
             nombre, {"programa": nombre, "por_nombre": {}, "aciertos": 0, "preguntas": 0}

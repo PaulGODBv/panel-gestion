@@ -250,9 +250,13 @@ class ExplorerAdminView(TemplateView):
                 'nivel': nivel, 'desde': desde or '', 'hasta': hasta or '',
             },
             'hay_filtros': any([programa, competencia, nivel, desde, hasta]),
+            # Los programas del catalogo que de verdad tienen a alguien
+            # detras, no los 49: un desplegable con cuarenta y nueve opciones
+            # de las que cuatro tienen datos es peor que uno con cuatro.
             'opciones_programa': sorted(
                 p for p in ultimos_reportes()
-                .values_list('academic_program', flat=True).distinct() if p
+                .values_list('variante_programa__programa__nombre', flat=True)
+                .distinct() if p
             ),
             'opciones_competencia': list(
                 todas.values('competence_id', 'competence_name')

@@ -1,6 +1,127 @@
 from django.db import models
 
-# Create your models here.
+from core.programas import normalizar
+
+
+class ProgramaAcademico(models.Model):
+    """Un programa del catálogo oficial de la UDES.
+
+    Es la entidad por la que agrupan de verdad los informes. Los 49 se siembran
+    en una migración de datos desde `core.programas`.
+
+    No se borran: un programa que la Universidad retire se desactiva. El
+    progreso de un estudiante apunta a su identificador, y borrar la fila
+    dejaría huérfanos reportes que son evidencia del piloto.
+    """
+
+    NIVELES = [
+        ("pregrado", "Pregrado"),
+        ("tecnologia", "Tecnología"),
+        ("tecnico", "Técnico laboral"),
+    ]
+
+    nombre = models.CharField(max_length=140, unique=True, verbose_name="Nombre")
+    nivel = models.CharField(max_length=20, choices=NIVELES, verbose_name="Nivel")
+    activo = models.BooleanField(
+        default=True,
+        verbose_name="Activo",
+        help_text="Desmárcalo si la Universidad retira el programa. Nunca lo borres: "
+                  "hay reportes que apuntan a él.",
+    )
+
+    class Meta:
+        verbose_name = "Programa académico"
+        verbose_name_plural = "Programas académicos"
+        ordering = ["nivel", "nombre"]
+
+    def __str__(self):
+        return self.nombre
+
+
+class VarianteDePrograma(models.Model):
+    """Cada forma distinta en que alguien ha escrito su programa.
+
+    Por qué existe una tabla para esto en vez de arreglar el texto del reporte:
+    el texto del reporte es **evidencia**, lo que el estudiante mandó, y aquí
+    no se reescribe la evidencia. La variante es la traducción, y vive aparte.
+
+    La clave es el texto normalizado, así que «Ingeniería de software» y
+    «INGENIERIA DE SOFTWARE» caen en la misma fila y se mapean una sola vez.
+    Las que casan exactamente con un programa del catálogo se enlazan solas;
+    las demás nacen con `programa` en nulo, salen marcadas en el admin y las
+    asigna una persona. Adivinar un parecido no es una opción: fusionar dos
+    carreras distintas mete un error en los resultados sin que nadie se entere.
+
+    Como los reportes apuntan a la variante y no al programa, asignarla arregla
+    de golpe todos sus reportes, sin recorrer nada.
+    """
+
+    texto_normalizado = models.CharField(
+        max_length=160, unique=True, verbose_name="Texto normalizado"
+    )
+    texto_original = models.CharField(
+        max_length=160,
+        verbose_name="Tal como se escribió",
+        help_text="La primera grafía con la que llegó. Solo para reconocerla.",
+    )
+    programa = models.ForeignKey(
+        ProgramaAcademico,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="variantes",
+        verbose_name="Programa",
+        help_text="Vacío significa «sin asignar»: nadie ha dicho todavía a qué "
+                  "programa corresponde, y los informes la muestran aparte.",
+    )
+
+    class Meta:
+        verbose_name = "Variante de programa"
+        verbose_name_plural = "Variantes de programa"
+        ordering = ["texto_normalizado"]
+
+    def __str__(self):
+        return self.texto_original
+
+    @classmethod
+    def para(cls, texto):
+        """La variante de un texto, creándola si es la primera vez que se ve.
+
+        Devuelve None si el texto viene vacío: «no dijo su programa» no es una
+        variante, es la ausencia de dato, y mezclar las dos cosas haría que
+        apareciera una fila «» en la tabla por programa.
+        """
+        clave = normalizar(texto)
+        if not clave:
+            return None
+
+        variante, creada = cls.objects.get_or_create(
+            texto_normalizado=clave,
+            defaults={"texto_original": (texto or "").strip()[:160]},
+        )
+        if creada:
+            # Si coincide con un programa del catálogo, se enlaza sola. Es el
+            # caso de las mayúsculas y las tildes, que no necesita criterio.
+            variante.programa = ProgramaAcademico.objects.filter(
+                nombre__iexact=variante.texto_original
+            ).first() or _por_nombre_normalizado(clave)
+            if variante.programa:
+                variante.save(update_fields=["programa"])
+        return variante
+
+
+def _por_nombre_normalizado(clave):
+    """El programa cuyo nombre normalizado es `clave`, si lo hay.
+
+    Se recorre en Python y no en SQL porque normalizar tildes dentro de la base
+    depende de la base: SQLite en desarrollo no sabe hacerlo y PostgreSQL pide
+    `unaccent`. Son 49 filas una vez por variante nueva, no por reporte.
+    """
+    for programa in ProgramaAcademico.objects.all():
+        if normalizar(programa.nombre) == clave:
+            return programa
+    return None
+
 
 class StudentReport(models.Model):
     username = models.CharField(max_length=150, verbose_name="Usuario")
@@ -18,7 +139,30 @@ class StudentReport(models.Model):
     reported_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha del reporte")
     app_version = models.CharField(max_length=20, blank=True, verbose_name="Versión de la app")
     academic_program = models.CharField(max_length=100, blank=True, null=True, verbose_name="Programa Académico")
-    
+
+    # Lo que el estudiante escribió se queda intacto arriba; esto es su
+    # traduccion al catalogo. Se resuelve al guardar, porque depende solo del
+    # texto, y a partir de ahi los informes agrupan por aqui.
+    variante_programa = models.ForeignKey(
+        'core.VarianteDePrograma',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="reportes",
+        verbose_name="Programa (normalizado)",
+    )
+
+    def save(self, *args, **kwargs):
+        """Resuelve la variante antes de guardar.
+
+        Aqui y no en el serializador: los reportes tambien se crean desde el
+        admin, desde las pruebas y desde los guiones de siembra, y una regla
+        que solo valiera para la API dejaria agujeros por los que entra
+        exactamente el problema que esto viene a arreglar.
+        """
+        self.variante_programa = VarianteDePrograma.para(self.academic_program)
+        super().save(*args, **kwargs)
+
     class Meta:
         verbose_name = 'Reporte de Estudiante'
         verbose_name_plural = 'Reportes de Estudiantes'
