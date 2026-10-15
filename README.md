@@ -210,9 +210,15 @@ agregación—, los estados vacíos, la visita guiada y la separación de papele
   ignorados: contienen datos de trabajo y no pertenecen al repositorio.
 - Una clave anterior quedó expuesta en el historial de git y fue rotada. Una
   credencial comprometida que sigue funcionando es peor que ninguna.
-- **Pendiente para producción:** la API viaja hoy en claro, así que la cabecera
-  `X-API-Key` se puede capturar en la red local. Rotar la clave no arregla eso;
-  hace falta HTTPS.
+- ~~La API viaja en claro.~~ **Resuelto el 14/10/2026.** El panel está
+  desplegado y sirve por HTTPS, y la app apunta al dominio: el APK de release ya
+  no lleva `usesCleartextTraffic`, que solo existe en las compilaciones de
+  desarrollo. Rotar la clave nunca arregló esto, porque el problema no era la
+  clave sino el canal.
+- La contraseña del PostgreSQL de producción se rotó al publicar la guía de
+  despliegue: esa guía nombra al usuario y al servidor, y el cortafuegos deja
+  entrar a «servicios de Azure», que es cualquier tenant. Usuario conocido más
+  contraseña débil sí era una puerta.
 
 ## Documentación interna
 
@@ -221,6 +227,19 @@ agregación—, los estados vacíos, la visita guiada y la separación de papele
 | `docs/conciliacion-banco-preguntas.md` | Conciliación del banco de preguntas           |
 | `docs/preguntas-calentamiento.md`      | Versiones cortas para los niveles de práctica |
 | `docs/tablero-trello.md`               | Seguimiento de tareas                         |
+| `docs/despliegue.md`                   | Despliegue en Azure, CI/CD y lo que costó cada paso |
+
+## Despliegue
+
+El panel está en **Azure Container Apps** con PostgreSQL gestionado, y **empujar
+a `main` despliega**: GitHub Actions corre las pruebas, `check --deploy` y
+`makemigrations --check`, y solo si pasan construye la imagen etiquetada con el
+sha del commit, la sube y espera a que el sitio responda 200 antes de darse por
+buena. No hay camino que despliegue sin pasar por las pruebas.
+
+Los dos ficheros están en `.github/workflows/`. Todo lo demás —el montaje de la
+identidad federada, y los tropiezos que costaron un intento cada uno— está en
+`docs/despliegue.md`.
 
 ## Licencia
 
