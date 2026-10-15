@@ -47,17 +47,31 @@ class LandingView(TemplateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
 
+        # Primero la URL externa, si la hay. El archivo local se conserva como
+        # respaldo para quien levante esto sin red ni Release publicado.
+        url_externa = getattr(settings, "RETA2_APK_URL", "").strip()
+
         apk = _archivo_de_medios(f"{CARPETA_APK}/{NOMBRE_APK}")
-        hay_apk = apk.is_file()
+        hay_apk = bool(url_externa) or apk.is_file()
 
         video = _archivo_de_medios(RUTA_VIDEO)
 
         ctx.update({
             "hay_apk": hay_apk,
-            "apk_url": f"{settings.MEDIA_URL}{CARPETA_APK}/{NOMBRE_APK}" if hay_apk else "",
+            "apk_url": (
+                url_externa if url_externa
+                else f"{settings.MEDIA_URL}{CARPETA_APK}/{NOMBRE_APK}" if hay_apk
+                else ""
+            ),
             # En megas y con una cifra decimal: el estudiante decide con esto
-            # si lo baja con datos moviles o espera a tener wifi.
-            "apk_megas": round(apk.stat().st_size / 1048576, 1) if hay_apk else None,
+            # si lo baja con datos moviles o espera a tener wifi. Del archivo
+            # local se mide; de la URL externa se toma del ajuste, porque
+            # medirla exigiria una peticion de red en cada carga.
+            "apk_megas": (
+                getattr(settings, "RETA2_APK_MEGAS", "") or None if url_externa
+                else round(apk.stat().st_size / 1048576, 1) if apk.is_file()
+                else None
+            ),
             "video_url": f"{settings.MEDIA_URL}{RUTA_VIDEO}" if video.is_file() else "",
             # Si el video acaba estando en YouTube basta con poner la direccion
             # de insercion en los ajustes; la plantilla prefiere esta.

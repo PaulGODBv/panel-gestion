@@ -489,10 +489,38 @@ capa que se quiere comprobar—.
 > medios en caliente pide almacenamiento externo (Azure Blob Storage), y es lo
 > mismo que hace falta para el APK y el vídeo de aquí abajo.
 
-El **APK firmado** y el **vídeo** van en `media/`, que no viaja en la imagen. Para
-el piloto, lo más simple es subirlos a un Azure Storage y servir `MEDIA_URL`
-desde ahí. Mientras no estén, la página pública no enseña un botón roto: dice
-que la descarga está en preparación.
+### El APK no va en `media/`
+
+Se intentó así y es mala idea: el disco del contenedor es efímero, de modo que
+un APK dejado en `media/apk/` desaparece en el siguiente reinicio y la página se
+queda ofreciendo una descarga rota, sin que nadie se entere hasta que un
+estudiante la pulsa.
+
+**Va en un Release de GitHub**, que da una URL directa y permanente, sin
+anuncios ni página intermedia, gratis y con el repositorio ya público:
+
+```
+https://github.com/PaulGODBv/app/releases/latest/download/app-release.apk
+```
+
+La variante `latest` apunta siempre a la última versión publicada, así que un
+enlace —o un QR impreso— sigue valiendo cuando se publique la siguiente.
+
+El ajuste es `RETA2_APK_URL`, con esa dirección por defecto, y `RETA2_APK_MEGAS`
+para el tamaño que enseña el botón. Va aparte porque medirlo exigiría una
+petición de red en cada carga de la página. **Los dos se cambian juntos.**
+
+Si `RETA2_APK_URL` se deja vacía, la página busca el archivo en `media/apk/`
+como antes; y si tampoco está, dice que la descarga se está preparando en vez de
+enseñar un botón roto.
+
+> **Súbelo con su `mapping.txt`.** R8 lo sobrescribe en cada compilación, así
+> que el de *ese* APK solo existe en ese momento. Sin él, las trazas de fallo
+> del piloto llegan ofuscadas e ilegibles.
+
+El **vídeo** sigue en `media/`, con el mismo problema pendiente. Lo más simple
+cuando toque es YouTube: `RETA2_VIDEO_PRESENTACION` acepta una dirección de
+inserción y la plantilla la prefiere.
 
 ## 8. Cerrar el círculo con la app Android
 

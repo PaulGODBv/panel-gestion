@@ -319,6 +319,29 @@ LOCALE_PATHS = [BASE_DIR / 'locale']
 # local, y si tampoco esta, la pagina oculta esa seccion.
 RETA2_VIDEO_PRESENTACION = os.environ.get('RETA2_VIDEO_PRESENTACION', '')
 
+# De donde se descarga el APK.
+#
+# Se sirve desde fuera y no desde `media/` a proposito: el disco del contenedor
+# es efimero, asi que un APK dejado ahi desaparece en el siguiente reinicio y
+# la pagina se queda ofreciendo una descarga rota. Un Release de GitHub da una
+# URL directa y permanente, sin anuncios ni pagina intermedia.
+#
+# La variante `releases/latest/download/` apunta siempre a la ultima version
+# publicada: el QR impreso sigue valiendo cuando se publique la siguiente.
+#
+# Si se deja vacia, la pagina busca el APK en `media/apk/` como antes, y si
+# tampoco esta dice que la descarga se esta preparando en vez de enseñar un
+# boton roto.
+RETA2_APK_URL = os.environ.get(
+    'RETA2_APK_URL',
+    'https://github.com/PaulGODBv/app/releases/latest/download/app-release.apk',
+)
+
+# Cuanto ocupa, en megas con un decimal. El estudiante decide con esto si lo
+# baja con datos moviles o espera a tener wifi. Va aparte porque medirlo
+# exigiria una peticion de red en cada carga de la pagina.
+RETA2_APK_MEGAS = os.environ.get('RETA2_APK_MEGAS', '11.5')
+
 LOGIN_REDIRECT_URL = '/admin/'
 LOGOUT_REDIRECT_URL = '/admin/login/'
 
