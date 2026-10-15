@@ -7,6 +7,20 @@
  *
  * Sin dependencias: ni framework ni hoja de terceros. Lo único que se mueve
  * lo mueve IntersectionObserver, que es del navegador.
+ *
+ * REDISEÑO DEL 15/10/2026. La página se sentía genérica, y el diagnóstico
+ * inicial fue el color. No lo era: lo genérico estaba en el oficio.
+ *
+ * Se tomó el lenguaje de una referencia fintech —titulares grandes y pesados
+ * con tracking negativo, tarjetas de radio 24 sin borde ni sombra con pasteles
+ * que se alternan, y mucho más aire entre secciones— y se dejó el azul de la
+ * Universidad. Se consideró adoptar también su violeta y se descartó: la
+ * página lleva el escudo de la UDES y comparte color con el panel, así que el
+ * violeta habría dejado el escudo como un cuerpo extraño en su propia página.
+ *
+ * La regla que ordena todo esto: **el color separa, el borde no**. Una tarjeta
+ * se distingue de su vecina por el tinte, no por un filete; una sección se
+ * distingue de la siguiente por el fondo, no por una línea.
  */
 
 :root {
@@ -18,7 +32,18 @@
     --ld-papel: #ffffff;
     --ld-papel-2: #f6f8fb;
     --ld-borde: #e2e8f0;
-    --ld-radio: 14px;
+
+    /* Los dos pasteles de las tarjetas, derivados del azul de la Universidad.
+     *
+     * Se alternan a lo largo de una fila para darle ritmo sin dibujar un solo
+     * borde: el color define el limite de la tarjeta. Es lo que hace que una
+     * rejilla de cuatro no parezca una tabla. */
+    --ld-tinte-1: #eaf3fb;
+    --ld-tinte-2: #d7e8f7;
+
+    /* 24 y no 14. Catorce es el radio de un formulario; veinticuatro es el de
+     * algo que invita a tocarlo, y a este tamano de tarjeta se nota. */
+    --ld-radio: 24px;
     --ld-ancho: 1080px;
     --ld-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
@@ -73,7 +98,10 @@ a { color: var(--ld-azul); }
     z-index: 20;
     background: rgba(255, 255, 255, .88);
     backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--ld-borde);
+    /* Una sombra suave en vez de una linea. La barra flota sobre la pagina en
+     * lugar de estar pegada con un filete, y es la UNICA sombra de la hoja
+     * aparte de los telefonos: todo lo demas se separa por color. */
+    box-shadow: rgba(15, 23, 42, .07) 0 6px 28px;
 }
 
 .ld-barra__fila {
@@ -176,12 +204,18 @@ a { color: var(--ld-azul); }
     margin: 0 0 14px;
 }
 
+/* El titular es la pieza que mas trabaja de la pagina.
+ *
+ * Peso 700 y no 600, y hasta 58 px: a este tamano el seiscientos se queda
+ * blando y la portada parece una plantilla. El tracking negativo aprieta las
+ * letras y es lo que da el aire caro — con tracking neutro, el mismo texto al
+ * mismo tamano se lee generico. */
 h1.ld-titular {
-    font-size: clamp(32px, 5vw, 52px);
-    line-height: 1.08;
-    letter-spacing: -.025em;
-    font-weight: 600;
-    margin: 0 0 18px;
+    font-size: clamp(34px, 5.4vw, 58px);
+    line-height: 1.04;
+    letter-spacing: -.022em;
+    font-weight: 700;
+    margin: 0 0 20px;
 }
 
 .ld-entrada {
@@ -233,15 +267,19 @@ h1.ld-titular {
 
 /* ---------- Secciones ---------- */
 
-.ld-seccion { padding: 72px 0; }
-.ld-seccion--gris { background: var(--ld-papel-2); border-block: 1px solid var(--ld-borde); }
+.ld-seccion { padding: 88px 0; }
+
+/* Sin bordes arriba y abajo: el cambio de color ya separa la seccion y el
+ * filete solo anade ruido. El tinte pasa de gris neutro a azul muy lavado,
+ * para que la pagina entera este en la misma familia. */
+.ld-seccion--gris { background: var(--ld-tinte-1); }
 
 h2.ld-titulo {
-    font-size: clamp(24px, 3.4vw, 34px);
-    line-height: 1.18;
-    letter-spacing: -.02em;
-    font-weight: 600;
-    margin: 0 0 12px;
+    font-size: clamp(26px, 3.8vw, 40px);
+    line-height: 1.14;
+    letter-spacing: -.022em;
+    font-weight: 700;
+    margin: 0 0 14px;
 }
 
 .ld-bajada {
@@ -254,15 +292,26 @@ h2.ld-titulo {
 .ld-rejilla {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-    gap: 18px;
+    gap: 16px;
 }
 
+/* Sin borde y con relleno pastel: el color dibuja el limite.
+ *
+ * Los dos tintes se alternan dentro de la fila. `nth-child` y no una clase
+ * porque el ritmo depende de la POSICION, no del contenido: anadir o quitar
+ * una tarjeta no deberia obligar a repintar las demas a mano. */
 .ld-tarjeta {
-    background: var(--ld-papel);
-    border: 1px solid var(--ld-borde);
+    background: var(--ld-tinte-1);
     border-radius: var(--ld-radio);
-    padding: 24px;
+    padding: 32px 28px;
 }
+
+.ld-tarjeta:nth-child(even) { background: var(--ld-tinte-2); }
+
+/* Dentro de una seccion ya tenida, el pastel se perderia: ahi las tarjetas
+ * vuelven al blanco y es el fondo el que hace de contraste. */
+.ld-seccion--gris .ld-tarjeta,
+.ld-seccion--gris .ld-tarjeta:nth-child(even) { background: var(--ld-papel); }
 
 .ld-tarjeta h3 {
     font-size: 17px;
@@ -298,12 +347,12 @@ h2.ld-titulo {
 }
 
 .ld-ficha {
-    border: 1px solid var(--ld-borde);
-    background: var(--ld-papel);
+    background: var(--ld-tinte-1);
     border-radius: 999px;
-    padding: 9px 18px;
+    padding: 10px 20px;
     font-size: 15px;
-    color: var(--ld-tinta-2);
+    font-weight: 500;
+    color: var(--ld-azul);
 }
 
 /* ---------- Vídeo ---------- */
@@ -311,7 +360,6 @@ h2.ld-titulo {
 .ld-video {
     border-radius: var(--ld-radio);
     overflow: hidden;
-    border: 1px solid var(--ld-borde);
     background: #000;
     aspect-ratio: 16 / 9;
 }
