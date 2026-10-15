@@ -114,3 +114,12 @@ el despliegue con HTTPS.
 | Administrador y superadministrador | La diferencia es exactamente dos cosas: las cuentas del panel y borrar. Con permisos de Django y un grupo. |
 | El panel entero en español | django-unfold no trae catálogo: 128 cadenas traducidas, más los `verbose_name` que faltaban y los nombres de los permisos, que Django guarda en la base. |
 | Dar permisos eligiendo un papel | El formulario pregunta «qué puede hacer» en vez de enseñar cuarenta casillas. |
+| Migrar a PostgreSQL | **Cerrado el 14/10.** Verificado contra el PostgreSQL 16.15 gestionado de Azure, no solo contra un clúster de prueba. |
+| Despliegue en producción | **Cerrado el 14/10.** El panel sirve por HTTPS en Azure Container Apps. Lo que costó: en un entorno «express» un cambio de variables o secretos **no alcanza a una réplica viva**, hay que destruirla y despertarla con una petición. |
+| CI/CD con GitHub Actions | Empujar a `main` corre las 32 pruebas y solo si pasan construye, sube y despliega, esperando a que el sitio responda 200. La credencial federada falló al principio porque GitHub manda el sujeto con **identificadores numéricos inmutables** dentro, no el formato que documenta todo el mundo. |
+| Las imágenes de las preguntas daban 404 en producción | `static()` solo sirve con DEBUG, y su comentario daba por supuesto un servidor web delante que en Container Apps no existe. Las sirve WhiteNoise desde `wsgi.py`, con prueba de regresión. |
+| El APK de release escribía las respuestas en el log | `HttpLoggingInterceptor` estaba en `BODY` sin condición. En el log del teléfono salían la `X-API-Key` y el `correct_option_order` de cada pregunta, legibles con `adb logcat` **sin root**. Ahora depende de `BuildConfig.DEBUG`. |
+| La app habla por HTTPS con el panel | `BASE_URL` entra por `buildConfigField` y `usesCleartextTraffic` se movió al manifiesto de `debug`. El APK de release ya no puede hablar en claro. |
+| La racha se deriva de los intentos (Room v20) | Trece segundos en un nivel vacío subían la racha sin responder nada, y no había forma de auditarlo. Una columna, `es_practica`, y la racha sale de las fechas: un día sin responder no deja fila, así que no puede contar. |
+| Icono propio para cada nivel y Contrarreloj | Trece iconos más el de Contrarreloj. Bloqueado sigue con candado y la práctica con rayo; falta el de Comunicación Escrita. |
+| Icono de pestaña con el escudo de la UDES | No había ninguno. Va en el panel y en la página pública, con las tres medidas dentro del `.ico`. |
