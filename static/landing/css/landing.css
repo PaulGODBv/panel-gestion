@@ -123,14 +123,16 @@ a { color: var(--ld-azul); }
     letter-spacing: -.01em;
 }
 
-/* El escudo de la Universidad, a la altura de la barra.
+/* El icono de la aplicacion, a la altura de la barra.
  *
- * 34 px es lo que cabe con holgura en una barra de 64 y lo que hace falta para
- * que el condor se lea: por debajo de treinta se convierte en una mancha azul,
- * y un escudo irreconocible es peor que ninguno. */
+ * 34 px es lo que cabe con holgura en una barra de 64. El radio de 8 no es
+ * adorno: el fichero es el cuadrado que Android enmascara al instalarlo, asi
+ * que sin redondearlo aqui se veria con esquinas vivas, que es justo como NO
+ * se ve en el telefono de quien lo instale. */
 .ld-marca__escudo {
     height: 34px;
-    width: auto;
+    width: 34px;
+    border-radius: 8px;
     flex: none;
 }
 
