@@ -65,6 +65,17 @@
 <main id="contenido">
 
     <section class="ld-portada">
+        {% comment %}
+            El cielo va vacio: las estrellas las genera landing.js, porque son
+            cientos de sombras y escribirlas aqui no tendria ningun sentido.
+            Sin JavaScript este div se queda vacio y la portada se ve con su
+            degradado, que es una portada perfectamente legible.
+
+            aria-hidden porque no dice nada: es decoracion, y anunciarla solo
+            haria perder el tiempo a quien use un lector de pantalla.
+        {% endcomment %}
+        <div class="ld-cielo" data-cielo aria-hidden="true"></div>
+
         <div class="ld-contenedor ld-portada__fila">
             <div data-aparece="0">
                 <p class="ld-eyebrow">Universidad de Santander · Ruta del Mejor Saber</p>

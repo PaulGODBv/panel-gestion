@@ -26,6 +26,22 @@
 :root {
     --ld-azul: #005b99;          /* el azul UDES, el mismo del panel */
     --ld-azul-claro: #4e88ca;
+
+    /* La noche de la portada: el azul de la Universidad llevado al fondo.
+     *
+     * No es negro. Se probo el negro —la referencia lo usa— y se descarto por
+     * lo mismo que se descarto el violeta en su dia: la portada y el panel
+     * tienen que parecer el mismo producto a ojos de quien los abra seguidos,
+     * y sobre negro la pagina deja de ser de la UDES para ser una pagina
+     * oscura cualquiera.
+     *
+     * `--ld-noche-alta` es tambien el color plano de la barra. Los dos valores
+     * van juntos a proposito: si se cambia uno hay que cambiar el otro o
+     * reaparece la costura. */
+    --ld-noche-alta: #00406f;
+    --ld-noche-baja: #00203a;
+    --ld-noche-texto: #c2d9ec;   /* la bajada, sobre la noche */
+    --ld-noche-tenue: #8fadc6;   /* la nota del final, un escalon por debajo */
     --ld-tinta: #0f172a;
     --ld-tinta-2: #475569;
     --ld-tinta-3: #94a3b8;
@@ -92,16 +108,57 @@ a { color: var(--ld-azul); }
 
 /* ---------- Barra superior ---------- */
 
+/* La barra tiene dos estados y los dos son deliberados.
+ *
+ * Sobre la portada va oscura y sin sombra: es parte del cielo. En cuanto hay
+ * contenido debajo se vuelve blanca, que es como estaba antes. El cambio lo
+ * dispara el centinela de un pixel del guion, no el scroll.
+ *
+ * El azul es plano a proposito, y es exactamente el que arranca el degradado
+ * de la portada. El degradado de ahi abajo es vertical justo por esto: asi
+ * todo su borde superior es este mismo color y la union no se ve. Con el
+ * degradado inclinado que se probo primero, el color variaba a lo largo del
+ * borde y aparecia una costura. */
 .ld-barra {
     position: sticky;
     top: 0;
     z-index: 20;
+    background: var(--ld-noche-alta);
+    transition: background .3s ease, box-shadow .3s ease;
+}
+
+/* Sin JavaScript la clase no llega nunca y la barra se queda azul. Es feo
+ * pero no es un fallo: se lee, contrasta y lleva a los mismos sitios. */
+.ld-barra:not(.ld-barra--despegada) .ld-marca { color: #eaf4fc; }
+
+/* El boton de descargar, sobre la barra oscura, invierte: pastilla blanca con
+ * el texto en azul. Hay que poner AMBOS, fondo y color — si solo se cambia el
+ * fondo, hereda el blanco de `.ld-btn--principal` y queda blanco sobre blanco,
+ * que es justo lo que paso en el trazado. */
+.ld-barra:not(.ld-barra--despegada) .ld-btn--principal {
+    background: #fff;
+    color: var(--ld-noche-alta);
+}
+.ld-barra:not(.ld-barra--despegada) .ld-btn--principal:hover { background: #dbeafe; }
+
+.ld-barra:not(.ld-barra--despegada) .ld-btn--discreto {
+    color: #cfe3f5;
+    border-color: rgba(255, 255, 255, .34);
+}
+.ld-barra:not(.ld-barra--despegada) .ld-btn--discreto:hover {
+    color: #fff;
+    border-color: rgba(255, 255, 255, .7);
+}
+
+/* Ya con contenido debajo: la barra de siempre. Una sombra suave en vez de una
+ * linea —la barra flota sobre la pagina en lugar de estar pegada con un
+ * filete— y es la UNICA sombra de la hoja aparte de los telefonos: todo lo
+ * demas se separa por color. */
+.ld-barra--despegada {
     background: rgba(255, 255, 255, .88);
     backdrop-filter: blur(10px);
-    /* Una sombra suave en vez de una linea. La barra flota sobre la pagina en
-     * lugar de estar pegada con un filete, y es la UNICA sombra de la hoja
-     * aparte de los telefonos: todo lo demas se separa por color. */
     box-shadow: rgba(15, 23, 42, .07) 0 6px 28px;
+    border-bottom-color: transparent;
 }
 
 .ld-barra__fila {
@@ -183,19 +240,83 @@ a { color: var(--ld-azul); }
 
 /* ---------- Portada ---------- */
 
+/* La portada es de noche. Lo de debajo sigue siendo claro, y ese contraste es
+ * el efecto: se entra en algo y despues la pagina se abre.
+ *
+ * Vertical y no inclinado — ver la barra. Sin `overflow: hidden` a proposito:
+ * el telefono de atras va girado y sobresale un poco, y recortarlo aqui lo
+ * cortaria en seco. Las estrellas se recortan solas dentro de `.ld-cielo`. */
 .ld-portada {
+    position: relative;
     padding: 72px 0 56px;
-    background:
-        radial-gradient(900px 420px at 15% -10%, rgba(0, 91, 153, .10), transparent 62%),
-        var(--ld-papel);
+    background: linear-gradient(var(--ld-noche-alta), var(--ld-noche-baja));
 }
 
 .ld-portada__fila {
+    position: relative;   /* por encima del cielo */
+    z-index: 1;
     display: grid;
     grid-template-columns: 1.15fr .85fr;
     gap: 48px;
     align-items: center;
 }
+
+/* ---------- El cielo ----------
+ *
+ * Tres capas. Cada una es UN solo elemento con muchas sombras: el navegador lo
+ * pinta una vez y despues solo mueve la capa, que es trabajo del compositor y
+ * no repintado. Por eso esto no se nota en el telefono modesto que va a abrir
+ * la pagina — un canvas repintando cada fotograma si se notaria, y en la
+ * bateria tambien.
+ *
+ * Las sombras las genera el guion: son cientos y escribirlas a mano no tiene
+ * sentido. Sin JavaScript no hay estrellas y la portada se queda en el
+ * degradado, que se lee igual de bien. */
+.ld-cielo {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.ld-cielo__paralaje {
+    position: absolute;
+    inset: 0;
+    transition: transform .5s cubic-bezier(.22, .61, .36, 1);
+}
+
+.ld-cielo__deriva {
+    position: absolute;
+    inset: 0;
+    animation: ld-subir var(--ld-vel) linear infinite;
+}
+
+/* La copia de abajo es lo que hace el bucle invisible: cuando la primera
+ * tanda termina de subir, la segunda ya esta en su sitio. */
+.ld-cielo__estrella {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: var(--ld-tam);
+    height: var(--ld-tam);
+    border-radius: 50%;
+    background: var(--ld-color);
+    box-shadow: var(--ld-sombras);
+}
+
+.ld-cielo__estrella::after {
+    content: "";
+    position: absolute;
+    top: 2000px;
+    left: 0;
+    width: inherit;
+    height: inherit;
+    border-radius: 50%;
+    background: inherit;
+    box-shadow: var(--ld-sombras);
+}
+
+@keyframes ld-subir { to { transform: translateY(-2000px); } }
 
 .ld-eyebrow {
     font-size: 13px;
@@ -239,6 +360,45 @@ h1.ld-titular {
     color: var(--ld-tinta-3);
     margin: 14px 0 0;
 }
+
+/* ---------- Lo que la noche invierte ----------
+ *
+ * Solo dentro de la portada. Las mismas clases fuera de ella siguen siendo las
+ * de siempre, y por eso el resto de la pagina no se entera de este cambio. */
+.ld-portada .ld-eyebrow { color: #9fd0f5; }
+.ld-portada .ld-titular { color: #fff; }
+.ld-portada .ld-entrada { color: var(--ld-noche-texto); }
+.ld-portada .ld-nota    { color: var(--ld-noche-tenue); }
+
+/* El azul UDES sobre el azul UDES oscuro no contrasta: el boton principal se
+ * invierte, igual que en la barra, y hay que poner fondo Y color. */
+.ld-portada .ld-btn--principal {
+    background: #fff;
+    color: var(--ld-noche-alta);
+}
+.ld-portada .ld-btn--principal:hover { background: #dbeafe; }
+
+.ld-portada .ld-btn--discreto {
+    color: #eaf4fc;
+    border-color: rgba(255, 255, 255, .34);
+}
+.ld-portada .ld-btn--discreto:hover {
+    color: #fff;
+    border-color: rgba(255, 255, 255, .7);
+}
+
+/* El apagado es el que sale cuando no hay APK. Se ve poco a proposito —esta
+ * desactivado— pero tiene que verse: sobre la noche, el gris claro de la
+ * version diurna desaparecia del todo. */
+.ld-portada .ld-btn--apagado {
+    background: rgba(255, 255, 255, .08);
+    color: var(--ld-noche-tenue);
+    border-color: rgba(255, 255, 255, .18);
+}
+
+/* Sobre blanco, una sombra azulada y suave bastaba para separar el telefono
+ * del fondo. Sobre la noche no se ve nada: tiene que ser negra y mas honda. */
+.ld-portada .ld-telefono { box-shadow: 0 24px 60px rgba(0, 0, 0, .45); }
 
 /* ---------- Teléfono ---------- */
 
@@ -474,15 +634,10 @@ h2.ld-titulo {
    memoria diecisiete capas vivas se notan. */
 .ld-aparece.ld-visible { will-change: auto; }
 
-/* La barra solo se despega del fondo cuando hay contenido debajo. Quieta
-   arriba del todo no necesita sombra, y ponersela de entrada hace que la
-   pagina arranque pareciendo que ya se ha desplazado. */
-.ld-barra { transition: box-shadow .3s ease, border-color .3s ease; }
-
-.ld-barra--despegada {
-    box-shadow: 0 6px 24px rgba(15, 23, 42, .07);
-    border-bottom-color: transparent;
-}
+/* Los dos estados de la barra viven arriba, en su propia seccion, junto al
+   azul de la portada del que dependen. Quieta arriba del todo no necesita
+   sombra, y ponersela de entrada hace que la pagina arranque pareciendo que
+   ya se ha desplazado. */
 
 @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
@@ -495,6 +650,12 @@ h2.ld-titulo {
         transition: none;
     }
     .ld-barra { transition: none; }
+
+    /* El cielo se queda, quieto. Quien pide menos movimiento no esta pidiendo
+       menos pagina: sigue viendo las estrellas, no derivan ni siguen al raton.
+       Quitarlas del todo seria castigarle con una portada mas pobre. */
+    .ld-cielo__deriva { animation: none; }
+    .ld-cielo__paralaje { transition: none; transform: none !important; }
 }
 
 /* ---------- Teléfonos y tabletas ---------- */
