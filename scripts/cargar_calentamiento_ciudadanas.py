@@ -252,13 +252,20 @@ PREGUNTAS = [
         "es un prejuicio, y es a lo que se opondrían los trabajadores.",
     ),
     (
-        # OJO: el contexto de esta esta RECONSTRUIDO. La original (`q100`) tiene
-        # el pasaje equivocado en el banco —el del FMI, copiado de `q60`—, y el
-        # suyo no existe en ningun sitio del proyecto. Este enunciado se dedujo
-        # de las opciones y de la explicacion, que lo acotan bastante, pero hay
-        # que contrastarlo con la cartilla antes de darlo por definitivo.
-        "Ante un caso de violencia contra una mujer, un funcionario declara que "
-        "ella «se expuso» al salir sola de noche. Esa afirmación puede llevar a que:",
+        # El 15/10 esta llevaba un contexto RECONSTRUIDO, deducido de las
+        # opciones porque el original no aparecia por ninguna parte. Medía la
+        # idea correcta —desplazar la culpa— pero NO era la escena: hablaba de
+        # una mujer que «se expuso» al salir sola de noche, y en la pregunta de
+        # verdad el funcionario no habla de ninguna victima concreta, sino que
+        # desacredita un estudio.
+        #
+        # El 16/10 se recupero el pasaje del cuadernillo oficial del ICFES
+        # —«Modulo de Competencias ciudadanas, Saber Pro 2018»— y esta version
+        # sale de ahi. Un contexto deducido se parece lo justo para colar y lo
+        # bastante para estar mal.
+        "Un estudio dice que el 30 % de las mujeres en Colombia sufre violencia "
+        "física. Un funcionario responde que no es confiable y que hay que ver "
+        "la justificación de los hechos. Eso puede llevar a que:",
         [
             "se cuestione a los investigadores del estudio.",
             "se entiendan mejor las estrategias de prevención.",
