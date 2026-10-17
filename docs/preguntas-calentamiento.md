@@ -339,10 +339,11 @@ nació. Eso es un prejuicio, y es a lo que se opondrían los trabajadores.
 
 ---
 
-## 17 · Minimizar al agresor (de `q100`, nivel 13) — **CONTEXTO RECONSTRUIDO**
+## 17 · Minimizar al agresor (de `q100`, nivel 13)
 
-> Ante un caso de violencia contra una mujer, un funcionario declara que ella
-> «se expuso» al salir sola de noche. Esa afirmación puede llevar a que:
+> Un estudio dice que el 30&nbsp;% de las mujeres en Colombia sufre violencia
+> física. Un funcionario responde que no es confiable y que hay que ver la
+> justificación de los hechos. Eso puede llevar a que:
 >
 > 1. se cuestione a los investigadores del estudio.
 > 2. se entiendan mejor las estrategias de prevención.
@@ -352,19 +353,35 @@ nació. Eso es un prejuicio, y es a lo que se opondrían los trabajadores.
 **Explicación:** buscar qué hizo la víctima desplaza la culpa. Esa es la
 consecuencia, aunque quien habla no la pretenda.
 
-> ### `q100` está rota en el banco, y hay que arreglarla aparte
+> ### `q100` estaba rota, y el 16/10/2026 se arregló
 >
-> Su pasaje es el del FMI y la analista económica —**copiado de `q60`**—, pero
-> su enunciado y sus opciones hablan de «la afirmación del funcionario» y de
-> violencia contra las mujeres. Pasaje y pregunta no son de la misma pregunta.
+> Su pasaje era el del FMI y la analista económica —**copiado de `q60`**—, que
+> no habla de ningún funcionario ni de ningún estudio. Sin el bueno, las cuatro
+> opciones mencionaban un estudio que no aparecía por ninguna parte: el ítem
+> era literalmente irresoluble.
 >
-> **No fue la siembra:** `CompetencyData` ya la traía así, con el id 1015. El
-> pasaje correcto no existe en ningún sitio del proyecto, así que **hay que
-> recuperarlo de la cartilla**.
+> **No fue la siembra:** `CompetencyData` ya la traía así con el id 1015, y
+> todas las versiones del historial de la app también. Nació rota.
 >
-> El contexto de arriba lo escribí yo, deducido del enunciado, de las opciones y
-> de la explicación, que lo acotan bastante. Sirve para el calentamiento, pero
-> **hay que contrastarlo con el original** antes de darlo por bueno.
+> **Recuperado del cuadernillo oficial del ICFES**, «Módulo de Competencias
+> ciudadanas — Cuadernillo de preguntas — Saber Pro 2018», icfes.gov.co. Es el
+> ítem cuyas cuatro opciones coinciden palabra por palabra con las que ya
+> estaban en el banco, así que no hay duda de que es este y no otro. El pasaje:
+> un estudio reveló que el 30&nbsp;% de las mujeres en Colombia son víctimas de
+> violencia física; varias organizaciones feministas pidieron endurecer las
+> penas; y un funcionario del Gobierno respondió que el estudio no era
+> confiable porque no consideraba los distintos contextos de las agresiones, y
+> que era muy importante tener en cuenta la justificación de los hechos.
+>
+> **La versión corta de arriba también estaba mal, y se rehízo.** La primera la
+> escribí deducida de las opciones, con una mujer que «se expuso» al salir sola
+> de noche. Medía la idea correcta, pero **no era la escena de la pregunta**:
+> el funcionario no habla de una víctima concreta, desacredita un estudio. Un
+> contexto deducido se parece lo justo para colar y lo suficiente para estar
+> mal; ahora sale del original.
+>
+> Lo arregla `scripts/reparar_pasaje_violencia.py`, en las dos preguntas, y
+> está corregido también en `CompetencyData.kt`.
 
 ---
 
@@ -386,7 +403,7 @@ resuelta por traslado.
 1. **Los duplicados.** Mover `q57` y `q51` al calentamiento saca de evaluación
    dos preguntas repetidas. Es borrar contenido de un nivel: lo confirma el
    autor del banco, no el guion.
-2. **`q100`.** Recuperar su pasaje real de la cartilla.
+2. ~~**`q100`.** Recuperar su pasaje real de la cartilla.~~ Hecho el 16/10/2026, del cuadernillo del ICFES.
 3. **El guion de carga**, siguiendo el patrón de los otros nueve del panel:
    ensayo por defecto, `--aplicar` para escribir, copia de la base antes.
 4. **Las otras dos competencias**, si el formato funciona con estudiantes.
