@@ -102,11 +102,17 @@ petróleo, que esta pregunta no usa.*
 > 1. correcta, porque un mes tiene 30 días.
 > 2. **incorrecta, porque olvida las 150 toneladas diarias.**
 > 3. correcta, porque cada día se suman 140 litros más.
-> 4. incorrecta, porque un mes no siempre tiene 30 días.
+> 4. incorrecta, porque olvida las 25 toneladas diarias.
 
 **Explicación:** los 140 litros son por tonelada, no por día. El error no está
-en el 30 sino en haber perdido el otro factor. La cuarta opción acierta que es
-incorrecta, pero por el motivo equivocado.
+en el 30 sino en haber perdido el otro factor. La cuarta opción ve el mismo
+fallo pero con el tonelaje mal: son 150 toneladas, el 25&nbsp;% de 600, no 25.
+
+> **Corrección del 22/10.** Aquí había escrito una cuarta opción inventada
+> —«un mes no siempre tiene 30 días»—, porque al sacar el original se me
+> truncó la salida y no llegué a verla. La de verdad es mejor: no es una pega
+> sobre el calendario, es el mismo razonamiento con el tonelaje equivocado.
+> Es exactamente el error que llevó a inventar el contexto de `q100`.
 
 *De 404 + 220 a 171 caracteres.*
 
