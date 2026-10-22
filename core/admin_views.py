@@ -253,8 +253,20 @@ class ExplorerAdminView(TemplateView):
             # Los programas del catalogo que de verdad tienen a alguien
             # detras, no los 49: un desplegable con cuarenta y nueve opciones
             # de las que cuatro tienen datos es peor que uno con cuatro.
+            #
+            # EL `.order_by()` VACIO NO SOBRA. `StudentReport` ordena por
+            # `-reported_at` en su Meta, y Django mete en el SELECT todo lo que
+            # necesita para ordenar. Sin vaciarlo, la consulta sale asi:
+            #
+            #     SELECT DISTINCT nombre, reported_at FROM ...
+            #
+            # y entonces el DISTINCT deduplica el PAR, no el nombre: el
+            # desplegable enseniaba «Ingenieria de Software» una vez por cada
+            # estudiante de esa carrera. Medido sobre los 55 reportes de
+            # desarrollo: 55 filas con el orden puesto, 2 sin el.
             'opciones_programa': sorted(
                 p for p in ultimos_reportes()
+                .order_by()
                 .values_list('variante_programa__programa__nombre', flat=True)
                 .distinct() if p
             ),

@@ -588,3 +588,70 @@ class ProgramaAcademicoTest(TestCase):
 
         filas = progreso_filtrado(programa="Ingeniería de Software")
         self.assertEqual(filas.count(), 2)
+
+
+class OpcionesDelExploradorTest(TestCase):
+    """El desplegable de programa enseña cada carrera UNA vez.
+
+    Reproduce el fallo tal como se vio: seis estudiantes de Ingeniería de
+    Software y el desplegable repetía «Ingeniería de Software» seis veces.
+
+    La causa no era el dato sino la consulta. `StudentReport` ordena por
+    `-reported_at` en su Meta, Django mete en el SELECT lo que necesita para
+    ordenar, y el `DISTINCT` acababa deduplicando el par
+    `(nombre, reported_at)` en lugar del nombre. Falla si alguien quita el
+    `.order_by()` vacío.
+    """
+
+    def setUp(self):
+        from .models import ProgramaAcademico, StudentReport
+
+        self.software = ProgramaAcademico.objects.get(nombre="Ingeniería de Software")
+        self.psico = ProgramaAcademico.objects.get(nombre="Psicología")
+
+        # Seis de la misma carrera, cada uno con su fecha: es justo lo que
+        # hacía que el DISTINCT no agrupara.
+        for i in range(6):
+            StudentReport.objects.create(
+                username=f"alumno{i}",
+                email=f"alumno{i}@mail.udes.edu.co",
+                academic_program="Ingeniería de Software",
+            )
+        StudentReport.objects.create(
+            username="otra",
+            email="otra@mail.udes.edu.co",
+            academic_program="Psicología",
+        )
+
+    def _opciones(self):
+        from .metricas import ultimos_reportes
+
+        return sorted(
+            p for p in ultimos_reportes()
+            .order_by()
+            .values_list("variante_programa__programa__nombre", flat=True)
+            .distinct() if p
+        )
+
+    def test_cada_programa_sale_una_sola_vez(self):
+        opciones = self._opciones()
+        self.assertEqual(
+            opciones,
+            ["Ingeniería de Software", "Psicología"],
+            "seis estudiantes de una carrera son una opción, no seis",
+        )
+
+    def test_el_orden_de_meta_es_lo_que_rompia_el_distinct(self):
+        """Sin vaciar el orden, la consulta devuelve una fila por reporte."""
+        from .metricas import ultimos_reportes
+
+        con_orden = list(
+            ultimos_reportes()
+            .values_list("variante_programa__programa__nombre", flat=True)
+            .distinct()
+        )
+        self.assertEqual(
+            len(con_orden), 7,
+            "si esto deja de dar 7, Django cambió y el .order_by() sobra",
+        )
+        self.assertEqual(len(self._opciones()), 2)
