@@ -1,18 +1,28 @@
 {% extends "admin/change_list.html" %}
 {% load i18n admin_urls %}
 
+{% comment %}
+    Los dos botones van SUELTOS, sin envolverlos en <li>.
+
+    Unfold dejo de renderizar esta barra como una lista: hoy es un
+    `<div class="flex flex-row gap-4 items-center">` y sus hijos son los
+    botones directamente. Un <li> ahi dentro sigue siendo `display: list-item`
+    aunque su padre sea un flex, asi que cada uno pintaba su viñeta gris —los
+    dos puntos que se veian entre los botones.
+
+    No se arregla con `list-style: none` en la hoja: eso taparia el sintoma de
+    un marcado que esta mal. Un <li> fuera de una lista tampoco es correcto
+    para quien lee la pagina con un lector de pantalla, que anunciaria
+    «elemento de lista» donde solo hay un boton.
+{% endcomment %}
 {% block object-tools-items %}
     {{ block.super }}
-    <li>
-        <a href="{% url 'admin:academics_question_importar' %}" class="rt-btn rt-btn--ghost rt-btn--sm">
-            <span class="material-symbols-outlined" aria-hidden="true">content_paste</span>
-            Importar pegando texto
-        </a>
-    </li>
-    <li>
-        <a href="{% url 'admin:academics_question_import_csv' %}" class="rt-btn rt-btn--ghost rt-btn--sm">
-            <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
-            Importar CSV
-        </a>
-    </li>
+    <a href="{% url 'admin:academics_question_importar' %}" class="rt-btn rt-btn--ghost rt-btn--sm">
+        <span class="material-symbols-outlined" aria-hidden="true">content_paste</span>
+        Importar pegando texto
+    </a>
+    <a href="{% url 'admin:academics_question_import_csv' %}" class="rt-btn rt-btn--ghost rt-btn--sm">
+        <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
+        Importar CSV
+    </a>
 {% endblock %}
