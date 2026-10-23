@@ -380,7 +380,8 @@ consecuencia, aunque quien habla no la pretenda.
 > contexto deducido se parece lo justo para colar y lo suficiente para estar
 > mal; ahora sale del original.
 >
-> Lo arregla `scripts/reparar_pasaje_violencia.py`, en las dos preguntas, y
+> Lo arregló `scripts/reparar_pasaje_violencia.py` —retirado el 23/10 una vez
+> aplicado en producción; sigue en el historial de git—, en las dos preguntas, y
 > está corregido también en `CompetencyData.kt`.
 
 ---
