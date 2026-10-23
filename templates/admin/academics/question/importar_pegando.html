@@ -64,8 +64,18 @@
                           placeholder="Contexto: el pasaje de lectura, si lo hay.&#10;El enunciado de la pregunta.&#10;* La opción correcta&#10;- Otra opción&#10;- Otra opción&#10;&gt; Por qué es esa y no las otras.">{{ texto }}</textarea>
             </div>
 
-            <div class="rt-note" id="rt-formato">
-                <p class="rt-note__title">Cómo se escribe</p>
+
+
+            <div class="rt-page__actions">
+                <button type="submit" name="accion" value="revisar" class="rt-btn rt-btn--primary">
+                    <span class="material-symbols-outlined" aria-hidden="true">fact_check</span>
+                    Revisar
+                </button>
+                <a href="{% url 'admin:academics_question_changelist' %}" class="rt-btn rt-btn--ghost">Cancelar</a>
+            </div>
+
+            <details class="rt-disclosure rt-disclosure--ayuda rt-note" id="rt-formato">
+                <summary>¿Cómo se escribe?</summary>
                 <table class="rt-table" style="margin-top:8px;">
                     <tbody>
                         <tr><td style="width:12ch;"><code class="rt-code">Contexto:</code></td><td>El pasaje de lectura. Opcional.</td></tr>
@@ -81,15 +91,7 @@
                     <strong>sobre la opción</strong>, así que no hay ningún número
                     que contar.
                 </p>
-            </div>
-
-            <div class="rt-page__actions">
-                <button type="submit" name="accion" value="revisar" class="rt-btn rt-btn--primary">
-                    <span class="material-symbols-outlined" aria-hidden="true">fact_check</span>
-                    Revisar
-                </button>
-                <a href="{% url 'admin:academics_question_changelist' %}" class="rt-btn rt-btn--ghost">Cancelar</a>
-            </div>
+            </details>
         </div>
     </section>
 
@@ -136,10 +138,29 @@
                                 {% if b.contexto %}
                                     <p class="rt-hint" style="margin-top:4px;">Contexto: {{ b.contexto|truncatechars:110 }}</p>
                                 {% endif %}
-                                {% if b.valida %}
-                                    <p class="rt-hint" style="margin-top:4px;">
-                                        Correcta: «{% for o in b.opciones %}{% if o.correcta %}{{ o.texto|truncatechars:70 }}{% endif %}{% endfor %}»
-                                    </p>
+                                {% comment %}
+                                    Las opciones con un radio cada una: la
+                                    correcta se arregla aqui, con un clic, sin
+                                    volver al cuadro a poner un asterisco.
+
+                                    Es lo que quita de en medio la sintaxis para
+                                    quien pega un cuestionario tal como viene —de
+                                    una cartilla, de un Word— donde la respuesta
+                                    buena no esta marcada en ninguna parte.
+                                {% endcomment %}
+                                {% if b.opciones %}
+                                    <fieldset class="rt-opciones">
+                                        <legend class="rt-hint">Cuál es la correcta</legend>
+                                        {% for o in b.opciones %}
+                                            <label class="rt-opcion">
+                                                <input type="radio"
+                                                       name="correcta_{{ b.numero }}"
+                                                       value="{{ forloop.counter0 }}"
+                                                       {% if o.correcta %}checked{% endif %}>
+                                                <span>{{ o.texto|default:"(opción vacía)" }}</span>
+                                            </label>
+                                        {% endfor %}
+                                    </fieldset>
                                 {% endif %}
                                 {% for p in b.problemas %}
                                     <p class="rt-hint" style="margin-top:4px; color: var(--rt-danger);">

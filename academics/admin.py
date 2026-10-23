@@ -203,7 +203,7 @@ class QuestionAdmin(ModelAdmin, SimpleHistoryAdmin):
             elif not texto.strip():
                 messages.error(request, "No hay nada que leer: el cuadro está vacío.")
             else:
-                bloques = analizar(texto)
+                bloques = analizar(texto, self._correctas_elegidas(request))
                 self._marcar_duplicadas(bloques, nivel, normalizar)
 
         # Huella del texto que se reviso. Al confirmar se vuelve a calcular: si
@@ -267,6 +267,26 @@ class QuestionAdmin(ModelAdmin, SimpleHistoryAdmin):
                 huella=huella if request.method == "POST" else "",
             ),
         )
+
+    @staticmethod
+    def _correctas_elegidas(request):
+        """Lo que la persona marco a mano en la revision: bloque -> opcion.
+
+        Viaja en el formulario, no en la sesion, por lo mismo que el texto: lo
+        que se confirma tiene que ser lo que se esta viendo. El boton de radio
+        ES lo que se ve, asi que no hace falta meterlo en la huella — esa
+        protege de editar el cuadro DESPUES de revisar, que es cuando la
+        pantalla se quedaria enseniando algo viejo.
+        """
+        elegidas = {}
+        for clave, valor in request.POST.items():
+            if not clave.startswith("correcta_"):
+                continue
+            try:
+                elegidas[int(clave[len("correcta_"):])] = int(valor)
+            except (TypeError, ValueError):
+                continue
+        return elegidas
 
     @staticmethod
     def _marcar_duplicadas(bloques, nivel, normalizar):

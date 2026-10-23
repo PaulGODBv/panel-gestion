@@ -1673,3 +1673,46 @@ html.dark #nav-sidebar-apps a.rt-nav-activo::before {
         transform: none;
     }
 }
+
+/* ---------- Ayuda plegable, y las opciones de la revisión ---------- */
+
+/* `.rt-disclosure` a secas se neutraliza en escritorio —oculta su resumen y
+ * se queda abierto— porque se escribió para los filtros, que ahí siempre se
+ * ven. Esta ayuda es lo contrario: en escritorio también tiene que poder
+ * cerrarse, que es justo de lo que se quejó el profesor al cargar preguntas.
+ * Abierta y en medio del camino, se interpone entre el cuadro de texto y el
+ * botón de revisar. */
+.rt-disclosure--ayuda > summary { display: flex; }
+.rt-disclosure--ayuda[open] > summary { margin-bottom: var(--rt-space-2); }
+.rt-disclosure--ayuda > summary::after {
+    content: "›";
+    margin-left: auto;
+    transition: transform .15s ease;
+}
+.rt-disclosure--ayuda[open] > summary::after { transform: rotate(90deg); }
+
+/* Las opciones de cada pregunta en la pantalla de revisión. Sin borde ni
+ * fondo: van dentro de una celda que ya está delimitada, y encuadrarlas otra
+ * vez haría una caja dentro de una caja. */
+.rt-opciones {
+    margin: 6px 0 0;
+    padding: 0;
+    border: 0;
+}
+.rt-opciones > legend {
+    padding: 0;
+    margin-bottom: 2px;
+}
+.rt-opcion {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 3px 0;
+    cursor: pointer;
+    line-height: 1.45;
+}
+.rt-opcion > input { margin-top: 3px; flex: none; }
+/* La elegida se destaca sin color de fondo: en una lista de cuatro, el peso
+ * de la letra distingue mejor que un relleno, que competiría con las
+ * insignias de estado que hay en la misma fila. */
+.rt-opcion:has(> input:checked) > span { font-weight: 600; }

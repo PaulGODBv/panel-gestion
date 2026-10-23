@@ -105,8 +105,28 @@ def normalizar(texto: str) -> str:
     return re.sub(r"[^a-z0-9 ]+", " ", re.sub(r"\s+", " ", sin_tildes.lower())).strip()
 
 
-def analizar(texto: str) -> list[Bloque]:
-    """Convierte el texto pegado en bloques, cada uno con su diagnóstico."""
+def marcar_elegida(bloque: Bloque, indice: int | None) -> None:
+    """Pone la correcta donde la eligió una persona, pisando lo que diga el texto.
+
+    Es lo que permite pegar un cuestionario tal como viene —de una cartilla, de
+    un Word, de un PDF— sin marcar nada, y resolver la correcta con un clic en
+    la pantalla de revisión. El asterisco sigue valiendo; deja de ser la única
+    forma.
+    """
+    if indice is None or not (0 <= indice < len(bloque.opciones)):
+        return
+    for posicion, opcion in enumerate(bloque.opciones):
+        opcion.correcta = posicion == indice
+
+
+def analizar(texto: str, elegidas: dict[int, int] | None = None) -> list[Bloque]:
+    """Convierte el texto pegado en bloques, cada uno con su diagnóstico.
+
+    `elegidas` mapea el número de bloque a la posición de la opción que una
+    persona marcó en la revisión. Se aplica ANTES de `revisar`, para que un
+    bloque al que le faltaba el asterisco deje de estar roto en cuanto se
+    elige: si se aplicara después, el problema ya estaría anotado.
+    """
     bloques: list[Bloque] = []
     actual: Bloque | None = None
     enunciado: list[str] = []
@@ -120,6 +140,8 @@ def analizar(texto: str) -> list[Bloque]:
         actual.enunciado = " ".join(enunciado).strip()
         actual.contexto = " ".join(contexto).strip()
         actual.explicacion = " ".join(explicacion).strip()
+        if elegidas:
+            marcar_elegida(actual, elegidas.get(actual.numero))
         revisar(actual)
         bloques.append(actual)
         actual, enunciado, contexto, explicacion = None, [], [], []
