@@ -14,6 +14,7 @@ from __future__ import annotations
 import pathlib
 
 from django.conf import settings
+from django.templatetags.static import static
 from django.views.generic import TemplateView
 
 #: Dónde se deja el APK para que la página lo ofrezca.
@@ -24,8 +25,19 @@ from django.views.generic import TemplateView
 CARPETA_APK = "apk"
 NOMBRE_APK = "reta2.apk"
 
-#: Vídeo de presentación, si se sirve desde aquí en vez de desde YouTube.
-RUTA_VIDEO = "landing/presentacion.mp4"
+#: Vídeo de presentación.
+#:
+#: Va en ESTÁTICOS y no en media, al revés que el APK, y la diferencia no es
+#: capricho: son 2,8 MB de quince segundos, menos que las dos capturas de
+#: teléfono que esta misma página ya sirve. El APK son once y se recompila con
+#: cada versión; esto se rinde una vez y cambia como cambia el texto.
+#:
+#: Estando en estáticos entra en la imagen al construirla, lo sirve WhiteNoise
+#: con huella en el nombre y caché inmutable, y sobrevive a los reinicios. En
+#: `media/` no sobrevivía: el disco del contenedor es efímero, y además la
+#: carpeta está en `.gitignore`, así que el archivo no llegaba siquiera a
+#: existir cuando GitHub Actions clona el repositorio para construir.
+RUTA_VIDEO = "landing/video/promo-reta2-15s.mp4"
 
 
 def _archivo_de_medios(ruta_relativa: str) -> pathlib.Path:
@@ -54,7 +66,15 @@ class LandingView(TemplateView):
         apk = _archivo_de_medios(f"{CARPETA_APK}/{NOMBRE_APK}")
         hay_apk = bool(url_externa) or apk.is_file()
 
-        video = _archivo_de_medios(RUTA_VIDEO)
+        # `static()` da la ruta con huella —promo-reta2-15s.a1b2c3.mp4— cuando
+        # el manifiesto existe, que es en produccion. En desarrollo devuelve la
+        # ruta tal cual. Si algun dia se retira el archivo, `static()` lanzaria
+        # con el almacenamiento de manifiesto, asi que el fallo se atrapa y la
+        # seccion del video desaparece en vez de tumbar la portada entera.
+        try:
+            video_url = static(RUTA_VIDEO)
+        except ValueError:
+            video_url = ""
 
         ctx.update({
             "hay_apk": hay_apk,
@@ -72,7 +92,7 @@ class LandingView(TemplateView):
                 else round(apk.stat().st_size / 1048576, 1) if apk.is_file()
                 else None
             ),
-            "video_url": f"{settings.MEDIA_URL}{RUTA_VIDEO}" if video.is_file() else "",
+            "video_url": video_url,
             # Si el video acaba estando en YouTube basta con poner la direccion
             # de insercion en los ajustes; la plantilla prefiere esta.
             "video_incrustado": getattr(settings, "RETA2_VIDEO_PRESENTACION", ""),
