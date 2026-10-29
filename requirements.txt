@@ -21,6 +21,15 @@ pillow==12.3.0
 
 django-crispy-forms==2.7
 
+# Lee el texto de un PDF, para la importacion de preguntas.
+#
+# Aqui se suele preferir escribir quince lineas antes que traer una
+# dependencia —asi se leyo el .env y asi se analizo DATABASE_URL—, pero un
+# PDF no son quince lineas. Se intento: un extractor propio saca el texto de
+# un PDF generado por software, pero del cuadernillo del ICFES devolvia las
+# palabras letra a letra, porque lleva fuentes recortadas. pypdf lee los dos.
+pypdf==6.21.4
+
 # --- Produccion -------------------------------------------------------------
 # Nada de esto hace falta para desarrollar: sin DATABASE_URL la base sigue
 # siendo SQLite y `runserver` sirve los estaticos por su cuenta. Se instalan

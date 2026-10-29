@@ -30,7 +30,7 @@
     </div>
 {% endif %}
 
-<form method="post" class="rt-stack">
+<form method="post" class="rt-stack" enctype="multipart/form-data">
     {% csrf_token %}
     <input type="hidden" name="huella" value="{{ huella }}">
 
@@ -52,6 +52,43 @@
                     {% endfor %}
                 </select>
                 <p class="rt-hint">Las preguntas se crean todas en este nivel.</p>
+            </div>
+
+            {% comment %}
+                Subir un PDF rellena el cuadro de abajo, no guarda nada. Sale
+                de la reunion con el profesor: escribe las preguntas en el
+                computador y exportarlas a PDF ya es un paso que da.
+
+                El lector acierta mas con unos documentos que con otros, y por
+                eso lo que saca va al cuadro y no a la base: se lee, se revisa
+                y se corrige antes de guardar.
+            {% endcomment %}
+            <div class="rt-field">
+                <label class="rt-label" for="rt-pdf">O sube un PDF</label>
+                <div class="rt-subir">
+                    <input type="file" id="rt-pdf" name="pdf" accept="application/pdf,.pdf"
+                           class="rt-input">
+                    {% comment %}formnovalidate: leer el PDF solo rellena el cuadro de
+                    texto, y para eso no hace falta nivel. Sin esto el navegador exige
+                    elegirlo antes de poder leer, que es pedir una decision para la que
+                    todavia no hay informacion: el nivel se elige al revisar.
+
+                    Va en {% templatetag openblock %} comment {% templatetag closeblock %}
+                    y no en {% templatetag openbrace %}# #{% templatetag closebrace %}:
+                    el comentario corto de Django no cruza saltos de linea, y escrito asi
+                    salia impreso en la pagina. Se vio en el navegador, no en las pruebas.
+                    {% endcomment %}
+                    <button type="submit" name="accion" value="pdf" formnovalidate
+                            class="rt-btn rt-btn--ghost">
+                        <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
+                        Leer PDF
+                    </button>
+                </div>
+                <p class="rt-hint">
+                    Rellena el cuadro de abajo con lo que encuentre. No guarda
+                    nada: se revisa igual que si lo hubieras pegado a mano.
+                    Un PDF escaneado no sirve, porque es una imagen.
+                </p>
             </div>
 
             <div class="rt-field">

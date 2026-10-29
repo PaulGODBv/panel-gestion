@@ -194,10 +194,49 @@ class QuestionAdmin(ModelAdmin, SimpleHistoryAdmin):
         id_de_nivel = request.POST.get("nivel", "")
         accion = request.POST.get("accion", "")
 
+        # Subir un PDF rellena el cuadro, no escribe en la base. Lo que entra
+        # sigue pasando por la revision, que es lo que hace seguro un lector
+        # imperfecto: un fallo se ve antes de guardar, no despues.
+        solo_se_leyo_un_pdf = accion == "pdf"
+        if accion == "pdf":
+            from .lector_pdf import PdfIlegible, leer
+
+            archivo = request.FILES.get("pdf")
+            if archivo is None:
+                messages.error(request, "Elige un archivo PDF primero.")
+            else:
+                try:
+                    texto, cuantas = leer(archivo)
+                except PdfIlegible as e:
+                    messages.error(request, str(e))
+                else:
+                    if cuantas:
+                        messages.success(
+                            request,
+                            f"Del PDF salieron {cuantas} preguntas. Léelas antes "
+                            "de revisar: el lector acierta más con unos "
+                            "documentos que con otros, y lo que no reconozca "
+                            "se arregla aquí mismo.",
+                        )
+                    else:
+                        messages.warning(
+                            request,
+                            "El PDF se leyó, pero no se reconoció ninguna "
+                            "pregunta. Suelen hacer falta las opciones marcadas "
+                            "con «a.», «b.»… Puedes pegar el texto a mano.",
+                        )
+            # No se revisa todavia: primero que lo lea una persona. Y si ya
+            # habia un nivel elegido se conserva, para no obligar a elegirlo
+            # otra vez al volver la pagina.
+            accion = ""
+
         bloques = []
         nivel = None
-        if request.method == "POST":
-            nivel = niveles.filter(pk=id_de_nivel).first()
+        if request.method == "POST" and not solo_se_leyo_un_pdf:
+            # El `if` no sobra: sin el, un POST sin nivel entra en el filtro con
+            # la cadena vacia y Django revienta con un 500 antes de llegar al
+            # aviso de abajo, que es justo el que habia que dar.
+            nivel = niveles.filter(pk=id_de_nivel).first() if id_de_nivel else None
             if nivel is None:
                 messages.error(request, "Elige el nivel al que van estas preguntas.")
             elif not texto.strip():
@@ -205,6 +244,10 @@ class QuestionAdmin(ModelAdmin, SimpleHistoryAdmin):
             else:
                 bloques = analizar(texto, self._correctas_elegidas(request))
                 self._marcar_duplicadas(bloques, nivel, normalizar)
+        elif solo_se_leyo_un_pdf and id_de_nivel:
+            # Si ya habia un nivel elegido se conserva al volver la pagina: el
+            # PDF no lo necesita, pero perderlo obligaria a elegirlo dos veces.
+            nivel = niveles.filter(pk=id_de_nivel).first()
 
         # Huella del texto que se reviso. Al confirmar se vuelve a calcular: si
         # alguien edito el cuadro despues de revisar, no se guarda lo que no se

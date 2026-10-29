@@ -1716,3 +1716,13 @@ html.dark #nav-sidebar-apps a.rt-nav-activo::before {
  * de la letra distingue mejor que un relleno, que competiría con las
  * insignias de estado que hay en la misma fila. */
 .rt-opcion:has(> input:checked) > span { font-weight: 600; }
+
+/* El archivo y su botón en la misma línea: son un solo gesto —elegir y
+ * leer—, y separarlos en dos renglones los hace parecer dos pasos. */
+.rt-subir {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--rt-space-2);
+}
+.rt-subir > input[type="file"] { flex: 1 1 18rem; }
