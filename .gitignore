@@ -64,6 +64,12 @@ docs/solicitud-icfes.md
 /media/apk/
 /media/landing/
 
+# El proyecto de montaje del video: fuentes, cortes y renders intermedios.
+# Lo que se sirve es un unico archivo ya rendido y ese si esta versionado,
+# en static/landing/video/. El taller donde se hizo no hace falta para
+# construir la imagen, y son cientos de megas.
+/video-promo/
+
 # Estaticos recogidos por collectstatic. Se generan al construir la imagen;
 # versionarlos solo serviria para que una version vieja pisara a una nueva.
 /staticfiles/
