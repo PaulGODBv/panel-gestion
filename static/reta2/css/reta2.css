@@ -1126,6 +1126,52 @@ html:root #content span[class*="bg-red-100"]   { background: var(--rt-danger-bg)
 html:root #content span[class*="bg-gray-100"]  { background: var(--rt-surface-2); color: var(--rt-text-2); border-color: var(--rt-border-strong); }
 
 
+/* Inicio de sesion: el formulario dentro de una tarjeta, no suelto.
+
+   Unfold deja #page en `bg-white` y la columna del formulario sin caja, asi
+   que en una pantalla ancha quedan cuatro campos flotando en medio de un folio
+   en blanco. El usuario lo dijo el 30/10/2026 ensenando al lado el acceso de
+   Aula Extendida, que es como espera verlo cualquiera de la Universidad.
+
+   Se hace desde aqui y no copiando `unauthenticated.html`: lo unico que hace
+   falta es fondo en la pagina y caja en la columna, y una plantilla copiada
+   habria que volver a revisarla en cada actualizacion de Unfold.
+
+   `body.login` lo pone el layout sin sesion, asi que esto viste tambien el
+   cierre de sesion y el restablecimiento de contrasena. Es lo que se quiere:
+   las tres son la misma pantalla con otro contenido. */
+html:root body.login #page { background: var(--rt-canvas); }
+
+/* El primer hijo es la columna del contenido; el segundo es la cabecera de
+   «Volver al sitio» y el tema, que va en `absolute` y no se toca. */
+html:root body.login #page > div > div:first-child {
+    background: var(--rt-surface);
+    border: 1px solid var(--rt-border);
+    border-radius: var(--rt-radius);
+    padding: var(--rt-space-4);
+}
+
+/* Mas ancha que las 24rem de Unfold: la caja come 32px por lado, y sin esto
+   los campos saldrian mas estrechos que antes de meterlos en ella. */
+@media (min-width: 640px) {
+    html:root body.login #page > div > div:first-child { width: 448px; }
+}
+
+/* La sombra solo en claro. En oscuro una sombra sobre carbon no se ve, y lo
+   que separa la tarjeta del fondo es el escalon de superficie mas el borde. */
+html:not(.dark) body.login #page > div > div:first-child {
+    box-shadow: 0 1px 2px rgba(10, 10, 10, 0.06), 0 4px 12px rgba(10, 10, 10, 0.08);
+}
+
+/* El escudo lleva papel blanco propio porque la marca es azul oscuro y en el
+   tema oscuro, suelta, desapareceria. Dentro de una tarjeta que YA es blanca
+   ese papel sobra: se veia un rectangulo dentro de otro sin motivo. */
+html:not(.dark) body.login .rt-marca {
+    background: transparent;
+    padding: 0;
+}
+
+
 /* --- 5.x Logros del estudiante -------------------------------------------- */
 
 /* Espeja la rejilla de la app: seis insignias en dos filas de tres. Se fija en
