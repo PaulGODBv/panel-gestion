@@ -290,3 +290,241 @@ class SubirUnPdfPorLaPantallaTest(TestCase):
         r = self.client.post(self.URL, {"accion": "revisar", "texto": suelto})
         self.assertEqual(r.status_code, 200)
         self.assertIn("Elige el nivel", r.content.decode("utf-8"))
+
+
+class NormalizarIconoTest(TestCase):
+    """Un archivo cualquiera, convertido en el PNG que espera la app.
+
+    No usa la base: `iconos` no importa Django, igual que `importador` y
+    `lector_pdf`.
+    """
+
+    @staticmethod
+    def _imagen(ancho, alto, color=(200, 30, 30, 255), fondo=(0, 0, 0, 0), margen=0):
+        from PIL import Image
+
+        im = Image.new("RGBA", (ancho, alto), fondo)
+        for y in range(margen, alto - margen):
+            for x in range(margen, ancho - margen):
+                im.putpixel((x, y), color)
+        return im
+
+    @staticmethod
+    def _bytes(im, formato="PNG"):
+        import io as _io
+
+        buf = _io.BytesIO()
+        if formato == "JPEG":
+            im = im.convert("RGB")
+        im.save(buf, format=formato)
+        return buf.getvalue()
+
+    def test_sale_cuadrado_del_lado_pedido(self):
+        from .iconos import LADO, normalizar
+        from PIL import Image
+        import io as _io
+
+        png = normalizar(self._bytes(self._imagen(400, 150)))
+        salida = Image.open(_io.BytesIO(png))
+        self.assertEqual((LADO, LADO), salida.size)
+        self.assertEqual("PNG", salida.format)
+        self.assertEqual("RGBA", salida.mode)
+
+    def test_dos_originales_distintos_acaban_ocupando_lo_mismo(self):
+        """Es la razón de ser del módulo.
+
+        Uno sube el dibujo recortado al ras y otro con medio folio de margen.
+        Sin normalizar, en la lista de niveles uno se ve enorme y el otro
+        flotando. Recortando al contenido y devolviendo siempre el mismo aire,
+        los dos ocupan igual.
+        """
+        from .iconos import normalizar
+        from PIL import Image
+        import io as _io
+
+        al_ras = normalizar(self._bytes(self._imagen(100, 100)))
+        con_aire = normalizar(self._bytes(self._imagen(300, 300, margen=100)))
+
+        caja_a = Image.open(_io.BytesIO(al_ras)).getbbox()
+        caja_b = Image.open(_io.BytesIO(con_aire)).getbbox()
+        self.assertEqual(caja_a, caja_b)
+
+    def test_no_deforma_lo_que_no_es_cuadrado(self):
+        from .iconos import normalizar
+        from PIL import Image
+        import io as _io
+
+        png = normalizar(self._bytes(self._imagen(400, 100)))
+        caja = Image.open(_io.BytesIO(png)).getbbox()
+        ancho, alto = caja[2] - caja[0], caja[3] - caja[1]
+        # El original es cuatro veces más ancho que alto; tiene que seguir
+        # siéndolo, centrado, y no estirado hasta el cuadrado.
+        self.assertAlmostEqual(4.0, ancho / alto, delta=0.15)
+
+    def test_el_fondo_blanco_de_un_jpg_se_quita(self):
+        """Un JPG no tiene transparencia y su blanco se vería como un cuadro."""
+        from .iconos import normalizar
+        from PIL import Image
+        import io as _io
+
+        original = self._imagen(200, 200, fondo=(255, 255, 255, 255), margen=50)
+        png = normalizar(self._bytes(original, formato="JPEG"))
+        salida = Image.open(_io.BytesIO(png))
+        self.assertEqual(0, salida.getpixel((2, 2))[3], "la esquina tiene que quedar transparente")
+
+    def test_lo_que_no_es_una_imagen_lo_dice(self):
+        from .iconos import IconoInvalido, normalizar
+
+        with self.assertRaises(IconoInvalido):
+            normalizar(b"esto no es una imagen")
+        with self.assertRaises(IconoInvalido):
+            normalizar(b"")
+
+    def test_una_imagen_en_blanco_no_pasa(self):
+        from .iconos import IconoInvalido, normalizar
+
+        vacia = self._imagen(100, 100, color=(0, 0, 0, 0))
+        with self.assertRaises(IconoInvalido):
+            normalizar(self._bytes(vacia))
+
+
+class IconoDeNivelPorLaApiTest(TestCase):
+    """El camino entero: se sube, se sirve, y la app recibe su URL."""
+
+    def setUp(self):
+        from django.test import override_settings
+        from .models import Competence, Level
+
+        self.competencia = Competence.objects.create(name="Lectura", description="", order=1)
+        self.nivel = Level.objects.create(
+            competence=self.competencia, name="Nivel 1", description="", order=1
+        )
+
+    @staticmethod
+    def _png():
+        from PIL import Image
+        import io as _io
+
+        im = Image.new("RGBA", (120, 120), (0, 0, 0, 0))
+        for y in range(20, 100):
+            for x in range(20, 100):
+                im.putpixel((x, y), (10, 90, 160, 255))
+        buf = _io.BytesIO()
+        im.save(buf, format="PNG")
+        return buf.getvalue()
+
+    def test_un_nivel_sin_icono_no_lo_anuncia(self):
+        from .serializers import LevelSummarySerializer
+
+        datos = LevelSummarySerializer(self.nivel).data
+        self.assertIsNone(datos["icono_url"], "sin icono, la app no debe pedir nada")
+
+    def test_al_subirlo_la_api_da_su_url_y_la_url_lo_sirve(self):
+        from django.contrib.auth import get_user_model
+        from .iconos import normalizar
+        from .serializers import LevelSummarySerializer
+
+        self.nivel.icono = normalizar(self._png())
+        self.nivel.icono_version = 1
+        self.nivel.save()
+
+        datos = LevelSummarySerializer(self.nivel).data
+        self.assertEqual(f"/api/levels/{self.nivel.pk}/icono/1/", datos["icono_url"])
+
+        get_user_model().objects.create_superuser("jefa", "j@e.com", "x" * 24)
+        self.client.login(username="jefa", password="x" * 24)
+        r = self.client.get(datos["icono_url"])
+        self.assertEqual(200, r.status_code)
+        self.assertEqual("image/png", r["Content-Type"])
+        self.assertIn("immutable", r["Cache-Control"])
+        # Los cuatro bytes con los que empieza todo PNG.
+        self.assertTrue(r.content.startswith(bytes([137, 80, 78, 71])))
+
+    def test_la_url_que_recibe_la_app_es_absoluta(self):
+        """Regresión: salía relativa y el teléfono no sabría contra qué host resolverla.
+
+        Es el mismo tropiezo que ya estaba documentado para la imagen de
+        contexto, y se repitió aquí porque `CompetenceListView` serializaba
+        sin pasar la petición en el contexto.
+        """
+        from django.test import override_settings
+        from .iconos import normalizar
+
+        self.nivel.icono = normalizar(self._png())
+        self.nivel.icono_version = 3
+        self.nivel.save()
+
+        # Con la cabecera y no con sesion: `/api/competences/` es el
+        # endpoint de la app, y se prueba como la app lo llama.
+        with override_settings(RETA2_API_KEY="clave-de-esta-prueba"):
+            r = self.client.get(
+                "/api/competences/", headers={"x-api-key": "clave-de-esta-prueba"}
+            )
+        self.assertEqual(200, r.status_code)
+
+        urls = [n["icono_url"] for c in r.json() for n in c["levels"] if n["icono_url"]]
+        self.assertEqual(1, len(urls))
+        self.assertTrue(
+            urls[0].startswith("http://"),
+            f"tiene que traer host, y vino «{urls[0]}»",
+        )
+        self.assertTrue(urls[0].endswith(f"/api/levels/{self.nivel.pk}/icono/3/"))
+
+    def test_la_version_cambia_con_cada_icono_nuevo(self):
+        """Sin esto, la cache de un anio serviria el icono viejo durante dias."""
+        from .admin import FormularioDeNivel
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        def sube():
+            formulario = FormularioDeNivel(
+                data={
+                    "competence": self.competencia.pk,
+                    "name": self.nivel.name,
+                    "description": "x",
+                    "order": self.nivel.order,
+                    "formato_practica": "opcion",
+                },
+                files={
+                    "archivo_de_icono": SimpleUploadedFile(
+                        "i.png", self._png(), content_type="image/png"
+                    )
+                },
+                instance=self.nivel,
+            )
+            self.assertTrue(formulario.is_valid(), formulario.errors)
+            return formulario.save()
+
+        primero = sube()
+        self.assertEqual(1, primero.icono_version)
+        segundo = sube()
+        self.assertEqual(2, segundo.icono_version, "subir otro tiene que invalidar la URL")
+
+    def test_un_archivo_que_no_sirve_sale_como_error_del_formulario(self):
+        from .admin import FormularioDeNivel
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        formulario = FormularioDeNivel(
+            data={
+                "competence": self.competencia.pk,
+                "name": self.nivel.name,
+                "description": "x",
+                "order": self.nivel.order,
+                "formato_practica": "opcion",
+            },
+            files={
+                "archivo_de_icono": SimpleUploadedFile(
+                    "i.png", b"no soy una imagen", content_type="image/png"
+                )
+            },
+            instance=self.nivel,
+        )
+        self.assertFalse(formulario.is_valid())
+        self.assertIn("archivo_de_icono", formulario.errors)
+
+    def test_pedir_el_icono_de_un_nivel_que_no_lo_tiene_da_404(self):
+        from django.contrib.auth import get_user_model
+
+        get_user_model().objects.create_superuser("jefa", "j@e.com", "x" * 24)
+        self.client.login(username="jefa", password="x" * 24)
+        r = self.client.get(f"/api/levels/{self.nivel.pk}/icono/0/")
+        self.assertEqual(404, r.status_code)

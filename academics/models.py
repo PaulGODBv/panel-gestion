@@ -65,6 +65,41 @@ class Level(models.Model):
                   "de evaluacion se ignora: ahi siempre se elige una opcion.",
     )
 
+    # El icono que la app pinta junto al nivel.
+    #
+    # VA EN LA BASE Y NO EN `media/`, al reves que las imagenes de contexto, y
+    # la razon es el despliegue: el disco del contenedor de Azure es efimero.
+    # Un archivo subido por el panel a `media/` desaparece en el siguiente
+    # reinicio, sin aviso, y el nivel vuelve a salir con la estrella. Las 15
+    # imagenes de contexto sobreviven solo porque estan versionadas en git y
+    # viajan dentro de la imagen; un icono subido desde el panel no puede
+    # estarlo. Postgres si persiste, y un icono normalizado son unos pocos
+    # kilobytes.
+    #
+    # El dia que haya almacenamiento externo (Azure Blob Storage, que ya esta
+    # anotado como pendiente para `media/`), esto se puede mover alli. Mientras
+    # tanto, es lo unico que funciona sin montar un servicio nuevo.
+    icono = models.BinaryField(
+        null=True,
+        blank=True,
+        editable=False,
+        verbose_name="Icono",
+        help_text="PNG cuadrado de 256 px, normalizado al subirlo.",
+    )
+
+    # Cambia cada vez que se sube un icono nuevo. Va en la URL que consume la
+    # app para que el icono viejo deje de valer en la cache: sin esto, Coil y
+    # el propio navegador seguirian enseniando el anterior durante dias.
+    icono_version = models.PositiveIntegerField(
+        default=0,
+        editable=False,
+        verbose_name="Version del icono",
+    )
+
+    @property
+    def tiene_icono(self) -> bool:
+        return bool(self.icono)
+
     @property
     def es_de_practica(self):
         """Los niveles de practica son los de orden 0, delante del basico."""

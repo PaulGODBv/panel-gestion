@@ -1,6 +1,8 @@
+from django.http import Http404, HttpResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAdminUser
 from core.permissions import HasValidApiKey
 from .models import Competence, Level, Question
 from .serializers import (
@@ -22,7 +24,12 @@ class CompetenceListView(APIView):
 
     def get(self, request):
         competences = Competence.objects.prefetch_related('levels').all()
-        serializer = CompetenceSerializer(competences, many=True)
+        # El contexto con la peticion, por lo mismo que en las preguntas: sin
+        # el, `icono_url` sale como «/api/levels/1/icono/1/» y el telefono no
+        # sabe contra que host resolverlo. Con el, sale la direccion entera.
+        serializer = CompetenceSerializer(
+            competences, many=True, context={'request': request}
+        )
         return Response(serializer.data)
 
 
@@ -64,3 +71,39 @@ class QuestionsByLevelView(APIView):
                 {'error': f'Nivel {level_id} no encontrado'},
                 status=status.HTTP_404_NOT_FOUND
             )
+
+
+class IconoDeNivelView(APIView):
+    """GET /api/levels/<id>/icono/ — el PNG del icono, o 404 si no tiene.
+
+    Sirve bytes de la base y no un archivo de `media/`, por lo que explica el
+    campo `Level.icono`: el disco del contenedor es efimero y lo que se suba
+    ahi no sobrevive al siguiente reinicio.
+
+    **Se cachea un anio y se declara inmutable.** Suena agresivo para algo que
+    el profesor puede cambiar, y por eso la URL lleva dentro `icono_version`:
+    al subir un icono nuevo la version sube, la URL cambia, y la anterior deja
+    de pedirse. Es la misma idea que la huella en el nombre de los estaticos.
+    Sin esto, la app seguiria enseniando el icono viejo durante dias y nadie
+    sabria por que.
+    """
+
+    # La clave de la API **o** una sesion de administrador. Las dos, porque
+    # esta URL la piden dos clientes distintos: la app, que manda la cabecera,
+    # y el propio panel, que ensenia la miniatura en la lista de niveles desde
+    # el navegador y ahi no hay cabecera que valga, solo la cookie de sesion.
+    # Sin el `IsAdminUser` la miniatura salia rota con un 403.
+    permission_classes = [HasValidApiKey | IsAdminUser]
+
+    def get(self, request, level_id: int, version: int = 0):
+        try:
+            nivel = Level.objects.only("icono", "icono_version").get(pk=level_id)
+        except Level.DoesNotExist:
+            raise Http404(f"Nivel {level_id} no encontrado")
+
+        if not nivel.icono:
+            raise Http404(f"El nivel {level_id} no tiene icono")
+
+        respuesta = HttpResponse(bytes(nivel.icono), content_type="image/png")
+        respuesta["Cache-Control"] = "public, max-age=31536000, immutable"
+        return respuesta

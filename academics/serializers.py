@@ -72,9 +72,32 @@ class QuestionSerializer(serializers.ModelSerializer):
         return obj.context_asset.es_figura if obj.context_asset else True
 
 
-class LevelSerializer(serializers.ModelSerializer):
+class UrlDelIconoMixin:
+    """Da la URL absoluta del icono del nivel, o `null` si no tiene.
+
+    Absoluta y no «/api/levels/3/icono/1/» por lo mismo que la imagen de
+    contexto: el telefono recibe la respuesta y no sabe contra que host
+    resolver un camino suelto. Si falta el `request` en el contexto se
+    devuelve el camino relativo, que al menos no es mentira.
+
+    Lleva la version dentro de la ruta a proposito. El icono se sirve con
+    cache de un anio, asi que cambiarlo tiene que cambiar la URL; de lo
+    contrario la app seguiria enseniando el anterior sin que nadie entienda
+    por que.
+    """
+
+    def get_icono_url(self, obj):
+        if not obj.icono:
+            return None
+        camino = f"/api/levels/{obj.pk}/icono/{obj.icono_version}/"
+        peticion = self.context.get("request")
+        return peticion.build_absolute_uri(camino) if peticion else camino
+
+
+class LevelSerializer(UrlDelIconoMixin, serializers.ModelSerializer):
     questions = QuestionSerializer(many=True, read_only=True)
     question_count = serializers.SerializerMethodField()
+    icono_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Level
@@ -85,6 +108,7 @@ class LevelSerializer(serializers.ModelSerializer):
             'order',
             'is_Locked_by_default',
             'formato_practica',
+            'icono_url',
             'question_count',
             'questions'
         ]
@@ -93,8 +117,9 @@ class LevelSerializer(serializers.ModelSerializer):
         return obj.questions.count()
 
 
-class LevelSummarySerializer(serializers.ModelSerializer):
+class LevelSummarySerializer(UrlDelIconoMixin, serializers.ModelSerializer):
     question_count = serializers.SerializerMethodField()
+    icono_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Level
@@ -105,6 +130,7 @@ class LevelSummarySerializer(serializers.ModelSerializer):
             'order',
             'is_Locked_by_default',
             'formato_practica',
+            'icono_url',
             'question_count'
         ]
 

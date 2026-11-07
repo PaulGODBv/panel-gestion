@@ -1,8 +1,59 @@
+from django import forms
 from django.contrib import admin
 from unfold.admin import ModelAdmin, TabularInline
 from simple_history.admin import SimpleHistoryAdmin
+from .iconos import IconoInvalido, normalizar
 from .models import Competence, ContextAsset, Level, Question, QuestionOption
 from django.utils.html import format_html
+
+
+class FormularioDeNivel(forms.ModelForm):
+    """El nivel, con un campo para subir su icono.
+
+    El campo NO es del modelo: `Level.icono` guarda bytes ya normalizados y no
+    un archivo, asi que aqui se recibe lo que suba el profesor —un PNG, un
+    JPG, lo que tenga— y se convierte antes de guardar. Lo que entra a la base
+    es siempre un PNG cuadrado de 256 px con el mismo margen, para que los
+    iconos se vean como una familia y no como un cajon de sastre.
+    """
+
+    archivo_de_icono = forms.ImageField(
+        required=False,
+        label="Icono del nivel",
+        help_text=(
+            "Cuadrado y con fondo transparente queda mejor, pero no hace falta: "
+            "se recorta, se centra y se lleva a 256 px al guardarlo. Si el fondo "
+            "es blanco, se quita."
+        ),
+    )
+
+    class Meta:
+        model = Level
+        fields = "__all__"
+
+    def clean_archivo_de_icono(self):
+        archivo = self.cleaned_data.get("archivo_de_icono")
+        if not archivo:
+            return None
+        try:
+            # Se normaliza en `clean` y no en `save` a proposito: asi un
+            # archivo que no sirve sale como error del formulario, junto al
+            # campo, y no como una pagina de error 500.
+            return normalizar(archivo.read())
+        except IconoInvalido as e:
+            raise forms.ValidationError(str(e))
+
+    def save(self, commit=True):
+        nivel = super().save(commit=False)
+        png = self.cleaned_data.get("archivo_de_icono")
+        if png:
+            nivel.icono = png
+            # Sube la version para que la URL cambie y la cache de un anio
+            # deje de servir el icono anterior.
+            nivel.icono_version = (nivel.icono_version or 0) + 1
+        if commit:
+            nivel.save()
+        return nivel
 
 
 class LevelInline(TabularInline):
@@ -30,17 +81,40 @@ class CompetenceAdmin(ModelAdmin):
 
 @admin.register(Level)
 class LevelAdmin(ModelAdmin):
+    form = FormularioDeNivel
     list_display = [
         'name',
         'competence',
         'order',
         'formato_practica',
+        'icono_actual',
         'is_Locked_by_default',
         'question_count',
         'coverage_indicator'
     ]
     list_filter = ['competence', 'formato_practica']
     ordering = ['competence', 'order']
+
+    @admin.display(description='Icono')
+    def icono_actual(self, obj):
+        """El icono tal como lo vera la app, en la propia lista.
+
+        Es la unica forma de saber que se subio lo que se queria: el campo de
+        subida siempre sale vacio —no se puede rellenar un `ImageField` con
+        bytes de la base— y sin esto no habria manera de distinguir un nivel
+        con icono de uno sin el.
+        """
+        if not obj.icono:
+            # Sin `format_html`: desde Django 5 exige argumentos y con una
+            # cadena suelta lanza «args or kwargs must be provided». Aqui no
+            # hay nada que interpolar, asi que el guion va tal cual.
+            return "—"
+        return format_html(
+            '<img src="/api/levels/{}/icono/{}/" alt="" '
+            'style="width:32px;height:32px;object-fit:contain">',
+            obj.pk,
+            obj.icono_version,
+        )
 
     def question_count(self, obj):
         return obj.questions.count()
